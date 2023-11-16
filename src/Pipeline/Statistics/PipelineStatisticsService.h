@@ -1,0 +1,37 @@
+#ifndef _PIPELINESTATISTICSSERVICE_H
+#define _PIPELINESTATISTICSSERVICE_H
+
+#include "StatisticsBuffer.h"
+#include "pipelineStatistics.h"
+#include "../../AudioOutput/audioFormatInfo.h"
+
+#include <chrono>
+
+namespace statistics{
+    class PipelineStatisticsService{
+    public:
+        PipelineStatisticsService(ulong LoopLength, uint bufferSize, audioFormatInfo audioFormat, uint pulseAudioLatency);
+        ~PipelineStatisticsService();
+
+        void loopStart();
+        void loopWorkEnd();
+        void firstInvocation();
+        // void loopEnd();
+        const pipelineStatistics* getStatistics();
+
+    private:
+        const uint buffersSize;
+        pipelineStatistics pStatistics;
+
+        StatisticsBuffer<ulong> loopLengthBuffer;
+        StatisticsBuffer<ulong> workLengthBuffer;
+
+        ulong loopStartPoint;
+        ulong loopWorkEndPoint;
+        ulong loopEndPoint;
+
+        ulong workLength;
+    };
+}
+
+#endif
