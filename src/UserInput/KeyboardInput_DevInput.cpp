@@ -1,11 +1,13 @@
 #include "KeyboardInput_DevInput.h"
 
 KeyboardInput_DevInput::KeyboardInput_DevInput() : keyCount(512){
-    this->keyStates = new bool[keyCount];
+    this->keyStates = new ushort[keyCount];
     for (uint i = 0; i < keyCount; i++){
         this->keyStates[i] = false;
     }
     running = false;
+    pressedKeysArr = new ushort[keyCount];
+    pressedKeysCount = 0;
 }
 
 KeyboardInput_DevInput::~KeyboardInput_DevInput(){
@@ -19,17 +21,20 @@ KeyboardInput_DevInput::~KeyboardInput_DevInput(){
     if (inputStream != nullptr){
         delete inputStream;
     }
-    delete [] keyStates;
+    delete[] keyStates;
+    delete[] pressedKeysArr;
 }
 
-void KeyboardInput_DevInput::getPressedKeys(ushort* keyArr, ushort& count){
-    count = 0;
-    for (uint i = 0; i < keyCount; i++){
-        if (keyStates[i]){
-            keyArr[count] = i;
-            count++;
-        }
-    }
+const ushort* KeyboardInput_DevInput::getPressedKeysArr(){
+    return pressedKeysArr;
+}
+
+ushort KeyboardInput_DevInput::getPressedKeysCount(){
+    return pressedKeysCount;
+}
+
+ushort KeyboardInput_DevInput::getKeyCount(){
+    return keyCount;
 }
 
 char KeyboardInput_DevInput::init(const std::string path){
@@ -94,7 +99,7 @@ char KeyboardInput_DevInput::stop(){
 }
 
 bool KeyboardInput_DevInput::getKeyState(ushort key){
-    return keyStates[key];
+    return bool(keyStates[key]);
 }
 
 void KeyboardInput_DevInput::scannerThreadFunction(){
@@ -102,7 +107,21 @@ void KeyboardInput_DevInput::scannerThreadFunction(){
     while (running){
         inputStream->read(reinterpret_cast<char*>(&event), sizeof(input_event));
         if (event.type == EV_KEY){
-            keyStates[event.code] = event.value;
+            if (event.code < keyCount){
+                if (keyStates[event.code] != bool(event.value)){
+                    if (keyStates[event.code] == 0){
+                        pressedKeysArr[pressedKeysCount] = event.code;
+                        pressedKeysCount++;
+                        keyStates[event.code] = pressedKeysCount;
+                    } else {
+                        pressedKeysCount--;
+                        pressedKeysArr[keyStates[event.code]-1] = pressedKeysArr[pressedKeysCount];
+                        keyStates[event.code] = 0;
+                    }
+                }
+            } else {
+                std::printf("Key out of bounds\n");
+            }
         }
     }
 }

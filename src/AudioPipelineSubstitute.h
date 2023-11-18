@@ -2,6 +2,7 @@
 #define _AUDIOPIPELINESUBSTITUTE_H
 
 
+#include "AudioOutput/audioFormatInfo.h"
 #include "Synthesizer/settings.h"
 #include "UserInput/AKeyboardRecorder.h"
 #include "UserInput/KeyboardRecorder_DevInput.h"
@@ -35,10 +36,12 @@ public:
 
     // void addSynth();
 
+    const audioFormatInfo* getAudioInfo();
+
     const synthesizer::settings* getSynthSettings(ushort id);
 
-    template<typename T>
-    void setSynthSettings(ushort id, synthesizer::settings_name settingsName, T value);
+    // template<typename T>
+    void setSynthSettings(ushort id, synthesizer::settings_name settingsName, double value);
 
 private:
     void pipelineThreadFunction();

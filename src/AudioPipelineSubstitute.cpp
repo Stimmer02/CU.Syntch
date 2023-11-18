@@ -1,5 +1,6 @@
 #include "AudioPipelineSubstitute.h"
 #include "Pipeline/Statistics/PipelineStatisticsService.h"
+#include "Synthesizer/settings.h"
 
 AudioPipelineSubstitute::AudioPipelineSubstitute(audioFormatInfo audioInfo, ushort keyCount, AKeyboardRecorder* midiInput){
     this->audioInfo = audioInfo;
@@ -120,6 +121,45 @@ void AudioPipelineSubstitute::pipelineThreadFunction(){
 
 const statistics::pipelineStatistics* AudioPipelineSubstitute::getStatistics(){
     return statisticsService->getStatistics();
+}
+
+const audioFormatInfo* AudioPipelineSubstitute::getAudioInfo(){
+    return &audioInfo;
+}
+
+const synthesizer::settings* AudioPipelineSubstitute::getSynthSettings(ushort id){
+    return synth->getSettings();
+}
+
+// template<typename T>
+void AudioPipelineSubstitute::setSynthSettings(ushort id, synthesizer::settings_name settingsName, double value){
+    static synthesizer::settings* settings = synth->getSettings();
+    switch (settingsName) {
+        case synthesizer::PITCH:
+            synth->setPitch(value);
+            settings->pitch = value;
+            break;
+
+        case synthesizer::ATTACK:
+            settings->attack.set(value, this->audioInfo.sampleRate);
+            break;
+
+        case synthesizer::SUSTAIN:
+            settings->sustain.set(value, this->audioInfo.sampleRate);
+            break;
+
+        case synthesizer::FADE:
+            settings->fade.set(value, this->audioInfo.sampleRate);
+            break;
+
+        case synthesizer::RELEASE:
+            settings->release.set(value, this->audioInfo.sampleRate);
+            break;
+
+        case synthesizer::VOLUME:
+            settings->volume = value;
+            break;
+    }
 }
 
 

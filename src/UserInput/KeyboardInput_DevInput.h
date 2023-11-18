@@ -1,6 +1,7 @@
 #ifndef KEYBOARDINPUT_DEVINPUT
 #define KEYBOARDINPUT_DEVINPUT
 
+#include <sys/types.h>
 #include <thread>
 #include <string>
 #include <fstream>
@@ -15,18 +16,23 @@ class KeyboardInput_DevInput :public IKeyboardInput{
     char init(const std::string path);
     char start();
     char stop();
-    void getPressedKeys(ushort* keyArr, ushort& count);
     bool getKeyState(ushort key);
+    const ushort* getPressedKeysArr();
+    ushort getPressedKeysCount();
+    ushort getKeyCount();
 
     const ushort keyCount;
 
     private:
     void scannerThreadFunction();
 
+    ushort* pressedKeysArr;
+    ushort pressedKeysCount;
+
     bool running;
     std::string path;
     std::fstream* inputStream;
-    bool* keyStates;
+    ushort* keyStates;
     std::thread* scannerThread;
 };
 #endif

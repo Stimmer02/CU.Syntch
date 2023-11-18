@@ -1,5 +1,4 @@
 #include "Synthesizer.h"
-#include "Synthesizer/settings.h"
 
 using namespace synthesizer;
 
@@ -9,10 +8,10 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
     settings.sampleRate = audioInfo.sampleRate;
     settings.pitch = 0;
     settings.volume = 0.1;
-    settings.attack.set(0.05, audioInfo.sampleRate);
+    settings.attack.set(0.5, audioInfo.sampleRate);
     settings.sustain.set(0, audioInfo.sampleRate);
     settings.fade.set(0, audioInfo.sampleRate);
-    settings.release.set(0.35, audioInfo.sampleRate);
+    settings.release.set(2.35, audioInfo.sampleRate);
 
     settings.maxValue = 0;
     uint a = 1;
@@ -37,7 +36,7 @@ Synthesizer::~Synthesizer(){
     delete[] notes;
 }
 
-const struct settings* Synthesizer::getSettings(){
+struct settings* Synthesizer::getSettings(){
     return &this->settings;
 }
 
@@ -68,10 +67,12 @@ char Synthesizer::setPitch(const char& value, const bool& add){
 }
 
 void Synthesizer::calculateFrequencies(){
-    for (uint i = 0; i < settings.keyCount; i++){
-        notes[i].frequency = 440.0 * std::pow(2.0, float(i+settings.pitch) / 12);
+    for (int i = 0; i < settings.keyCount; i++){
+        notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch)/12.0);
         notes[i].multiplier = PI * 2 / settings.sampleRate * notes[i].frequency;
+
     }
+    std::printf("FREQUENCY=%f\n", notes[0].frequency);
 }
 
 void Synthesizer::generateSample(pipelineAudioBuffer* audioBuffer,  const keyboardTransferBuffer* keyboardState){

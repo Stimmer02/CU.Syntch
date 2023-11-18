@@ -4,6 +4,7 @@
 #include "noteBuffer.h"
 #include "settings.h"
 #include <cmath>
+// #include <math.h>
 
 namespace synthesizer {
     class IGenerator{

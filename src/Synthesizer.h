@@ -12,9 +12,10 @@
 #include "AudioOutput/audioFormatInfo.h"
 #include "UserInput/keyboardTransferBuffer.h"
 
+// #include <mad.h>
+
 #define PI 3.1415926595
 
-//PI * 2 / sampleRate * note[i].freq
 
 namespace synthesizer {
     class Synthesizer{
@@ -22,7 +23,7 @@ namespace synthesizer {
         Synthesizer(const audioFormatInfo& audioFormatInfo, const ushort& keyCount);
         ~Synthesizer();
         void generateSample(pipelineAudioBuffer* audioBuffer, const keyboardTransferBuffer* keyboardState);
-        const struct settings* getSettings();
+        struct settings* getSettings();
         void setGenerator(generator_type type);
         char setPitch(const char& value, const bool& add = false);
 
