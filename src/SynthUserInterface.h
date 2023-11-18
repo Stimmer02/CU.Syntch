@@ -18,6 +18,8 @@ private:
 
     void drawSyntchSettings();
     void drawStatistics();
+    void drawXTimes(uint x);
+    void syntchSettingsChange(const ushort& id, const synthesizer::settings_name& settingsName, const double& value, const uint& keyID);
 
     void parseMenuSynthSetting();
     void parseMenuStatistics();
@@ -36,6 +38,8 @@ private:
 
     bool running;
     audioFormatInfo audioInfo;
+
+    uint loopDelay;
 };
 
 #endif

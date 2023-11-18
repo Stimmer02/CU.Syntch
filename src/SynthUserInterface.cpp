@@ -21,6 +21,8 @@ SynthUserInterface::SynthUserInterface(AudioPipelineSubstitute* audioPipeline, I
     parseInputMethod = &SynthUserInterface::parseMenuStatistics;
     xPosition = 0;
     yPosition = 0;
+
+    loopDelay = 1000/30;
 }
 
 SynthUserInterface::~SynthUserInterface(){
@@ -37,20 +39,16 @@ char SynthUserInterface::start(){
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    uint counter = 0;
     terminalDiscard.disableInput();
     audioPipeline->start();
     std::printf("ALL RUNNING\n");
     running = true;
 
     while (this->running){
-        std::this_thread::sleep_for(std::chrono::milliseconds(100/3));
-        counter++;
+        std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
         parseInput();
-        if (counter == 15){
-            counter = 0;
-            (*this.*renderMethod)();
-        }
+        (*this.*renderMethod)();
+
     }
     audioPipeline->stop();
     std::printf("ALL STOPPED\n");
@@ -67,13 +65,13 @@ void SynthUserInterface::parseInput(){
         return;
     }
 
-    if (this->userInput->getKeyState(KEY_LEFTCTRL)){
-        if (this->userInput->getKeyState(KEY_Q)){
+    if (userInput->getKeyState(KEY_LEFTCTRL)){
+        if (userInput->getKeyState(KEY_Q)){
             running = false;
-        } else if (this->userInput->getKeyState(KEY_1)){
+        } else if (userInput->getKeyState(KEY_1)){
             parseInputMethod = &SynthUserInterface::parseMenuStatistics;
             renderMethod = &SynthUserInterface::drawStatistics;
-        } else if (this->userInput->getKeyState(KEY_2)){
+        } else if (userInput->getKeyState(KEY_2)){
             parseInputMethod = &SynthUserInterface::parseMenuSynthSetting;
             renderMethod = &SynthUserInterface::drawSyntchSettings;
         }
@@ -86,7 +84,7 @@ void SynthUserInterface::parseInput(){
 
 void SynthUserInterface::drawSyntchSettings(){
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
-    static char ansi[8][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
+    static char ansi[8][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
     static int lastYPosition = 0;
     std::strcpy(ansi[lastYPosition], "\33[0m");
     std::strcpy(ansi[yPosition], "\33[7m");
@@ -127,7 +125,9 @@ void SynthUserInterface::drawStatistics(){
 void SynthUserInterface::parseMenuSynthSetting(){
     static const ushort* pressedKeys = userInput->getPressedKeysArr();
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
-    const int maxY = 6;
+    static const int maxY = 6;
+    static const uint inputDelay = loopDelay/1000;
+
     switch (pressedKeys[0]){
         case KEY_ENTER:
 
@@ -136,12 +136,20 @@ void SynthUserInterface::parseMenuSynthSetting(){
         case KEY_UP:
             if (yPosition > 0){
                 yPosition--;
+                while (userInput->getKeyState(KEY_UP)){
+                    std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
+                    (*this.*renderMethod)();
+                }
             }
             break;
 
         case KEY_DOWN:
             if (yPosition < maxY){
                 yPosition++;
+                while (userInput->getKeyState(KEY_DOWN)){
+                    std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
+                    (*this.*renderMethod)();
+                }
             }
             break;
 
@@ -156,19 +164,19 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     break;
 
                 case 2:
-                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw - 0.01);
+                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw - 0.1);
                     break;
 
                 case 3:
-                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw - 0.01);
+                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw - 0.1);
                     break;
 
                 case 4:
-                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw - 0.01);
+                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw - 0.1);
                     break;
 
                 case 5:
-                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw - 0.01);
+                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw - 0.1);
                     break;
 
                 case 6:
@@ -187,19 +195,19 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     break;
 
                 case 2:
-                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw + 0.01);
+                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw + 0.1);
                     break;
 
                 case 3:
-                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw + 0.01);
+                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw + 0.1);
                     break;
 
                 case 4:
-                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw + 0.01);
+                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw + 0.1);
                     break;
 
                 case 5:
-                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw + 0.01);
+                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw + 0.1);
                     break;
 
                 case 6:
@@ -207,6 +215,14 @@ void SynthUserInterface::parseMenuSynthSetting(){
 
             }
             break;
+    }
+}
+
+
+void SynthUserInterface::drawXTimes(uint x){
+    for (uint i = 0; i < x; i++){
+        std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
+        (*this.*renderMethod)();
     }
 }
 
