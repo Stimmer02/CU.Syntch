@@ -8,7 +8,7 @@ void updateStatistics(const statistics::pipelineStatistics* pStatistics, const a
 
 int main(int argc, char** argv){
 
-    const ushort keyCount = 128;
+    const ushort keyCount = 32;
 
     if (argc == 1){
         std::printf("USAGE: %s <event ID>\n", argv[0]);
@@ -26,8 +26,12 @@ int main(int argc, char** argv){
     audioInfo.bitDepth = 16;
     audioInfo.channels = 1;
     audioInfo.littleEndian = true;
-    audioInfo.sampleRate = 48000;
+    audioInfo.sampleRate = 16000;
     audioInfo.sampleSize = 1024;
+
+    audioInfo.littleEndian = true;
+    audioInfo.byteRate = audioInfo.sampleRate * audioInfo.channels * audioInfo.bitDepth/8;
+    audioInfo.blockAlign = audioInfo.channels * audioInfo.bitDepth/8;
 
     InputMap* keyboardMap = new InputMap("./incrementalKeyboardMap.txt");
 

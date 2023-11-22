@@ -19,6 +19,7 @@
 #include "Pipeline/BufferConverter/BufferConverter_Mono32.h"
 #include "Pipeline/Statistics/PipelineStatisticsService.h"
 #include "Pipeline/Statistics/pipelineStatistics.h"
+#include "AudioOutput/AudioRecorder.h"
 
 
 class AudioPipelineSubstitute{
@@ -31,6 +32,7 @@ public:
 
     void startRecording();
     void stopRecording();
+    bool isRecording();
 
     const statistics::pipelineStatistics* getStatistics();
 
@@ -58,6 +60,7 @@ private:
     pipelineAudioBuffer* pipelineBuffer;
     audioBuffer* buffer;
     IBufferConverter* bufferConverter;
+    AudioRecorder audioRecorder;
 
     bool running;
     bool recording;

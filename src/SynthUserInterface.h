@@ -18,11 +18,14 @@ private:
 
     void drawSyntchSettings();
     void drawStatistics();
+    void drawRecordingMenu();
+
     void drawXTimes(uint x);
     void syntchSettingsChange(const ushort& id, const synthesizer::settings_name& settingsName, const double& value, const uint& keyID);
 
     void parseMenuSynthSetting();
     void parseMenuStatistics();
+    void parseRecordingMenu();
 
     typedef void (SynthUserInterface::*methodPtr)();
     methodPtr renderMethod;

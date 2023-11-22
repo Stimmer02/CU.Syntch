@@ -75,6 +75,7 @@ void AudioPipelineSubstitute::stop(){
         return;
     }
     running = false;
+    stopRecording();
     if (pipelineThread->joinable()){
         pipelineThread->join();
     }
@@ -85,6 +86,9 @@ void AudioPipelineSubstitute::startRecording(){
     if (recording) {
         return;
     }
+    if (audioRecorder.init(audioInfo, "test.wav")){
+        return;
+    }
     recording = true;
 }
 
@@ -93,7 +97,27 @@ void AudioPipelineSubstitute::stopRecording(){
         return;
     }
     recording = false;
+    audioRecorder.closeFile();
 }
+
+bool AudioPipelineSubstitute::isRecording(){
+    return recording;
+}
+
+void printLastBuffer(const audioBuffer* buff2){
+    static char space1[51] = "                                                  ";
+    static char space2[51] = "                                                  ";
+
+    for (uint i = 0; i < buff2->size; i++){
+        char fill = buff2->buff[i]*50/255;
+        space1[fill] = 0x0;
+        space2[50 - fill] = 0x0;
+        std::printf("%3d | %4d | %s*%s|\n", buff2->buff[i], buff2->buff[i]-127, space1, space2);
+        space1[fill] = ' ';
+        space2[50 - fill] = ' ';
+    }
+}
+
 
 void AudioPipelineSubstitute::pipelineThreadFunction(){
     ulong sampleTimeLength = audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate;
@@ -115,7 +139,11 @@ void AudioPipelineSubstitute::pipelineThreadFunction(){
         synth->generateSample(pipelineBuffer, keyboardState);
         bufferConverter->toPCM(pipelineBuffer, buffer);
         statisticsService->loopWorkEnd();
+        // printLastBuffer(buffer);
         audioOutput->playBuffer(buffer);
+        if (recording){
+            audioRecorder.saveBuffer(buffer);
+        }
     }
 }
 
@@ -161,5 +189,6 @@ void AudioPipelineSubstitute::setSynthSettings(ushort id, synthesizer::settings_
             break;
     }
 }
+
 
 

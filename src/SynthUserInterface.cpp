@@ -1,12 +1,6 @@
 #include "SynthUserInterface.h"
-#include "Synthesizer.h"
-#include "Synthesizer/settings.h"
-#include <algorithm>
 #include <linux/input-event-codes.h>
 
-void updateStatistics(const statistics::pipelineStatistics* pStatistics, const audioFormatInfo& audioInfo){
-    std::printf("\33[2J\33[1;1H\33[0mLoop length\n\33[32m   goal: %lius\n   avg:  %.2lfus\n   max:  %lius\n   lat:  %+.2lfus\n\33[0mWork Length\n\33[32m   avg:  %.2lfus\n   max:  %lius\n\33[0mWork Load\n\33[32m   avg:  %3.4lf%%\n   max:  %3.4lf%%\n\33[0mUser Input Latency:\33[32m %.2lfms\n\n\33[0mFormat Info\n   bit depth:   %i b\n   channels:    %i\n   sample rate: %i Hz\n   sample size: %i\n\n\33[31m", pStatistics->loopLength, pStatistics->averageLoopLength, pStatistics->maxLoopLength, pStatistics->averageLoopLatency, pStatistics->averageWorkTime, pStatistics->maxWorkTime, pStatistics->averageLoad, pStatistics->maxLoad, pStatistics->userInputLatency/1000, audioInfo.bitDepth, audioInfo.channels, audioInfo.sampleRate, audioInfo.sampleSize);
-}
 
 SynthUserInterface::SynthUserInterface(AudioPipelineSubstitute* audioPipeline, IKeyboardInput* userInput){
     this->audioPipeline = audioPipeline;
@@ -74,13 +68,23 @@ void SynthUserInterface::parseInput(){
         } else if (userInput->getKeyState(KEY_2)){
             parseInputMethod = &SynthUserInterface::parseMenuSynthSetting;
             renderMethod = &SynthUserInterface::drawSyntchSettings;
+        } else if (userInput->getKeyState(KEY_SPACE)){
+            while (userInput->getKeyState(KEY_SPACE)){
+                std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
+                (*this.*renderMethod)();
+            }
+            if (audioPipeline->isRecording()){
+                audioPipeline->stopRecording();
+            } else {
+                audioPipeline->startRecording();
+            }
         }
     } else {
         (*this.*parseInputMethod)();
     }
 }
 
-
+const std::string recordingMessage[2] = {"\033[1mNOT RECORDING\33[0m", "\033[1m\33[31m ⏺ RECORDING\33[0m"};
 
 void SynthUserInterface::drawSyntchSettings(){
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
@@ -92,7 +96,8 @@ void SynthUserInterface::drawSyntchSettings(){
 
     std::printf(
     "\33[2J\33[1;1H"
-    "\33[0m\033[1mSTATISTICS┃\033[7mSETTINGS\33[0m\n\n"
+    "\33[0m\033[1mSTATISTICS┃\033[7mSETTINGS\33[0m\n"
+    "%s\n\n"
     "%s  Pitch: %+2i\n"
     "%s Volume: %2.2f\n"
     "%s Attack: %2.2f\n"
@@ -100,15 +105,16 @@ void SynthUserInterface::drawSyntchSettings(){
     "%s   Fade: %2.2f\n"
     "%sRelease: %2.2f\n\n"
     "%sGenerator type:\n"
-    "%s\n",
-    ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->attack.raw, ansi[3], settings->sustain.raw, ansi[4], settings->fade.raw, ansi[5], settings->release.raw, ansi[6], ansi[7]);
+    "%s\n\n\33[31m",
+    recordingMessage[audioPipeline->isRecording()].c_str(), ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->attack.raw, ansi[3], settings->sustain.raw, ansi[4], settings->fade.raw, ansi[5], settings->release.raw, ansi[6], ansi[7]);
 }
 
 void SynthUserInterface::drawStatistics(){
     const statistics::pipelineStatistics* pStatistics = audioPipeline->getStatistics();
     std::printf(
     "\33[2J\33[1;1H"
-    "\33[0m\033[7m\033[1mSTATISTICS\33[0m\033[1m┃SETTINGS\33[0m\n\n"
+    "\33[0m\033[7m\033[1mSTATISTICS\33[0m\033[1m┃SETTINGS\33[0m\n"
+    "%s\n\n"
     "Loop length\n"
     "\33[32m   goal: %lius\n   avg:  %.2lfus\n   max:  %lius\n   lat:  %+.2lfus\n"
     "\33[0mWork Length\n"
@@ -117,8 +123,8 @@ void SynthUserInterface::drawStatistics(){
     "\33[32m   avg:  %3.4lf%%\n   max:  %3.4lf%%\n"
     "\33[0mUser Input Latency:\33[32m %.2lfms\n\n"
     "\33[0mFormat Info\n"
-    "   bit depth:   %i b\n   channels:    %i\n   sample rate: %i Hz\n   sample size: %i\n\n\33[31m"
-    , pStatistics->loopLength, pStatistics->averageLoopLength, pStatistics->maxLoopLength, pStatistics->averageLoopLatency, pStatistics->averageWorkTime, pStatistics->maxWorkTime, pStatistics->averageLoad, pStatistics->maxLoad, pStatistics->userInputLatency/1000, audioInfo.bitDepth, audioInfo.channels, audioInfo.sampleRate, audioInfo.sampleSize);
+    "   bit depth:   %i b\n   channels:    %i\n   sample rate: %i Hz\n   sample size: %i\n\n\33[31m",
+    recordingMessage[audioPipeline->isRecording()].c_str(), pStatistics->loopLength, pStatistics->averageLoopLength, pStatistics->maxLoopLength, pStatistics->averageLoopLatency, pStatistics->averageWorkTime, pStatistics->maxWorkTime, pStatistics->averageLoad, pStatistics->maxLoad, pStatistics->userInputLatency/1000, audioInfo.bitDepth, audioInfo.channels, audioInfo.sampleRate, audioInfo.sampleSize);
 }
 
 

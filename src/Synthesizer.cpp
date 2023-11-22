@@ -72,7 +72,6 @@ void Synthesizer::calculateFrequencies(){
         notes[i].multiplier = PI * 2 / settings.sampleRate * notes[i].frequency;
 
     }
-    std::printf("FREQUENCY=%f\n", notes[0].frequency);
 }
 
 void Synthesizer::generateSample(pipelineAudioBuffer* audioBuffer,  const keyboardTransferBuffer* keyboardState){
