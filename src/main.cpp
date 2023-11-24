@@ -38,15 +38,18 @@ int main(int argc, char** argv){
     if (keyboardInput->init(keyboardStreamLocation, audioInfo.sampleSize, audioInfo.sampleRate, keyboardMap)){
         return 2;
     }
+
     if (userInput->init(keyboardStreamLocation)){
         return 3;
     }
-    AudioPipelineSubstitute* pipeline = new AudioPipelineSubstitute(audioInfo, keyCount, keyboardInput);
-    SynthUserInterface userInterface(pipeline, userInput);
+
+    SynthUserInterface userInterface(audioInfo, keyboardInput, userInput, keyCount);
 
     userInterface.start();
 
     delete keyboardMap;
+    delete keyboardInput;
+    delete userInput;
 
 
     return 0;

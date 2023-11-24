@@ -1,6 +1,8 @@
 #ifndef _SYNTHUSERINTERFACE_H
 #define _SYNTHUSERINTERFACE_H
 
+#include "AudioOutput/audioFormatInfo.h"
+#include "UserInput/AKeyboardRecorder.h"
 #include "UserInput/IKeyboardInput.h"
 #include "AudioPipelineSubstitute.h"
 #include "UserInput/TerminalInputDiscard.h"
@@ -8,7 +10,7 @@
 
 class SynthUserInterface{
 public:
-    SynthUserInterface(AudioPipelineSubstitute* audioPipeline, IKeyboardInput* userInput);
+    SynthUserInterface(audioFormatInfo audioInfo, AKeyboardRecorder* keyboardInput, IKeyboardInput* userInput, ushort keyCount);
     ~SynthUserInterface();
 
     char start();
@@ -19,6 +21,7 @@ private:
     void drawSyntchSettings();
     void drawStatistics();
     void drawRecordingMenu();
+    void drawFormatSettings();
     bool recordingIndicatorBlink;
 
     void drawXTimes(uint x);
@@ -27,6 +30,7 @@ private:
 
     void parseMenuSynthSetting();
     void parseMenuStatistics();
+    void parseFormatSettings();
     void parseRecordingMenu();
 
     typedef void (SynthUserInterface::*methodPtr)();
@@ -38,12 +42,16 @@ private:
 
 
     IKeyboardInput* userInput;
+    AKeyboardRecorder* keyboardInput;
     AudioPipelineSubstitute* audioPipeline;
     TerminalInputDiscard terminalDiscard;
 
     bool running;
     bool toUpdate;
+    bool fromatSettingsApplied;
     audioFormatInfo audioInfo;
+    audioFormatInfo unappliedAudioInfo;
+    ushort keyCount;
 
     uint loopDelay;
 };

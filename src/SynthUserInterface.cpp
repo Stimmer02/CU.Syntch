@@ -1,12 +1,16 @@
 #include "SynthUserInterface.h"
+#include "AudioPipelineSubstitute.h"
 #include "Synthesizer/IGenerator.h"
 #include <linux/input-event-codes.h>
 
 
-SynthUserInterface::SynthUserInterface(AudioPipelineSubstitute* audioPipeline, IKeyboardInput* userInput){
-    this->audioPipeline = audioPipeline;
+SynthUserInterface::SynthUserInterface(audioFormatInfo audioInfo, AKeyboardRecorder* keyboardInput, IKeyboardInput* userInput, ushort keyCount){
     this->userInput = userInput;
-     if (userInput->start()){
+    this->keyboardInput = keyboardInput;
+    this->keyCount = keyCount;
+
+    audioPipeline = new AudioPipelineSubstitute(audioInfo, keyCount, keyboardInput);
+    if (userInput->start()){
         delete userInput;
         userInput = nullptr;
     }
@@ -19,10 +23,12 @@ SynthUserInterface::SynthUserInterface(AudioPipelineSubstitute* audioPipeline, I
 
     recordingIndicatorBlink = 0;
     loopDelay = 1000/30;
+
+    fromatSettingsApplied = true;
 }
 
 SynthUserInterface::~SynthUserInterface(){
-    delete userInput;
+    delete audioPipeline;
 }
 
 char SynthUserInterface::start(){
@@ -32,7 +38,8 @@ char SynthUserInterface::start(){
         return 1;
     }
 
-    audioInfo = *this->audioPipeline->getAudioInfo();
+    audioInfo = *audioPipeline->getAudioInfo();
+    unappliedAudioInfo = *audioPipeline->getAudioInfo();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
@@ -40,6 +47,7 @@ char SynthUserInterface::start(){
     audioPipeline->start();
     std::printf("ALL RUNNING\n");
     running = true;
+    toUpdate = true;
 
     while (this->running){
         std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
@@ -56,7 +64,6 @@ char SynthUserInterface::start(){
         if (toUpdate){
             (*this.*renderMethod)();
         }
-
     }
     audioPipeline->stop();
     std::printf("ALL STOPPED\n");
@@ -80,9 +87,17 @@ void SynthUserInterface::parseInput(){
         } else if (userInput->getKeyState(KEY_1)){
             parseInputMethod = &SynthUserInterface::parseMenuStatistics;
             renderMethod = &SynthUserInterface::drawStatistics;
+            yPosition = 0;
         } else if (userInput->getKeyState(KEY_2)){
             parseInputMethod = &SynthUserInterface::parseMenuSynthSetting;
             renderMethod = &SynthUserInterface::drawSyntchSettings;
+            yPosition = 0;
+
+        }  else if (userInput->getKeyState(KEY_3)){
+            parseInputMethod = &SynthUserInterface::parseFormatSettings;
+            renderMethod = &SynthUserInterface::drawFormatSettings;
+            yPosition = 0;
+
         } else if (userInput->getKeyState(KEY_SPACE)){
             waitUntilKeyReleased(KEY_SPACE);
             if (audioPipeline->isRecording()){
@@ -112,7 +127,7 @@ void SynthUserInterface::drawSyntchSettings(){
 
     std::printf(
     "\33[2J\33[1;1H"
-    "\33[0m\033[1mSTATISTICS┃\033[7mSETTINGS\33[0m\n"
+    "\33[0m\033[1mSTATISTICS┃\033[7mSYNTH SETTINGS\33[0m\033[1m┃AUDIO FORMAT\33[0m\n"
     "%s\n\n"
     "%s  Pitch: %+2i\n"
     "%s Volume: %2.2f\n"
@@ -130,7 +145,7 @@ void SynthUserInterface::drawStatistics(){
     const statistics::pipelineStatistics* pStatistics = audioPipeline->getStatistics();
     std::printf(
     "\33[2J\33[1;1H"
-    "\33[0m\033[7m\033[1mSTATISTICS\33[0m\033[1m┃SETTINGS\33[0m\n"
+    "\33[0m\033[7m\033[1mSTATISTICS\33[0m\033[1m┃SYNTH SETTINGS┃AUDIO FORMAT\33[0m\n"
     "%s\n\n"
     "Loop length\n"
     "\33[32m   goal: %lius\n   avg:  %.2lfus\n   max:  %lius\n   lat:  %+.2lfus\n"
@@ -144,6 +159,27 @@ void SynthUserInterface::drawStatistics(){
     recordingMessage[audioPipeline->isRecording()+recordingIndicatorBlink].c_str(), pStatistics->loopLength, pStatistics->averageLoopLength, pStatistics->maxLoopLength, pStatistics->averageLoopLatency, pStatistics->averageWorkTime, pStatistics->maxWorkTime, pStatistics->averageLoad, pStatistics->maxLoad, pStatistics->userInputLatency/1000, audioInfo.bitDepth, audioInfo.channels, audioInfo.sampleRate, audioInfo.sampleSize);
 }
 
+void SynthUserInterface::drawFormatSettings(){
+    static const std::string applyMessage[2] = {"settings not applied\n\n", ""};
+    static char ansi[6][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
+    static int lastYPosition = 0;
+    std::strcpy(ansi[lastYPosition], "\33[0m");
+    std::strcpy(ansi[yPosition], "\33[7m");
+    lastYPosition = yPosition;
+    std::printf(
+    "\33[2J\33[1;1H"
+    "\33[0m\033[1mSTATISTICS┃SYNTH SETTINGS┃\033[7mAUDIO FORMAT\33[0m\n"
+    "%s\n\n"
+    "%s  bit depth: %i b\n"
+    "%s   channels: %i\n"
+    "%ssample rate: %i Hz\n"
+    "%ssample size: %i\n\n"
+    "%sAPPLY\n"
+    "%sRESET\n\n"
+    "\33[0m\33[31m"
+    "%s",
+    recordingMessage[audioPipeline->isRecording()+recordingIndicatorBlink].c_str(), ansi[0], unappliedAudioInfo.bitDepth, ansi[1], unappliedAudioInfo.channels, ansi[2], unappliedAudioInfo.sampleRate, ansi[3], unappliedAudioInfo.sampleSize, ansi[4], ansi[5], applyMessage[fromatSettingsApplied].c_str());
+}
 
 void SynthUserInterface::parseMenuSynthSetting(){
     static const ushort* pressedKeys = userInput->getPressedKeysArr();
@@ -246,6 +282,200 @@ void SynthUserInterface::parseMenuSynthSetting(){
     }
 }
 
+template<typename T>
+T findIndex(const T arr[], uint conut, T value){
+    for (uint i = 0; i < conut; i++){
+        if (arr[i] == value){
+            return i;
+        }
+    }
+    return 0;
+}
+
+void SynthUserInterface::parseFormatSettings(){
+    static const ushort* pressedKeys = userInput->getPressedKeysArr();
+    static const int maxY = 5;
+
+    static const uint sampleRateOptionsCount = 9;
+    static const uint sampleRateOptions[sampleRateOptionsCount] = {
+        8000,
+        16000,
+        24000,
+        32000,
+        44100,
+        48000,
+        96000,
+        128000,
+        1920000,
+    };
+    static uint sampleRateCurrent = findIndex<uint>(sampleRateOptions, sampleRateOptionsCount, audioInfo.sampleRate);
+
+    static const uint sampleSizeOptionsCount = 12;
+    static const uint sampleSizeOptions[sampleSizeOptionsCount] = {
+        16,
+        32,
+        64,
+        128,
+        256,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768,
+    };
+    static uint sampleSizeCurrent = findIndex<uint>(sampleSizeOptions, sampleSizeOptionsCount, audioInfo.sampleSize);
+
+
+    static const uint bitDepthOptionsCount = 4;
+    static const uchar bitDepthOptions[bitDepthOptionsCount] = {
+        8,
+        16,
+        24,
+        32,
+    };
+    static uint bitDepthCurrent = findIndex<uchar>(bitDepthOptions, bitDepthOptionsCount, audioInfo.bitDepth);
+
+    static const uchar channelsOptionsCount = 2;
+    static uchar channelsCurrent = audioInfo.channels;
+
+    switch (pressedKeys[0]){
+        case KEY_ENTER:
+            switch (yPosition) {
+                case 4:
+                    if (fromatSettingsApplied == false){
+                        audioInfo = unappliedAudioInfo;
+                        audioPipeline->stop();
+                        delete audioPipeline;
+                        keyboardInput->reInit(audioInfo.sampleSize, audioInfo.sampleRate);
+                        audioPipeline = new AudioPipelineSubstitute(audioInfo, keyCount, keyboardInput);
+                        audioPipeline->start();
+                        fromatSettingsApplied = true;
+                    }
+                    waitUntilKeyReleased(KEY_ENTER);
+                    break;
+
+                case 5:
+                    if (fromatSettingsApplied == false){
+                        unappliedAudioInfo = audioInfo;
+                        sampleRateCurrent = findIndex<uint>(sampleRateOptions, sampleRateOptionsCount, audioInfo.sampleRate);
+                        sampleSizeCurrent = findIndex<uint>(sampleSizeOptions, sampleSizeOptionsCount, audioInfo.sampleSize);
+                        bitDepthCurrent = findIndex<uchar>(bitDepthOptions, bitDepthOptionsCount, audioInfo.bitDepth);
+                        channelsCurrent = audioInfo.channels;
+                        fromatSettingsApplied = true;
+                    }
+                    waitUntilKeyReleased(KEY_ENTER);
+                    break;
+            }
+            break;
+
+        case KEY_UP:
+            if (yPosition > 0){
+                yPosition--;
+                waitUntilKeyReleased(KEY_UP);
+            }
+            break;
+
+        case KEY_DOWN:
+            if (yPosition < maxY){
+                yPosition++;
+                waitUntilKeyReleased(KEY_DOWN);
+            }
+            break;
+
+        case KEY_LEFT:
+            switch (yPosition) {
+                case 0:
+                    if (bitDepthCurrent > 0){
+                        bitDepthCurrent--;
+                        unappliedAudioInfo.bitDepth = bitDepthOptions[bitDepthCurrent];
+                        fromatSettingsApplied = false;
+                    }
+                    waitUntilKeyReleased(KEY_LEFT);
+                    break;
+
+                case 1:
+                    if (channelsCurrent > 1){
+                        channelsCurrent--;
+                        unappliedAudioInfo.channels = channelsCurrent;
+                        fromatSettingsApplied = false;
+                    }
+                    waitUntilKeyReleased(KEY_LEFT);
+                    break;
+
+                case 2:
+                    if (sampleRateCurrent > 0){
+                        sampleRateCurrent--;
+                        unappliedAudioInfo.sampleRate = sampleRateOptions[sampleRateCurrent];
+                        fromatSettingsApplied = false;
+                    }
+                    waitUntilKeyReleased(KEY_LEFT);
+                    break;
+
+                case 3:
+                    if (sampleSizeCurrent > 0){
+                        sampleSizeCurrent--;
+                        unappliedAudioInfo.sampleSize = sampleSizeOptions[sampleSizeCurrent];
+                        fromatSettingsApplied = false;
+                    }
+                    waitUntilKeyReleased(KEY_LEFT);
+                    break;
+            }
+            break;
+
+        case KEY_RIGHT:
+            switch (yPosition) {
+                case 0:
+                    if (bitDepthCurrent < bitDepthOptionsCount-1){
+                        bitDepthCurrent++;
+                        unappliedAudioInfo.bitDepth = bitDepthOptions[bitDepthCurrent];
+                        fromatSettingsApplied = false;
+                    }
+                    waitUntilKeyReleased(KEY_RIGHT);
+                    break;
+
+                case 1:
+                    if (channelsCurrent < channelsOptionsCount-1){
+                        channelsCurrent++;
+                        unappliedAudioInfo.channels = channelsCurrent;
+                        fromatSettingsApplied = false;
+                    }
+                    waitUntilKeyReleased(KEY_RIGHT);
+                    break;
+
+                case 2:
+                    if (sampleRateCurrent < sampleRateOptionsCount-1){
+                        sampleRateCurrent++;
+                        unappliedAudioInfo.sampleRate = sampleRateOptions[sampleRateCurrent];
+                        fromatSettingsApplied = false;
+                    }
+                    waitUntilKeyReleased(KEY_RIGHT);
+                    break;
+
+                case 3:
+                    if (sampleSizeCurrent < sampleSizeOptionsCount-1){
+                        sampleSizeCurrent++;
+                        unappliedAudioInfo.sampleSize = sampleSizeOptions[sampleSizeCurrent];
+                        fromatSettingsApplied = false;
+                    }
+                    waitUntilKeyReleased(KEY_RIGHT);
+                    break;
+
+            }
+            break;
+    }
+}
+
+void SynthUserInterface::parseMenuStatistics(){
+    // static const ushort* pressedKeys = userInput->getPressedKeysArr();
+    // switch (pressedKeys[0]){
+    //     case KEY_ENTER:
+    //
+    //         break;
+    // }
+}
+
 void SynthUserInterface::waitUntilKeyReleased(ushort key){
     while (userInput->getKeyState(key)){
         std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
@@ -263,11 +493,5 @@ void SynthUserInterface::drawXTimes(uint x){
     }
 }
 
-void SynthUserInterface::parseMenuStatistics(){
-    // static const ushort* pressedKeys = userInput->getPressedKeysArr();
-    // switch (pressedKeys[0]){
-    //     case KEY_ENTER:
-    //
-    //         break;
-    // }
-}
+
+

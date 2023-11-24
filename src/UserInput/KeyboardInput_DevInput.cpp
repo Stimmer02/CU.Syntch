@@ -19,6 +19,7 @@ KeyboardInput_DevInput::~KeyboardInput_DevInput(){
         }
     }
     if (inputStream != nullptr){
+        inputStream->close();
         delete inputStream;
     }
     delete[] keyStates;
@@ -92,7 +93,7 @@ char KeyboardInput_DevInput::stop(){
     if (scannerThread->joinable()){
         scannerThread->join();
     }
-    inputStream->close();
+    // inputStream->close();
     delete scannerThread;
     scannerThread = nullptr;
     return 0;

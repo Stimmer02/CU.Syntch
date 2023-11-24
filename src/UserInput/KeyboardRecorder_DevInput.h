@@ -15,6 +15,7 @@ class KeyboardRecorder_DevInput :public AKeyboardRecorder {
     KeyboardRecorder_DevInput(const ushort& keyCount);
     ~KeyboardRecorder_DevInput();
     char init(const std::string path, const uint& sampleSize, const uint& sampleFrequency, InputMap* keyboardMap);
+    char reInit(const uint& sampleSize, const uint& sampleFrequency);
     char start();
     char stop();
     bool isRunning();

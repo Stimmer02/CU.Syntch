@@ -16,6 +16,7 @@ KeyboardRecorder_DevInput::~KeyboardRecorder_DevInput(){
         }
     }
     if (inputStream != nullptr){
+        inputStream->close();
         delete inputStream;
     }
 
@@ -26,7 +27,7 @@ KeyboardRecorder_DevInput::~KeyboardRecorder_DevInput(){
 
 char KeyboardRecorder_DevInput::init(const std::string path, const uint& sampleSize, const uint& sampleRate, InputMap* keyboardMap){
     if (running){
-        std::fprintf(stderr, "ERR: KeyboardRecorder_DevInput::initialize CANNOT INITAILIZE WHILE READIONG THREAD IS RUNNING\n");
+        std::fprintf(stderr, "ERR: KeyboardRecorder_DevInput::init CANNOT INITAILIZE WHILE READIONG THREAD IS RUNNING\n");
         return -1;
     }
 
@@ -45,17 +46,36 @@ char KeyboardRecorder_DevInput::init(const std::string path, const uint& sampleS
     if (!inputStream->is_open()){
         delete inputStream;
         inputStream = nullptr;
-        std::fprintf(stderr, "ERR: KeyboardRecorder_DevInput::initialize FILE \"%s\" DOES NOT EXIST OR USER DOES NOT HAVE PERMISSIONS TO READ IT\n", path.c_str());
+        std::fprintf(stderr, "ERR: KeyboardRecorder_DevInput::init FILE \"%s\" DOES NOT EXIST OR USER DOES NOT HAVE PERMISSIONS TO READ IT\n", path.c_str());
         return -2;
     }
     if (inputStream->bad()){
         delete inputStream;
         inputStream = nullptr;
-        std::fprintf(stderr, "ERR: KeyboardRecorder_DevInput::initialize BAD BIT IS SET AFTER OPPENING FILE \"%s\"\n", path.c_str());
+        std::fprintf(stderr, "ERR: KeyboardRecorder_DevInput::init BAD BIT IS SET AFTER OPPENING FILE \"%s\"\n", path.c_str());
         return -3;
     }
     this->keyboardMap = keyboardMap;
     this->path = path;
+    return 0;
+}
+
+char KeyboardRecorder_DevInput::reInit(const uint& sampleSize, const uint& sampleRate){
+    if (running){
+        std::fprintf(stderr, "ERR: KeyboardRecorder_DevInput::reInit CANNOT INITAILIZE WHILE READIONG THREAD IS RUNNING\n");
+        return -1;
+    }
+
+    if (inputStream == nullptr){
+        std::fprintf(stderr, "ERR: KeyboardRecorder_DevInput::reInit CANNOT RE-INITAILIZE WITHOUT INITIALIZATION\n");
+        return -2;
+    }
+
+    this->sampleSize = sampleSize;
+    this->sampleRate = sampleRate;
+
+    delete buffer;
+    buffer = new KeyboardDoubleBuffer(sampleSize, keyCount);
     return 0;
 }
 
@@ -71,6 +91,15 @@ char KeyboardRecorder_DevInput::start(){
     if (scannerThread != nullptr){
         delete scannerThread;
     }
+    if (inputStream->is_open() == false){
+        // inputStream->open(path);
+        if (inputStream->bad()){
+            delete inputStream;
+            inputStream = nullptr;
+            std::fprintf(stderr, "ERR: KeyboardRecorder_DevInput::start BAD BIT IS SET AFTER OPPENING FILE \"%s\"\n", path.c_str());
+            return -3;
+        }
+    }
     scannerThread = new std::thread(&KeyboardRecorder_DevInput::scannerThreadFunction, this);
     return 0;
 }
@@ -84,7 +113,7 @@ char KeyboardRecorder_DevInput::stop(){
     if (scannerThread->joinable()){
         scannerThread->join();
     }
-    inputStream->close();
+    // inputStream->close();
     delete scannerThread;
     scannerThread = nullptr;
     return 0;
