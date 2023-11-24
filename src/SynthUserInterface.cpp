@@ -1,4 +1,5 @@
 #include "SynthUserInterface.h"
+#include "Synthesizer/IGenerator.h"
 #include <linux/input-event-codes.h>
 
 
@@ -87,6 +88,8 @@ void SynthUserInterface::parseInput(){
 const std::string recordingMessage[2] = {"\033[1mNOT RECORDING\33[0m", "\033[1m\33[31m ⏺ RECORDING\33[0m"};
 
 void SynthUserInterface::drawSyntchSettings(){
+    static const std::string synthNames[3] = {"SINE", "SQARE", "TRIANGLE"};
+    static uint synthType = synthesizer::SINE;
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
     static char ansi[8][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
     static int lastYPosition = 0;
@@ -104,9 +107,9 @@ void SynthUserInterface::drawSyntchSettings(){
     "%sSustain: %2.2f\n"
     "%s   Fade: %2.2f\n"
     "%sRelease: %2.2f\n\n"
-    "%sGenerator type:\n"
+    "%sGenerator type: %s\n"
     "%s\n\n\33[31m",
-    recordingMessage[audioPipeline->isRecording()].c_str(), ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->attack.raw, ansi[3], settings->sustain.raw, ansi[4], settings->fade.raw, ansi[5], settings->release.raw, ansi[6], ansi[7]);
+    recordingMessage[audioPipeline->isRecording()].c_str(), ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->attack.raw, ansi[3], settings->sustain.raw, ansi[4], settings->fade.raw, ansi[5], settings->release.raw, ansi[6], synthNames[synthType].c_str(), ansi[7]);
 }
 
 void SynthUserInterface::drawStatistics(){

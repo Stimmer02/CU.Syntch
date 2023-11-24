@@ -4,11 +4,11 @@
 typedef unsigned int uint;
 
 struct pipelineAudioBuffer {
-    int* buffer;
+    double* buffer;
     const uint size;
 
     pipelineAudioBuffer(const uint& sampleSize) : size(sampleSize){
-        buffer = new int[sampleSize];
+        buffer = new double[sampleSize];
     }
     ~pipelineAudioBuffer(){
         delete[] buffer;

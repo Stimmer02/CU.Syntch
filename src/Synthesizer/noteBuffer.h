@@ -6,7 +6,7 @@ typedef unsigned char uchar;
 
 namespace synthesizer{
     struct noteBuffer{
-        int* buffer;
+        double* buffer;
         // uchar* state;
         float lastAttack;
         uchar velocity;
@@ -23,7 +23,7 @@ namespace synthesizer{
             lastAttack = 1;
         }
         noteBuffer(const uint& bufferSize){
-            buffer = new int[bufferSize];
+            buffer = new double[bufferSize];
             // state = new uchar[bufferSize];
         }
         void init(const uint& bufferSize){
@@ -31,7 +31,7 @@ namespace synthesizer{
                 delete[] buffer;
                 // delete[] state;
             }
-            buffer = new int[bufferSize];
+            buffer = new double[bufferSize];
             // state = new uchar[bufferSize];
         }
         ~noteBuffer(){

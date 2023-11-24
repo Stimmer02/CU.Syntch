@@ -8,10 +8,10 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
     settings.sampleRate = audioInfo.sampleRate;
     settings.pitch = 0;
     settings.volume = 0.1;
-    settings.attack.set(0.5, audioInfo.sampleRate);
+    settings.attack.set(0.2, audioInfo.sampleRate);
     settings.sustain.set(0, audioInfo.sampleRate);
     settings.fade.set(0, audioInfo.sampleRate);
-    settings.release.set(2.35, audioInfo.sampleRate);
+    settings.release.set(1.35, audioInfo.sampleRate);
 
     settings.maxValue = 0;
     uint a = 1;
@@ -41,18 +41,18 @@ struct settings* Synthesizer::getSettings(){
 }
 
 void Synthesizer::setGenerator(generator_type type){
-    // delete soundGenerator;
-    // switch (type) {
-    //     case SINE:
-    //         soundGenerator = new Generator_Sine();
-    //         break;
-    //     case SQUARE:
-    //         soundGenerator = new Generator_Square();
-    //         break;
-    //     case TRIANGLE:
-    //         soundGenerator = new Generator_Triangle();
-    //         break;
-    // }
+    delete soundGenerator;
+    switch (type) {
+        case SINE:
+            soundGenerator = new Generator_Sine();
+            break;
+        case SQUARE:
+            soundGenerator = new Generator_Square();
+            break;
+        case TRIANGLE:
+            soundGenerator = new Generator_Triangle();
+            break;
+    }
 }
 
 char Synthesizer::setPitch(const char& value, const bool& add){
@@ -82,7 +82,7 @@ void Synthesizer::generateSample(pipelineAudioBuffer* audioBuffer,  const keyboa
     for (uint i = 0; i < settings.sampleSize; i++){
         audioBuffer->buffer[i] = 0;
         for (uint j = 0; j < settings.keyCount; j++){
-            audioBuffer->buffer[i] += notes[j].buffer[i];
+            audioBuffer->buffer[i] += notes[j].buffer[i];//TODO: check multiplication
         }
     }
 }

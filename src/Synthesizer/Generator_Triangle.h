@@ -6,7 +6,7 @@
 namespace synthesizer{
     class Generator_Triangle : public IGenerator{
     public:
-        void generate(noteBuffer& noteBuffer, const settings& settings);
+        void generate(noteBuffer& noteBuffer, const uchar* keyState, const settings& settings);
     };
 }
 
