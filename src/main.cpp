@@ -26,8 +26,8 @@ int main(int argc, char** argv){
     audioInfo.bitDepth = 16;
     audioInfo.channels = 1;
     audioInfo.littleEndian = true;
-    audioInfo.sampleRate = 16000;
-    audioInfo.sampleSize = 1024;
+    audioInfo.sampleRate = 48000;
+    audioInfo.sampleSize = 512;
 
     audioInfo.littleEndian = true;
     audioInfo.byteRate = audioInfo.sampleRate * audioInfo.channels * audioInfo.bitDepth/8;

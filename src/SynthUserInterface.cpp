@@ -12,8 +12,8 @@ SynthUserInterface::SynthUserInterface(AudioPipelineSubstitute* audioPipeline, I
     }
 
     running = false;
-    renderMethod = &SynthUserInterface::drawStatistics;
-    parseInputMethod = &SynthUserInterface::parseMenuStatistics;
+    renderMethod = &SynthUserInterface::drawSyntchSettings;
+    parseInputMethod = &SynthUserInterface::parseMenuSynthSetting;
     xPosition = 0;
     yPosition = 0;
 
@@ -42,7 +42,9 @@ char SynthUserInterface::start(){
     while (this->running){
         std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
         parseInput();
-        (*this.*renderMethod)();
+        if (toUpdate){
+            (*this.*renderMethod)();
+        }
 
     }
     audioPipeline->stop();
@@ -55,6 +57,7 @@ char SynthUserInterface::start(){
 void SynthUserInterface::parseInput(){
     static ushort pressedKeysCount;
     pressedKeysCount = userInput->getPressedKeysCount();
+    toUpdate = true;
 
     if (pressedKeysCount == 0){
         return;
@@ -70,10 +73,7 @@ void SynthUserInterface::parseInput(){
             parseInputMethod = &SynthUserInterface::parseMenuSynthSetting;
             renderMethod = &SynthUserInterface::drawSyntchSettings;
         } else if (userInput->getKeyState(KEY_SPACE)){
-            while (userInput->getKeyState(KEY_SPACE)){
-                std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
-                (*this.*renderMethod)();
-            }
+            waitUntilKeyReleased(KEY_SPACE);
             if (audioPipeline->isRecording()){
                 audioPipeline->stopRecording();
             } else {
@@ -85,14 +85,14 @@ void SynthUserInterface::parseInput(){
     }
 }
 
-const std::string recordingMessage[2] = {"\033[1mNOT RECORDING\33[0m", "\033[1m\33[31m ⏺ RECORDING\33[0m"};
+const std::string recordingMessage[2] = {"\033[1mNOT RECORDING\33[0m", "\033[1m\33[31m   ⏺RECORDING\33[0m"};
 
 void SynthUserInterface::drawSyntchSettings(){
     static const std::string synthNames[3] = {"SINE", "SQARE", "TRIANGLE"};
-    static uint synthType = synthesizer::SINE;
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
     static char ansi[8][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
     static int lastYPosition = 0;
+    uint synthType = audioPipeline->getSynthType(0);
     std::strcpy(ansi[lastYPosition], "\33[0m");
     std::strcpy(ansi[yPosition], "\33[7m");
     lastYPosition = yPosition;
@@ -113,6 +113,7 @@ void SynthUserInterface::drawSyntchSettings(){
 }
 
 void SynthUserInterface::drawStatistics(){
+    toUpdate = true;
     const statistics::pipelineStatistics* pStatistics = audioPipeline->getStatistics();
     std::printf(
     "\33[2J\33[1;1H"
@@ -135,7 +136,6 @@ void SynthUserInterface::parseMenuSynthSetting(){
     static const ushort* pressedKeys = userInput->getPressedKeysArr();
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
     static const int maxY = 6;
-    static const uint inputDelay = loopDelay/1000;
 
     switch (pressedKeys[0]){
         case KEY_ENTER:
@@ -145,20 +145,14 @@ void SynthUserInterface::parseMenuSynthSetting(){
         case KEY_UP:
             if (yPosition > 0){
                 yPosition--;
-                while (userInput->getKeyState(KEY_UP)){
-                    std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
-                    (*this.*renderMethod)();
-                }
+                waitUntilKeyReleased(KEY_UP);
             }
             break;
 
         case KEY_DOWN:
             if (yPosition < maxY){
                 yPosition++;
-                while (userInput->getKeyState(KEY_DOWN)){
-                    std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
-                    (*this.*renderMethod)();
-                }
+                waitUntilKeyReleased(KEY_DOWN);
             }
             break;
 
@@ -169,26 +163,32 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     break;
 
                 case 1:
-                    audioPipeline->setSynthSettings(0, synthesizer::VOLUME, settings->volume - 0.01);
+                    audioPipeline->setSynthSettings(0, synthesizer::VOLUME, settings->volume - 0.01*(settings->volume - 0.01 >= 0));
                     break;
 
                 case 2:
-                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw - 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw - 0.1*(settings->attack.raw - 0.1 >= 0));
                     break;
 
                 case 3:
-                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw - 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw - 0.1*(settings->sustain.raw - 0.1 >= 0));
                     break;
 
                 case 4:
-                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw - 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw - 0.1*(settings->fade.raw - 0.1 >= 0));
                     break;
 
                 case 5:
-                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw - 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw - 0.1*(settings->release.raw - 0.1 >= 0));
                     break;
 
                 case 6:
+                    uint currentType = audioPipeline->getSynthType(0);
+                    if (currentType > 0){
+                        currentType--;
+                        audioPipeline->setSynthSettings(0, synthesizer::generator_type(currentType));
+                    }
+                    waitUntilKeyReleased(KEY_LEFT);
                     break;
             }
             break;
@@ -220,6 +220,12 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     break;
 
                 case 6:
+                    uint currentType = audioPipeline->getSynthType(0);
+                    if (currentType < synthesizer::LAST){
+                        currentType++;
+                        audioPipeline->setSynthSettings(0, synthesizer::generator_type(currentType));
+                    }
+                    waitUntilKeyReleased(KEY_RIGHT);
                     break;
 
             }
@@ -227,6 +233,15 @@ void SynthUserInterface::parseMenuSynthSetting(){
     }
 }
 
+void SynthUserInterface::waitUntilKeyReleased(ushort key){
+    while (userInput->getKeyState(key)){
+        std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
+         if (toUpdate){
+            toUpdate = false;
+            (*this.*renderMethod)();
+         }
+    }
+}
 
 void SynthUserInterface::drawXTimes(uint x){
     for (uint i = 0; i < x; i++){

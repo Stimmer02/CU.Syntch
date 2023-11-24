@@ -1,6 +1,7 @@
 #include "AudioPipelineSubstitute.h"
 #include "Pipeline/Statistics/PipelineStatisticsService.h"
 #include "Synthesizer/settings.h"
+#include <cstdio>
 
 AudioPipelineSubstitute::AudioPipelineSubstitute(audioFormatInfo audioInfo, ushort keyCount, AKeyboardRecorder* midiInput){
     this->audioInfo = audioInfo;
@@ -105,17 +106,19 @@ bool AudioPipelineSubstitute::isRecording(){
 }
 
 void printLastBuffer(const audioBuffer* buff2){
-    static char space1[51] = "                                                  ";
-    static char space2[51] = "                                                  ";
+    static FILE* dumpFile = fopen("streamDump.txt", "w");
+    static char space1[101] = "                                                                                                   ";
+    static char space2[101] = "                                                                                                   ";
 
     for (uint i = 0; i < buff2->size; i++){
-        char fill = buff2->buff[i]*50/255;
+        char fill = buff2->buff[i]*100/255;
         space1[fill] = 0x0;
-        space2[50 - fill] = 0x0;
-        std::printf("%3d | %4d | %s*%s|\n", buff2->buff[i], buff2->buff[i]-127, space1, space2);
+        space2[100 - fill] = 0x0;
+        std::fprintf(dumpFile, "%3d | %4d | %s*%s|\n", buff2->buff[i], buff2->buff[i]-127, space1, space2);
         space1[fill] = ' ';
-        space2[50 - fill] = ' ';
+        space2[100 - fill] = ' ';
     }
+    std::fprintf(dumpFile, "-------------------------BUFF_END-------------------------\n");
 }
 
 
@@ -159,6 +162,10 @@ const synthesizer::settings* AudioPipelineSubstitute::getSynthSettings(ushort id
     return synth->getSettings();
 }
 
+synthesizer::generator_type AudioPipelineSubstitute::getSynthType(ushort id){
+    return synth->getGeneratorType();
+}
+
 // template<typename T>
 void AudioPipelineSubstitute::setSynthSettings(ushort id, synthesizer::settings_name settingsName, double value){
     static synthesizer::settings* settings = synth->getSettings();
@@ -188,6 +195,10 @@ void AudioPipelineSubstitute::setSynthSettings(ushort id, synthesizer::settings_
             settings->volume = value;
             break;
     }
+}
+
+void AudioPipelineSubstitute::setSynthSettings(ushort id, synthesizer::generator_type type){
+    synth->setGenerator(type);
 }
 
 

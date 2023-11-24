@@ -21,6 +21,7 @@ private:
     void drawRecordingMenu();
 
     void drawXTimes(uint x);
+    void waitUntilKeyReleased(ushort key);
     void syntchSettingsChange(const ushort& id, const synthesizer::settings_name& settingsName, const double& value, const uint& keyID);
 
     void parseMenuSynthSetting();
@@ -40,6 +41,7 @@ private:
     TerminalInputDiscard terminalDiscard;
 
     bool running;
+    bool toUpdate;
     audioFormatInfo audioInfo;
 
     uint loopDelay;

@@ -25,12 +25,14 @@ namespace synthesizer {
         void generateSample(pipelineAudioBuffer* audioBuffer, const keyboardTransferBuffer* keyboardState);
         struct settings* getSettings();
         void setGenerator(generator_type type);
+        generator_type getGeneratorType();
         char setPitch(const char& value, const bool& add = false);
 
     private:
         void calculateFrequencies();
 
         IGenerator* soundGenerator;
+        generator_type generatorType;
         noteBuffer* notes;
         synthesizer::settings settings;
     };

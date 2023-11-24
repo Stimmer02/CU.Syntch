@@ -1,4 +1,5 @@
 #include "Synthesizer.h"
+#include "Synthesizer/IGenerator.h"
 
 using namespace synthesizer;
 
@@ -7,11 +8,11 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
     settings.sampleSize = audioInfo.sampleSize;
     settings.sampleRate = audioInfo.sampleRate;
     settings.pitch = 0;
-    settings.volume = 0.1;
+    settings.volume = 0.15;
     settings.attack.set(0.2, audioInfo.sampleRate);
     settings.sustain.set(0, audioInfo.sampleRate);
     settings.fade.set(0, audioInfo.sampleRate);
-    settings.release.set(1.35, audioInfo.sampleRate);
+    settings.release.set(0.2, audioInfo.sampleRate);
 
     settings.maxValue = 0;
     uint a = 1;
@@ -40,7 +41,16 @@ struct settings* Synthesizer::getSettings(){
     return &this->settings;
 }
 
+generator_type Synthesizer::getGeneratorType(){
+    return generatorType;
+}
+
 void Synthesizer::setGenerator(generator_type type){
+    if (generatorType == type){
+        return;
+    }
+
+    generatorType = type;
     delete soundGenerator;
     switch (type) {
         case SINE:

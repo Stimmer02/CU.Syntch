@@ -1,7 +1,7 @@
 #include "BufferConverter_Mono24.h"
 
 void BufferConverter_Mono24::toPCM(pipelineAudioBuffer* pipelineBuffer, audioBuffer* pcmBuffer){
-    static const uint maxValue = 0x00EFFFFF;
+    static const uint maxValue = 0x007FFFFF;
     int value;
     for (uint i = 0, j = 0; i < pipelineBuffer->size; i++){
         value = maxValue * pipelineBuffer->buffer[i];

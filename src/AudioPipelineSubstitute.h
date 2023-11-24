@@ -3,6 +3,7 @@
 
 
 #include "AudioOutput/audioFormatInfo.h"
+#include "Synthesizer/IGenerator.h"
 #include "Synthesizer/settings.h"
 #include "UserInput/AKeyboardRecorder.h"
 #include "UserInput/KeyboardRecorder_DevInput.h"
@@ -41,9 +42,11 @@ public:
     const audioFormatInfo* getAudioInfo();
 
     const synthesizer::settings* getSynthSettings(ushort id);
+    synthesizer::generator_type getSynthType(ushort id);
 
     // template<typename T>
     void setSynthSettings(ushort id, synthesizer::settings_name settingsName, double value);
+    void setSynthSettings(ushort id, synthesizer::generator_type type);
 
 private:
     void pipelineThreadFunction();

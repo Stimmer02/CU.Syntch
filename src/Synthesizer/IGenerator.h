@@ -14,9 +14,10 @@ namespace synthesizer {
     };
 
     enum generator_type{
-        SINE,
-        SQUARE,
-        TRIANGLE,
+        SINE = 0,
+        SQUARE = 1,
+        TRIANGLE = 2,
+        LAST = TRIANGLE,
     };
 }
 

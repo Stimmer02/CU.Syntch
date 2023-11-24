@@ -19,5 +19,5 @@ void synthesizer::Generator_Sine::generate(noteBuffer& noteBuffer, const uchar* 
             noteBuffer.samplesAfterPress = 0;
         }
     }
-    noteBuffer.phaze += i + 1;
+    noteBuffer.phaze += i;
 }
