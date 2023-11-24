@@ -17,6 +17,7 @@ SynthUserInterface::SynthUserInterface(AudioPipelineSubstitute* audioPipeline, I
     xPosition = 0;
     yPosition = 0;
 
+    recordingIndicatorBlink = 0;
     loopDelay = 1000/30;
 }
 
@@ -25,6 +26,7 @@ SynthUserInterface::~SynthUserInterface(){
 }
 
 char SynthUserInterface::start(){
+    uint blinkCounter = 0;
 
     if (userInput == nullptr){
         return 1;
@@ -42,6 +44,15 @@ char SynthUserInterface::start(){
     while (this->running){
         std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
         parseInput();
+        if (audioPipeline->isRecording()){
+            blinkCounter++;
+            if (blinkCounter > 15){
+                blinkCounter = 0;
+                recordingIndicatorBlink = !recordingIndicatorBlink;
+                toUpdate = true;
+            }
+        }
+
         if (toUpdate){
             (*this.*renderMethod)();
         }
@@ -76,6 +87,7 @@ void SynthUserInterface::parseInput(){
             waitUntilKeyReleased(KEY_SPACE);
             if (audioPipeline->isRecording()){
                 audioPipeline->stopRecording();
+                recordingIndicatorBlink = 0;
             } else {
                 audioPipeline->startRecording();
             }
@@ -85,7 +97,8 @@ void SynthUserInterface::parseInput(){
     }
 }
 
-const std::string recordingMessage[2] = {"\033[1mNOT RECORDING\33[0m", "\033[1m\33[31m   ⏺RECORDING\33[0m"};
+const std::string recordingMessage[3] = {"\033[1mNOT RECORDING\33[0m", "\033[1m\33[31m  ⏺ RECORDING\33[0m", "\033[1m\33[31m    RECORDING\33[0m"};
+
 
 void SynthUserInterface::drawSyntchSettings(){
     static const std::string synthNames[3] = {"SINE", "SQARE", "SAWTOOTH"};
@@ -109,7 +122,7 @@ void SynthUserInterface::drawSyntchSettings(){
     "%sRelease: %2.2f\n\n"
     "%sGenerator type: %s\n"
     "%s\n\n\33[31m",
-    recordingMessage[audioPipeline->isRecording()].c_str(), ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->attack.raw, ansi[3], settings->sustain.raw, ansi[4], settings->fade.raw, ansi[5], settings->release.raw, ansi[6], synthNames[synthType].c_str(), ansi[7]);
+    recordingMessage[audioPipeline->isRecording()+recordingIndicatorBlink].c_str(), ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->attack.raw, ansi[3], settings->sustain.raw, ansi[4], settings->fade.raw, ansi[5], settings->release.raw, ansi[6], synthNames[synthType].c_str(), ansi[7]);
 }
 
 void SynthUserInterface::drawStatistics(){
@@ -128,7 +141,7 @@ void SynthUserInterface::drawStatistics(){
     "\33[0mUser Input Latency:\33[32m %.2lfms\n\n"
     "\33[0mFormat Info\n"
     "   bit depth:   %i b\n   channels:    %i\n   sample rate: %i Hz\n   sample size: %i\n\n\33[31m",
-    recordingMessage[audioPipeline->isRecording()].c_str(), pStatistics->loopLength, pStatistics->averageLoopLength, pStatistics->maxLoopLength, pStatistics->averageLoopLatency, pStatistics->averageWorkTime, pStatistics->maxWorkTime, pStatistics->averageLoad, pStatistics->maxLoad, pStatistics->userInputLatency/1000, audioInfo.bitDepth, audioInfo.channels, audioInfo.sampleRate, audioInfo.sampleSize);
+    recordingMessage[audioPipeline->isRecording()+recordingIndicatorBlink].c_str(), pStatistics->loopLength, pStatistics->averageLoopLength, pStatistics->maxLoopLength, pStatistics->averageLoopLatency, pStatistics->averageWorkTime, pStatistics->maxWorkTime, pStatistics->averageLoad, pStatistics->maxLoad, pStatistics->userInputLatency/1000, audioInfo.bitDepth, audioInfo.channels, audioInfo.sampleRate, audioInfo.sampleSize);
 }
 
 

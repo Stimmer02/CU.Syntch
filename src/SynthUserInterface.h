@@ -19,6 +19,7 @@ private:
     void drawSyntchSettings();
     void drawStatistics();
     void drawRecordingMenu();
+    bool recordingIndicatorBlink;
 
     void drawXTimes(uint x);
     void waitUntilKeyReleased(ushort key);
