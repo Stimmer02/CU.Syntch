@@ -88,7 +88,7 @@ void SynthUserInterface::parseInput(){
 const std::string recordingMessage[2] = {"\033[1mNOT RECORDING\33[0m", "\033[1m\33[31m   ⏺RECORDING\33[0m"};
 
 void SynthUserInterface::drawSyntchSettings(){
-    static const std::string synthNames[3] = {"SINE", "SQARE", "TRIANGLE"};
+    static const std::string synthNames[3] = {"SINE", "SQARE", "SAWTOOTH"};
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
     static char ansi[8][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
     static int lastYPosition = 0;

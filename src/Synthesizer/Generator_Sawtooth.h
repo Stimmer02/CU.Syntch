@@ -1,10 +1,10 @@
-#ifndef _IGENERATOR_TRIANGLE_H
-#define _IGENERATOR_TRIANGLE_H
+#ifndef _IGENERATOR_SAWTOOTH_H
+#define _IGENERATOR_SAWTOOTH_H
 
 #include "IGenerator.h"
 
 namespace synthesizer{
-    class Generator_Triangle : public IGenerator{
+    class Generator_Sawtooth : public IGenerator{
     public:
         void generate(noteBuffer& noteBuffer, const uchar* keyState, const settings& settings);
     };

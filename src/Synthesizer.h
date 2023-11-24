@@ -6,7 +6,7 @@
 #include "Synthesizer/IGenerator.h"
 #include "Synthesizer/Generator_Sine.h"
 #include "Synthesizer/Generator_Square.h"
-#include "Synthesizer/Generator_Triangle.h"
+#include "Synthesizer/Generator_Sawtooth.h"
 #include "UserInput/KeyboardDoubleBuffer.h"
 #include "Pipeline/pipelineAudioBuffer.h"
 #include "AudioOutput/audioFormatInfo.h"

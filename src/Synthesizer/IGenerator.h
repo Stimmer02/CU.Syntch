@@ -16,8 +16,8 @@ namespace synthesizer {
     enum generator_type{
         SINE = 0,
         SQUARE = 1,
-        TRIANGLE = 2,
-        LAST = TRIANGLE,
+        SAWTOOTH = 2,
+        LAST = SAWTOOTH,
     };
 }
 

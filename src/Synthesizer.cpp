@@ -59,10 +59,11 @@ void Synthesizer::setGenerator(generator_type type){
         case SQUARE:
             soundGenerator = new Generator_Square();
             break;
-        case TRIANGLE:
-            soundGenerator = new Generator_Triangle();
+        case SAWTOOTH:
+            soundGenerator = new Generator_Sawtooth();
             break;
     }
+    calculateFrequencies();
 }
 
 char Synthesizer::setPitch(const char& value, const bool& add){
@@ -77,10 +78,16 @@ char Synthesizer::setPitch(const char& value, const bool& add){
 }
 
 void Synthesizer::calculateFrequencies(){
-    for (int i = 0; i < settings.keyCount; i++){
-        notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch)/12.0);
-        notes[i].multiplier = PI * 2 / settings.sampleRate * notes[i].frequency;
-
+    if (generatorType == SINE){
+        for (int i = 0; i < settings.keyCount; i++){
+            notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch)/12.0);
+            notes[i].multiplier = PI*2 * notes[i].frequency / settings.sampleRate;
+        }
+    } else {
+        for (int i = 0; i < settings.keyCount; i++){
+            notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch)/12.0);
+            notes[i].multiplier = settings.sampleRate / notes[i].frequency;
+        }
     }
 }
 

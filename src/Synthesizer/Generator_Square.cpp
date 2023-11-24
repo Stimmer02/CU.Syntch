@@ -7,10 +7,10 @@ void synthesizer::Generator_Square::generate(noteBuffer& noteBuffer, const uchar
             noteBuffer.lastAttack = float(settings.attack.duration-noteBuffer.samplesAfterPress)/settings.attack.duration;
             noteBuffer.samplesAfterPress += noteBuffer.lastAttack > 0;
             noteBuffer.samplesAfterRelease = 0;
-            noteBuffer.buffer[i] = ((sin((i+noteBuffer.phaze)*noteBuffer.multiplier) > 0)-0.5) * settings.volume * (1-noteBuffer.lastAttack);
+            noteBuffer.buffer[i] = ((int((noteBuffer.phaze+i)/noteBuffer.multiplier) & 0x1)*2 - 1) * settings.volume * (1-noteBuffer.lastAttack);
         } else if (noteBuffer.samplesAfterRelease < settings.release.duration) {
             float release = float(settings.release.duration-noteBuffer.samplesAfterRelease)/settings.release.duration;
-            noteBuffer.buffer[i] = ((sin((i+noteBuffer.phaze)*noteBuffer.multiplier) > 0)-0.5) * settings.volume * (1-noteBuffer.lastAttack) * release;
+            noteBuffer.buffer[i] = ((int((noteBuffer.phaze+i)/noteBuffer.multiplier) & 0x1)*2 - 1) * settings.volume * (1-noteBuffer.lastAttack) * release;
             noteBuffer.samplesAfterPress = 0;
             noteBuffer.samplesAfterRelease++;
         } else {
