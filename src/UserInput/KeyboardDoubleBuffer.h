@@ -24,7 +24,7 @@ private:
 
     bool activeBuffer;
     long activationTimestamp[2];
-    uchar** buffer[2];//first dimension is sampleSize second keyCount
+    uchar** buffer[2];//first dimension is keyCount second sampleSize
 };
 
 #endif

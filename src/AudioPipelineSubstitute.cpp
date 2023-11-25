@@ -111,7 +111,7 @@ void printLastBuffer(const audioBuffer* buff2){
     static char space2[101] = "                                                                                                   ";
 
     for (uint i = 0; i < buff2->size; i++){
-        char fill = buff2->buff[i]*100/255;
+        uint fill = buff2->buff[i]*100/255;
         space1[fill] = 0x0;
         space2[100 - fill] = 0x0;
         std::fprintf(dumpFile, "%3d | %4d | %s*%s|\n", buff2->buff[i], buff2->buff[i]-127, space1, space2);
@@ -122,11 +122,16 @@ void printLastBuffer(const audioBuffer* buff2){
 }
 
 
+
 void AudioPipelineSubstitute::pipelineThreadFunction(){
     ulong sampleTimeLength = audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate;
     midiInput->buffer->swapActiveBuffer();
     ulong nextLoop = midiInput->buffer->getActivationTimestamp() + sampleTimeLength;
     statisticsService->firstInvocation();
+
+#ifdef _WIN32
+    *((unsigned int*)0XD) = 0xDEAD;
+#endif
 
     while (running){
         std::this_thread::sleep_until(std::chrono::time_point<std::chrono::system_clock>(std::chrono::nanoseconds((nextLoop)*1000)));

@@ -23,6 +23,7 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
     settings.maxValue -= 1;
 
     soundGenerator = new Generator_Sine();
+    generatorType = SINE;
 
     notes = new noteBuffer[keyCount];
     for (uint i = 0; i < keyCount; i++){
@@ -97,9 +98,9 @@ void Synthesizer::generateSample(pipelineAudioBuffer* audioBuffer,  const keyboa
     }
 
     for (uint i = 0; i < settings.sampleSize; i++){
-        audioBuffer->buffer[i] = 0;
-        for (uint j = 0; j < settings.keyCount; j++){
-            audioBuffer->buffer[i] += notes[j].buffer[i];//TODO: check multiplication
+        audioBuffer->buffer[i] = notes[0].buffer[i];
+        for (uint j = 1; j < settings.keyCount; j++){
+            audioBuffer->buffer[i] += notes[j].buffer[i];
         }
     }
 }

@@ -28,7 +28,6 @@ int main(int argc, char** argv){
     audioInfo.littleEndian = true;
     audioInfo.sampleRate = 48000;
     audioInfo.sampleSize = 512;
-
     audioInfo.littleEndian = true;
     audioInfo.byteRate = audioInfo.sampleRate * audioInfo.channels * audioInfo.bitDepth/8;
     audioInfo.blockAlign = audioInfo.channels * audioInfo.bitDepth/8;

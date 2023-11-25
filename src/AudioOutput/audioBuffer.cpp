@@ -1,6 +1,6 @@
 #include "audioBuffer.h"
 
-audioBuffer::audioBuffer(const uint16_t& buffSize):size(buffSize){
+audioBuffer::audioBuffer(const uint32_t& buffSize):size(buffSize){
     buff = new uint8_t[buffSize];
 }
 

@@ -1,11 +1,11 @@
 #include "KeyboardDoubleBuffer.h"
 
-KeyboardDoubleBuffer::KeyboardDoubleBuffer(const uint& sampleSize, const ushort& keyCount) : sampleSize(sampleSize), keyCount(keyCount){
-    buffer[0] = new uchar*[sampleSize];
-    buffer[1] = new uchar*[sampleSize];
-    for (uint i = 0; i < sampleSize; i++){
-        buffer[0][i] = new uchar[keyCount];
-        buffer[1][i] = new uchar[keyCount];
+KeyboardDoubleBuffer::KeyboardDoubleBuffer(const uint& sampleSize, const ushort& keyCount) : keyCount(keyCount), sampleSize(sampleSize){
+    buffer[0] = new uchar*[keyCount];
+    buffer[1] = new uchar*[keyCount];
+    for (uint i = 0; i < keyCount; i++){
+        buffer[0][i] = new uchar[sampleSize];
+        buffer[1][i] = new uchar[sampleSize];
     }
     activeBuffer = 0;
     clearInactiveBuffer();
@@ -14,7 +14,7 @@ KeyboardDoubleBuffer::KeyboardDoubleBuffer(const uint& sampleSize, const ushort&
 }
 
 KeyboardDoubleBuffer::~KeyboardDoubleBuffer(){
-    for (uint i = 0; i < sampleSize; i++){
+    for (uint i = 0; i < keyCount; i++){
         delete[] buffer[0][i];
         delete[] buffer[1][i];
     }
@@ -41,8 +41,8 @@ void KeyboardDoubleBuffer::swapActiveBuffer(){
 }
 
 void KeyboardDoubleBuffer::clearInactiveBuffer(){
-    for (uint i = 0; i < sampleSize; i++){
-        for (uint j = 0; j < keyCount; j++){
+    for (uint i = 0; i < keyCount; i++){
+        for (uint j = 0; j < sampleSize; j++){
             buffer[!activeBuffer][i][j] = 0;
         }
     }

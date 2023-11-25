@@ -139,13 +139,13 @@ void KeyboardRecorder_DevInput::scannerThreadFunction(){
             ushort mappedKey = keyboardMap->map(event.code);
             if (samplePosition < sampleSize){
                 if (mappedKey < keyCount){
-                    buffer->getActiveBuffer()[samplePosition][mappedKey] = event.value+1;
+                    buffer->getActiveBuffer()[mappedKey][samplePosition] = event.value+1;
                 } else {
                     std::printf("UNMAPPED KEY:%d\n", event.code);
                 }
             } else {
                 if (mappedKey < keyCount){
-                    buffer->getActiveBuffer()[sampleSize-1][mappedKey] = event.value+1;
+                    buffer->getActiveBuffer()[mappedKey][sampleSize-1] = event.value+1;
                     std::printf("WARNING: KeyboardRecorder_DevInput::scannerThreadFunction BUFFER WAS NOT SWAPPED FAST ENOUGH\n");
                 }
             }

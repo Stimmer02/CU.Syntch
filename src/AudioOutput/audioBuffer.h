@@ -6,10 +6,10 @@
 
 struct audioBuffer {
     uint8_t* buff;
-    ssize_t count;
-    const uint16_t size;
+    uint32_t count;
+    const uint32_t size;
 
-    audioBuffer(const uint16_t& buffSize);
+    audioBuffer(const uint32_t& buffSize);
     ~audioBuffer();
 };
 

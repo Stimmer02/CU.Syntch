@@ -93,7 +93,7 @@ void SynthUserInterface::parseInput(){
             renderMethod = &SynthUserInterface::drawSyntchSettings;
             yPosition = 0;
 
-        }  else if (userInput->getKeyState(KEY_3)){
+        } else if (userInput->getKeyState(KEY_3)){
             parseInputMethod = &SynthUserInterface::parseFormatSettings;
             renderMethod = &SynthUserInterface::drawFormatSettings;
             yPosition = 0;
@@ -296,21 +296,22 @@ void SynthUserInterface::parseFormatSettings(){
     static const ushort* pressedKeys = userInput->getPressedKeysArr();
     static const int maxY = 5;
 
-    static const uint sampleRateOptionsCount = 9;
+    static const uint sampleRateOptionsCount = 10;
     static const uint sampleRateOptions[sampleRateOptionsCount] = {
         8000,
+        11025,
         16000,
-        24000,
-        32000,
+        22050,
         44100,
         48000,
         96000,
         128000,
-        1920000,
+        176400,
+        192000,
     };
     static uint sampleRateCurrent = findIndex<uint>(sampleRateOptions, sampleRateOptionsCount, audioInfo.sampleRate);
 
-    static const uint sampleSizeOptionsCount = 12;
+    static const uint sampleSizeOptionsCount = 13;
     static const uint sampleSizeOptions[sampleSizeOptionsCount] = {
         16,
         32,
@@ -324,6 +325,7 @@ void SynthUserInterface::parseFormatSettings(){
         8192,
         16384,
         32768,
+        65536
     };
     static uint sampleSizeCurrent = findIndex<uint>(sampleSizeOptions, sampleSizeOptionsCount, audioInfo.sampleSize);
 
