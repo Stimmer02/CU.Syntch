@@ -8,7 +8,7 @@ void updateStatistics(const statistics::pipelineStatistics* pStatistics, const a
 
 int main(int argc, char** argv){
 
-    const ushort keyCount = 32;
+    const ushort keyCount = 64;
 
     if (argc == 1){
         std::printf("USAGE: %s <event ID>\n", argv[0]);

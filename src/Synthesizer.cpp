@@ -7,7 +7,7 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
     settings.keyCount = keyCount;
     settings.sampleSize = audioInfo.sampleSize;
     settings.sampleRate = audioInfo.sampleRate;
-    settings.pitch = 0;
+    settings.pitch = -24;
     settings.volume = 0.15;
     settings.attack.set(0.2, audioInfo.sampleRate);
     settings.sustain.set(0, audioInfo.sampleRate);

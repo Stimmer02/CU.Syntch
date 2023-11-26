@@ -22,7 +22,9 @@ namespace synthesizer {
     public:
         Synthesizer(const audioFormatInfo& audioFormatInfo, const ushort& keyCount);
         ~Synthesizer();
+
         void generateSample(pipelineAudioBuffer* audioBuffer, const keyboardTransferBuffer* keyboardState);
+
         struct settings* getSettings();
         void setGenerator(generator_type type);
         generator_type getGeneratorType();

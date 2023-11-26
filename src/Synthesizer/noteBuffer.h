@@ -7,7 +7,7 @@ typedef unsigned char uchar;
 namespace synthesizer{
     struct noteBuffer{
         double* buffer;
-        // uchar* state;
+
         float lastAttack;
         uchar velocity;
         uint phaze;

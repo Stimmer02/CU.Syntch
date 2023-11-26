@@ -13,10 +13,10 @@ namespace statistics{
         PipelineStatisticsService(ulong LoopLength, uint bufferSize, audioFormatInfo audioFormat, uint pulseAudioLatency);
         ~PipelineStatisticsService();
 
+        void firstInvocation();
         void loopStart();
         void loopWorkEnd();
-        void firstInvocation();
-        // void loopEnd();
+
         const pipelineStatistics* getStatistics();
 
     private:

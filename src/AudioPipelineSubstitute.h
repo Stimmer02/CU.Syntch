@@ -36,15 +36,9 @@ public:
     bool isRecording();
 
     const statistics::pipelineStatistics* getStatistics();
-
-    // void addSynth();
-
     const audioFormatInfo* getAudioInfo();
-
     const synthesizer::settings* getSynthSettings(ushort id);
     synthesizer::generator_type getSynthType(ushort id);
-
-    // template<typename T>
     void setSynthSettings(ushort id, synthesizer::settings_name settingsName, double value);
     void setSynthSettings(ushort id, synthesizer::generator_type type);
 
@@ -53,20 +47,22 @@ private:
 
     audioFormatInfo audioInfo;
     ushort keyCount;
+
     AKeyboardRecorder* midiInput;
+    IOutStream* audioOutput;
+    synthesizer::Synthesizer* synth;
+    AudioRecorder audioRecorder;
+
     statistics::PipelineStatisticsService* statisticsService;
 
     keyboardTransferBuffer* keyboardState;
-    IOutStream* audioOutput;
-    synthesizer::Synthesizer* synth;
-
     pipelineAudioBuffer* pipelineBuffer;
     audioBuffer* buffer;
     IBufferConverter* bufferConverter;
-    AudioRecorder audioRecorder;
 
     bool running;
     bool recording;
+
     std::thread* pipelineThread;
 };
 
