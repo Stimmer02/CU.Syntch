@@ -32,6 +32,7 @@ namespace synthesizer {
 
     private:
         void calculateFrequencies();
+        void mixAudio(pipelineAudioBuffer*& audioBuffer);
 
         IGenerator* soundGenerator;
         generator_type generatorType;
@@ -45,7 +46,8 @@ namespace synthesizer {
         SUSTAIN,
         FADE,
         RELEASE,
-        VOLUME
+        VOLUME,
+        STEREO
     };
 }
 #endif

@@ -13,6 +13,7 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
     settings.sustain.set(0, audioInfo.sampleRate);
     settings.fade.set(0, audioInfo.sampleRate);
     settings.release.set(0.2, audioInfo.sampleRate);
+    settings.stereoMix = 0.5;
 
     settings.maxValue = 0;
     uint a = 1;
@@ -92,15 +93,29 @@ void Synthesizer::calculateFrequencies(){
     }
 }
 
+void Synthesizer::mixAudio(pipelineAudioBuffer*& audioBuffer){
+    double multiplierL = 1, multiplierR = settings.stereoMix;
+    double multiplierStep = (multiplierL-multiplierR) / settings.keyCount;
+
+    for (uint i = 0; i < settings.sampleSize; i++){
+        audioBuffer->bufferL[i] = notes[0].buffer[i] * multiplierL;
+        audioBuffer->bufferR[i] = notes[0].buffer[i] * multiplierR;
+    }
+    multiplierL -= multiplierStep;
+    multiplierR += multiplierStep;
+    for (uint i = 1; i < settings.keyCount; i++){
+        for (uint j = 0; j < settings.sampleSize; j++){
+            audioBuffer->bufferL[j] += notes[i].buffer[j] * multiplierL;
+            audioBuffer->bufferR[j] += notes[i].buffer[j] * multiplierR;
+        }
+        multiplierL -= multiplierStep;
+        multiplierR += multiplierStep;
+    }
+}
+
 void Synthesizer::generateSample(pipelineAudioBuffer* audioBuffer,  const keyboardTransferBuffer* keyboardState){
     for (uint i = 0; i < settings.keyCount; i++){
         soundGenerator->generate(notes[i], keyboardState->buffer[i], settings);
     }
-
-    for (uint i = 0; i < settings.sampleSize; i++){
-        audioBuffer->buffer[i] = notes[0].buffer[i];
-        for (uint j = 1; j < settings.keyCount; j++){
-            audioBuffer->buffer[i] += notes[j].buffer[i];
-        }
-    }
+    mixAudio(audioBuffer);
 }

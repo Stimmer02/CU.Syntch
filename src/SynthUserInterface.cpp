@@ -1,5 +1,6 @@
 #include "SynthUserInterface.h"
 #include "AudioPipelineSubstitute.h"
+#include "Synthesizer.h"
 #include "Synthesizer/IGenerator.h"
 #include <linux/input-event-codes.h>
 
@@ -118,7 +119,7 @@ const std::string recordingMessage[3] = {"\033[1mNOT RECORDING\33[0m", "\033[1m\
 void SynthUserInterface::drawSyntchSettings(){
     static const std::string synthNames[3] = {"SINE", "SQARE", "SAWTOOTH"};
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
-    static char ansi[8][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
+    static char ansi[9][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
     static int lastYPosition = 0;
     uint synthType = audioPipeline->getSynthType(0);
     std::strcpy(ansi[lastYPosition], "\33[0m");
@@ -129,15 +130,16 @@ void SynthUserInterface::drawSyntchSettings(){
     "\33[2J\33[1;1H"
     "\33[0m\033[1mSTATISTICS┃\033[7mSYNTH SETTINGS\33[0m\033[1m┃AUDIO FORMAT\33[0m\n"
     "%s\n\n"
-    "%s  Pitch: %+2i\n"
-    "%s Volume: %2.2f\n"
-    "%s Attack: %2.2f\n"
-    "%sSustain: %2.2f\n"
-    "%s   Fade: %2.2f\n"
-    "%sRelease: %2.2f\n\n"
+    "%s      Pitch: %+2i\n"
+    "%s     Volume: %2.2f\n"
+    "%s Stereo mix: %2.2f\n"
+    "%s     Attack: %2.2f\n"
+    "%s    Sustain: %2.2f\n"
+    "%s       Fade: %2.2f\n"
+    "%s    Release: %2.2f\n\n"
     "%sGenerator type: %s\n"
     "%s\n\n\33[31m",
-    recordingMessage[audioPipeline->isRecording()+recordingIndicatorBlink].c_str(), ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->attack.raw, ansi[3], settings->sustain.raw, ansi[4], settings->fade.raw, ansi[5], settings->release.raw, ansi[6], synthNames[synthType].c_str(), ansi[7]);
+    recordingMessage[audioPipeline->isRecording()+recordingIndicatorBlink].c_str(), ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->stereoMix, ansi[3], settings->attack.raw, ansi[4], settings->sustain.raw, ansi[5], settings->fade.raw, ansi[6], settings->release.raw, ansi[7], synthNames[synthType].c_str(), ansi[8]);
 }
 
 void SynthUserInterface::drawStatistics(){
@@ -184,7 +186,7 @@ void SynthUserInterface::drawFormatSettings(){
 void SynthUserInterface::parseMenuSynthSetting(){
     static const ushort* pressedKeys = userInput->getPressedKeysArr();
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
-    static const int maxY = 6;
+    static const int maxY = 7;
 
     switch (pressedKeys[0]){
         case KEY_ENTER:
@@ -216,22 +218,26 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     break;
 
                 case 2:
-                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw - 0.1*(settings->attack.raw - 0.1 >= 0));
+                    audioPipeline->setSynthSettings(0, synthesizer::STEREO, settings->stereoMix - 0.01*(settings->stereoMix - 0.01 >= 0));
                     break;
 
                 case 3:
-                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw - 0.1*(settings->sustain.raw - 0.1 >= 0));
+                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw - 0.1*(settings->attack.raw - 0.1 >= 0));
                     break;
 
                 case 4:
-                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw - 0.1*(settings->fade.raw - 0.1 >= 0));
+                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw - 0.1*(settings->sustain.raw - 0.1 >= 0));
                     break;
 
                 case 5:
-                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw - 0.1*(settings->release.raw - 0.1 >= 0));
+                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw - 0.1*(settings->fade.raw - 0.1 >= 0));
                     break;
 
                 case 6:
+                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw - 0.1*(settings->release.raw - 0.1 >= 0));
+                    break;
+
+                case 7:
                     uint currentType = audioPipeline->getSynthType(0);
                     if (currentType > 0){
                         currentType--;
@@ -253,22 +259,26 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     break;
 
                 case 2:
-                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw + 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::STEREO, settings->stereoMix + 0.01);
                     break;
 
                 case 3:
-                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw + 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw + 0.1);
                     break;
 
                 case 4:
-                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw + 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw + 0.1);
                     break;
 
                 case 5:
-                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw + 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw + 0.1);
                     break;
 
                 case 6:
+                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw + 0.1);
+                    break;
+
+                case 7:
                     uint currentType = audioPipeline->getSynthType(0);
                     if (currentType < synthesizer::LAST){
                         currentType++;
@@ -438,7 +448,7 @@ void SynthUserInterface::parseFormatSettings(){
                     break;
 
                 case 1:
-                    if (channelsCurrent < channelsOptionsCount-1){
+                    if (channelsCurrent < channelsOptionsCount){
                         channelsCurrent++;
                         unappliedAudioInfo.channels = channelsCurrent;
                         fromatSettingsApplied = false;

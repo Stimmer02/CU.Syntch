@@ -1,5 +1,6 @@
 #include "AudioPipelineSubstitute.h"
 #include "Pipeline/Statistics/PipelineStatisticsService.h"
+#include "Synthesizer.h"
 #include "Synthesizer/settings.h"
 #include <cstdio>
 
@@ -13,7 +14,7 @@ AudioPipelineSubstitute::AudioPipelineSubstitute(audioFormatInfo audioInfo, usho
     synth = new synthesizer::Synthesizer(audioInfo, keyCount);
 
     pipelineBuffer = new pipelineAudioBuffer(audioInfo.sampleSize);
-    buffer = new audioBuffer(audioInfo.sampleSize*audioInfo.bitDepth/8);
+    buffer = new audioBuffer(audioInfo.sampleSize*audioInfo.channels*audioInfo.bitDepth/8);
     buffer->count = buffer->size;
 
     running = false;
@@ -29,6 +30,20 @@ AudioPipelineSubstitute::AudioPipelineSubstitute(audioFormatInfo audioInfo, usho
             bufferConverter = new BufferConverter_Mono24();
         } else if (audioInfo.bitDepth <= 32){
             bufferConverter = new BufferConverter_Mono32();
+        } else {
+            bufferConverter = nullptr;
+            std::fprintf(stderr, "ERR AudioPipelineSubstitute::AudioPipelineSubstitute: UNSUPPORTED BIT DEPTH\n");
+            exit(1);
+        }
+    } else if (audioInfo.channels == 2){
+        if (audioInfo.bitDepth <= 8){
+            bufferConverter = new BufferConverter_Stereo8();
+        } else if (audioInfo.bitDepth <= 16){
+            bufferConverter = new BufferConverter_Stereo16();
+        } else if (audioInfo.bitDepth <= 24){
+            bufferConverter = new BufferConverter_Stereo24();
+        } else if (audioInfo.bitDepth <= 32){
+            bufferConverter = new BufferConverter_Stereo32();
         } else {
             bufferConverter = nullptr;
             std::fprintf(stderr, "ERR AudioPipelineSubstitute::AudioPipelineSubstitute: UNSUPPORTED BIT DEPTH\n");
@@ -198,6 +213,10 @@ void AudioPipelineSubstitute::setSynthSettings(ushort id, synthesizer::settings_
 
         case synthesizer::VOLUME:
             settings->volume = value;
+            break;
+
+        case synthesizer::STEREO:
+            settings->stereoMix = value;
             break;
     }
 }

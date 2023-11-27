@@ -19,6 +19,8 @@ namespace synthesizer{
         dynamics sustain;
         dynamics fade;
         dynamics release;
+
+        double stereoMix;
     };
 }
 #endif
