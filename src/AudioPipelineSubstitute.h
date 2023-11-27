@@ -41,10 +41,10 @@ public:
 
     const statistics::pipelineStatistics* getStatistics();
     const audioFormatInfo* getAudioInfo();
-    const synthesizer::settings* getSynthSettings(ushort id);
-    synthesizer::generator_type getSynthType(ushort id);
-    void setSynthSettings(ushort id, synthesizer::settings_name settingsName, double value);
-    void setSynthSettings(ushort id, synthesizer::generator_type type);
+    const synthesizer::settings* getSynthSettings(const ushort& id);
+    synthesizer::generator_type getSynthType(const ushort& id);
+    void setSynthSettings(const ushort& id, const synthesizer::settings_name& settingsName, const double& value);
+    void setSynthSettings(const ushort& id, const synthesizer::generator_type& type);
 
 private:
     void pipelineThreadFunction();

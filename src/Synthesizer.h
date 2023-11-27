@@ -18,6 +18,16 @@
 
 
 namespace synthesizer {
+    enum settings_name {
+        PITCH,
+        ATTACK,
+        SUSTAIN,
+        FADE,
+        RELEASE,
+        VOLUME,
+        STEREO
+    };
+
     class Synthesizer{
     public:
         Synthesizer(const audioFormatInfo& audioFormatInfo, const ushort& keyCount);
@@ -25,10 +35,10 @@ namespace synthesizer {
 
         void generateSample(pipelineAudioBuffer* audioBuffer, const keyboardTransferBuffer* keyboardState);
 
-        struct settings* getSettings();
-        void setGenerator(generator_type type);
+        const struct settings* getSettings();
+        void setSettings(const settings_name& settingsName, const double& value);
+        void setGenerator(const generator_type& type);
         generator_type getGeneratorType();
-        char setPitch(const char& value, const bool& add = false);
 
     private:
         void calculateFrequencies();
@@ -39,16 +49,6 @@ namespace synthesizer {
         generator_type generatorType;
         noteBuffer* notes;
         synthesizer::settings settings;
-    };
-
-    enum settings_name {
-        PITCH,
-        ATTACK,
-        SUSTAIN,
-        FADE,
-        RELEASE,
-        VOLUME,
-        STEREO
     };
 }
 #endif

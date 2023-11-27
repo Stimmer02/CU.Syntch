@@ -40,15 +40,49 @@ Synthesizer::~Synthesizer(){
     delete[] notes;
 }
 
-struct settings* Synthesizer::getSettings(){
+const struct settings* Synthesizer::getSettings(){
     return &this->settings;
+}
+
+void Synthesizer::setSettings(const settings_name& settingsName, const double& value){
+    switch (settingsName) {
+        case synthesizer::PITCH:
+            settings.pitch = value;
+            calculateFrequencies();
+            break;
+
+        case synthesizer::ATTACK:
+            settings.attack.set(value, settings.sampleRate);
+            break;
+
+        case synthesizer::SUSTAIN:
+            settings.sustain.set(value, settings.sampleRate);
+            break;
+
+        case synthesizer::FADE:
+            settings.fade.set(value, settings.sampleRate);
+            break;
+
+        case synthesizer::RELEASE:
+            settings.release.set(value, settings.sampleRate);
+            break;
+
+        case synthesizer::VOLUME:
+            settings.volume = value;
+            break;
+
+        case synthesizer::STEREO:
+            settings.stereoMix = value;
+            calculateStereoFactor();
+            break;
+    }
 }
 
 generator_type Synthesizer::getGeneratorType(){
     return generatorType;
 }
 
-void Synthesizer::setGenerator(generator_type type){
+void Synthesizer::setGenerator(const generator_type& type){
     if (generatorType == type){
         return;
     }
@@ -69,16 +103,6 @@ void Synthesizer::setGenerator(generator_type type){
     calculateFrequencies();
 }
 
-char Synthesizer::setPitch(const char& value, const bool& add){
-    if (add){
-        settings.pitch += value;
-    } else {
-        settings.pitch = value;
-    }
-
-    calculateFrequencies();
-    return settings.pitch;
-}
 
 void Synthesizer::calculateFrequencies(){
     if (generatorType == SINE){

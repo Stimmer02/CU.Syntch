@@ -178,50 +178,20 @@ const audioFormatInfo* AudioPipelineSubstitute::getAudioInfo(){
     return &audioInfo;
 }
 
-const synthesizer::settings* AudioPipelineSubstitute::getSynthSettings(ushort id){
+const synthesizer::settings* AudioPipelineSubstitute::getSynthSettings(const ushort& id){
     return synth->getSettings();
 }
 
-synthesizer::generator_type AudioPipelineSubstitute::getSynthType(ushort id){
+synthesizer::generator_type AudioPipelineSubstitute::getSynthType(const ushort& id){
     return synth->getGeneratorType();
 }
 
 // template<typename T>
-void AudioPipelineSubstitute::setSynthSettings(ushort id, synthesizer::settings_name settingsName, double value){
-    static synthesizer::settings* settings = synth->getSettings();
-    switch (settingsName) {
-        case synthesizer::PITCH:
-            synth->setPitch(value);
-            settings->pitch = value;
-            break;
-
-        case synthesizer::ATTACK:
-            settings->attack.set(value, this->audioInfo.sampleRate);
-            break;
-
-        case synthesizer::SUSTAIN:
-            settings->sustain.set(value, this->audioInfo.sampleRate);
-            break;
-
-        case synthesizer::FADE:
-            settings->fade.set(value, this->audioInfo.sampleRate);
-            break;
-
-        case synthesizer::RELEASE:
-            settings->release.set(value, this->audioInfo.sampleRate);
-            break;
-
-        case synthesizer::VOLUME:
-            settings->volume = value;
-            break;
-
-        case synthesizer::STEREO:
-            settings->stereoMix = value;
-            break;
-    }
+void AudioPipelineSubstitute::setSynthSettings(const ushort& id, const synthesizer::settings_name& settingsName, const double& value){
+    synth->setSettings(settingsName, value);
 }
 
-void AudioPipelineSubstitute::setSynthSettings(ushort id, synthesizer::generator_type type){
+void AudioPipelineSubstitute::setSynthSettings(const ushort& id, const synthesizer::generator_type& type){
     synth->setGenerator(type);
 }
 
