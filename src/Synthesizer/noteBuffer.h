@@ -11,6 +11,8 @@ namespace synthesizer{
         float lastAttack;
         uchar velocity;
         uint phaze;
+        double stereoFactorL;
+        double stereoFactorR;
 
         float frequency;
         float multiplier;

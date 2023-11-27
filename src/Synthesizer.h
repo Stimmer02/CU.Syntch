@@ -32,6 +32,7 @@ namespace synthesizer {
 
     private:
         void calculateFrequencies();
+        void calculateStereoFactor();
         void mixAudio(pipelineAudioBuffer*& audioBuffer);
 
         IGenerator* soundGenerator;

@@ -32,6 +32,7 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
     }
 
     calculateFrequencies();
+    calculateStereoFactor();
 }
 
 Synthesizer::~Synthesizer(){
@@ -93,23 +94,29 @@ void Synthesizer::calculateFrequencies(){
     }
 }
 
+void Synthesizer::calculateStereoFactor(){
+    double stereoFactorL = 1, stereoFactorR = settings.stereoMix;
+    double multiplierStep = (stereoFactorL-stereoFactorR) / settings.keyCount;
+
+    for (uint i = 0; i < settings.keyCount; i++){
+        notes[i].stereoFactorL = stereoFactorL;
+        notes[i].stereoFactorR = stereoFactorR;
+        stereoFactorL -= multiplierStep;
+        stereoFactorR += multiplierStep;
+    }
+}
+
 void Synthesizer::mixAudio(pipelineAudioBuffer*& audioBuffer){
-    double multiplierL = 1, multiplierR = settings.stereoMix;
-    double multiplierStep = (multiplierL-multiplierR) / settings.keyCount;
 
     for (uint i = 0; i < settings.sampleSize; i++){
-        audioBuffer->bufferL[i] = notes[0].buffer[i] * multiplierL;
-        audioBuffer->bufferR[i] = notes[0].buffer[i] * multiplierR;
+        audioBuffer->bufferL[i] = notes[0].buffer[i] * notes[0].stereoFactorL;
+        audioBuffer->bufferR[i] = notes[0].buffer[i] * notes[0].stereoFactorR;
     }
-    multiplierL -= multiplierStep;
-    multiplierR += multiplierStep;
     for (uint i = 1; i < settings.keyCount; i++){
         for (uint j = 0; j < settings.sampleSize; j++){
-            audioBuffer->bufferL[j] += notes[i].buffer[j] * multiplierL;
-            audioBuffer->bufferR[j] += notes[i].buffer[j] * multiplierR;
+            audioBuffer->bufferL[j] += notes[i].buffer[j] * notes[i].stereoFactorL;
+            audioBuffer->bufferR[j] += notes[i].buffer[j] * notes[i].stereoFactorR;
         }
-        multiplierL -= multiplierStep;
-        multiplierR += multiplierStep;
     }
 }
 
