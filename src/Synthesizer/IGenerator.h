@@ -3,14 +3,14 @@
 
 #include "noteBuffer.h"
 #include "settings.h"
+#include "DynamicsController.h"
 #include <cmath>
-// #include <math.h>
 
 namespace synthesizer {
     class IGenerator{
     public:
         virtual ~IGenerator(){};
-        virtual void generate(noteBuffer& noteBuffer, const uchar* keyState, const settings& settings) = 0;
+        virtual void generate(noteBuffer& noteBuffer, const uchar* keyState, const settings& settings, const double* dynamicsProfile, const double* releaseProfile) = 0;
     };
 
     enum generator_type{

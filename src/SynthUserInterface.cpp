@@ -119,7 +119,7 @@ const std::string recordingMessage[3] = {"\033[1mNOT RECORDING\33[0m", "\033[1m\
 void SynthUserInterface::drawSyntchSettings(){
     static const std::string synthNames[3] = {"SINE", "SQARE", "SAWTOOTH"};
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
-    static char ansi[9][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
+    static char ansi[10][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
     static int lastYPosition = 0;
     uint synthType = audioPipeline->getSynthType(0);
     std::strcpy(ansi[lastYPosition], "\33[0m");
@@ -136,10 +136,11 @@ void SynthUserInterface::drawSyntchSettings(){
     "%s     Attack: %2.2f\n"
     "%s    Sustain: %2.2f\n"
     "%s       Fade: %2.2f\n"
+    "%s    Fade to: %2.2f\n"
     "%s    Release: %2.2f\n\n"
     "%sGenerator type: %s\n"
     "%s\n\n\33[31m",
-    recordingMessage[audioPipeline->isRecording()+recordingIndicatorBlink].c_str(), ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->stereoMix, ansi[3], settings->attack.raw, ansi[4], settings->sustain.raw, ansi[5], settings->fade.raw, ansi[6], settings->release.raw, ansi[7], synthNames[synthType].c_str(), ansi[8]);
+    recordingMessage[audioPipeline->isRecording()+recordingIndicatorBlink].c_str(), ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->stereoMix, ansi[3], settings->attack.raw, ansi[4], settings->sustain.raw, ansi[5], settings->fade.raw, ansi[6], settings->rawFadeTo, ansi[7], settings->release.raw, ansi[8], synthNames[synthType].c_str(), ansi[9]);
 }
 
 void SynthUserInterface::drawStatistics(){
@@ -186,7 +187,7 @@ void SynthUserInterface::drawFormatSettings(){
 void SynthUserInterface::parseMenuSynthSetting(){
     static const ushort* pressedKeys = userInput->getPressedKeysArr();
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
-    static const int maxY = 7;
+    static const int maxY = 8;
 
     switch (pressedKeys[0]){
         case KEY_ENTER:
@@ -234,10 +235,14 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     break;
 
                 case 6:
-                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw - 0.1*(settings->release.raw - 0.1 >= 0));
+                    audioPipeline->setSynthSettings(0, synthesizer::FADETO, settings->rawFadeTo - 0.1*(settings->rawFadeTo - 0.1 >= 0));
                     break;
 
                 case 7:
+                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw - 0.1*(settings->release.raw - 0.1 >= 0));
+                    break;
+
+                case 8:
                     uint currentType = audioPipeline->getSynthType(0);
                     if (currentType > 0){
                         currentType--;
@@ -275,10 +280,14 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     break;
 
                 case 6:
-                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw + 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::FADETO, settings->rawFadeTo + 0.1);
                     break;
 
                 case 7:
+                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw + 0.1);
+                    break;
+
+                case 8:
                     uint currentType = audioPipeline->getSynthType(0);
                     if (currentType < synthesizer::LAST){
                         currentType++;

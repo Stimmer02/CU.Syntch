@@ -1,5 +1,6 @@
 #include "Synthesizer.h"
 #include "Synthesizer/IGenerator.h"
+#include "Synthesizer/settings.h"
 
 using namespace synthesizer;
 
@@ -12,6 +13,7 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
     settings.attack.set(0.2, audioInfo.sampleRate);
     settings.sustain.set(0, audioInfo.sampleRate);
     settings.fade.set(0, audioInfo.sampleRate);
+    settings.fadeTo = 0;
     settings.release.set(0.2, audioInfo.sampleRate);
     settings.stereoMix = 0.5;
 
@@ -33,6 +35,8 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
 
     calculateFrequencies();
     calculateStereoFactor();
+    dynamicsController.calculateDynamicsProfile(settings);
+    dynamicsController.calculateReleaseProfile(settings);
 }
 
 Synthesizer::~Synthesizer(){
@@ -53,18 +57,22 @@ void Synthesizer::setSettings(const settings_name& settingsName, const double& v
 
         case synthesizer::ATTACK:
             settings.attack.set(value, settings.sampleRate);
+            dynamicsController.calculateDynamicsProfile(settings);
             break;
 
         case synthesizer::SUSTAIN:
             settings.sustain.set(value, settings.sampleRate);
+            dynamicsController.calculateDynamicsProfile(settings);
             break;
 
         case synthesizer::FADE:
             settings.fade.set(value, settings.sampleRate);
+            dynamicsController.calculateDynamicsProfile(settings);
             break;
 
         case synthesizer::RELEASE:
             settings.release.set(value, settings.sampleRate);
+            dynamicsController.calculateReleaseProfile(settings);
             break;
 
         case synthesizer::VOLUME:
@@ -74,6 +82,14 @@ void Synthesizer::setSettings(const settings_name& settingsName, const double& v
         case synthesizer::STEREO:
             settings.stereoMix = value;
             calculateStereoFactor();
+            break;
+
+        case synthesizer::FADETO:
+            settings.rawFadeTo = value;
+            if (settings.fade.duration != 0){//TODO: check if this is even necessary
+                settings.fadeTo = value;
+            }
+            dynamicsController.calculateDynamicsProfile(settings);
             break;
     }
 }
@@ -146,7 +162,7 @@ void Synthesizer::mixAudio(pipelineAudioBuffer*& audioBuffer){
 
 void Synthesizer::generateSample(pipelineAudioBuffer* audioBuffer,  const keyboardTransferBuffer* keyboardState){
     for (uint i = 0; i < settings.keyCount; i++){
-        soundGenerator->generate(notes[i], keyboardState->buffer[i], settings);
+        soundGenerator->generate(notes[i], keyboardState->buffer[i], settings, dynamicsController.getDynamicsProfile(), dynamicsController.getReleaseProfile());
     }
     mixAudio(audioBuffer);
 }

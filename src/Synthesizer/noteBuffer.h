@@ -8,21 +8,24 @@ namespace synthesizer{
     struct noteBuffer{
         double* buffer;
 
-        float lastAttack;
-        uchar velocity;
         uint phaze;
+        uint pressSamplessPassed;
+        uint pressSamplessPassedCopy;
+        uint releaseSamplesPassed;
+
         double stereoFactorL;
         double stereoFactorR;
 
         float frequency;
         float multiplier;
 
-        uint samplesAfterPress;
-        uint samplesAfterRelease;
 
         noteBuffer(){
             buffer = nullptr;
-            lastAttack = 1;
+            phaze = 0;
+            pressSamplessPassed = 0;
+            pressSamplessPassedCopy = 0;
+            releaseSamplesPassed = 0;
         }
         noteBuffer(const uint& bufferSize){
             buffer = new double[bufferSize];

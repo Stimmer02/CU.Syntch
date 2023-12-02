@@ -1,6 +1,7 @@
 #ifndef _SYNTHESIZER_H
 #define _SYNTHESIZER_H
 
+#include "Synthesizer/DynamicsController.h"
 #include "Synthesizer/noteBuffer.h"
 #include "Synthesizer/settings.h"
 #include "Synthesizer/IGenerator.h"
@@ -23,6 +24,7 @@ namespace synthesizer {
         ATTACK,
         SUSTAIN,
         FADE,
+        FADETO,
         RELEASE,
         VOLUME,
         STEREO
@@ -48,6 +50,7 @@ namespace synthesizer {
         IGenerator* soundGenerator;
         generator_type generatorType;
         noteBuffer* notes;
+        DynamicsController dynamicsController;
         synthesizer::settings settings;
     };
 }

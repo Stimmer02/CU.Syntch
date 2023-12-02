@@ -6,7 +6,7 @@
 namespace synthesizer{
     class Generator_Sine : public IGenerator{
     public:
-        void generate(noteBuffer& noteBuffer, const uchar* keyState, const settings& settings);
+        void generate(noteBuffer& noteBuffer, const uchar* keyState, const settings& settings, const double* dynamicsProfile, const double* releaseProfile);
     };
 }
 
