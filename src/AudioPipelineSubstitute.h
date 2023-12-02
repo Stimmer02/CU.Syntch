@@ -36,6 +36,7 @@ public:
     void stop();
 
     void startRecording();
+    void startRecording(std::string outPath);
     void stopRecording();
     bool isRecording();
 

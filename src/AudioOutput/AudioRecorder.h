@@ -9,19 +9,22 @@ typedef unsigned char uchar;
 
 class AudioRecorder{
 public:
+    AudioRecorder();
     ~AudioRecorder();
 
     char init(const audioFormatInfo& info, std::string fileName);
+    char init(const audioFormatInfo& info);
     char saveBuffer(const audioBuffer* buffer);
     char closeFile();
 
 private:
+    char initFile(const audioFormatInfo& info);
     void writeInverted(ulong input, uchar length);
 
-    std::fstream* file;
+    FILE* file;
     uint savedData;
-    uint fileSizePosition;
-    uint dataSizePosition;
+    fpos_t fileSizePosition;
+    fpos_t dataSizePosition;
 };
 
 #endif

@@ -108,6 +108,16 @@ void AudioPipelineSubstitute::startRecording(){
     recording = true;
 }
 
+void AudioPipelineSubstitute::startRecording(std::string outPath){
+    if (recording) {
+        return;
+    }
+    if (audioRecorder.init(audioInfo, outPath)){
+        return;
+    }
+    recording = true;
+}
+
 void AudioPipelineSubstitute::stopRecording(){
     if (recording == false) {
         return;

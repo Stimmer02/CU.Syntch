@@ -26,7 +26,7 @@ void synthesizer::Generator_Sine::generate(noteBuffer& noteBuffer, const uchar* 
             }
 
             noteBuffer.pressSamplessPassed = (settings.attack.duration - 1) * dynamicsMultiplier;
-            noteBuffer.buffer[i] = sin(noteBuffer.phaze * noteBuffer.multiplier) * settings.volume * dynamicsMultiplier;
+            noteBuffer.buffer[i] = sin(noteBuffer.phaze * noteBuffer.multiplier) * settings.volume * dynamicsMultiplier;//BUG: this line crashes if I increase release time while playing any sound
 
         } else {
             noteBuffer.phaze = 0;

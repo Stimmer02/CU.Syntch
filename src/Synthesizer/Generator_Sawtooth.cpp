@@ -2,7 +2,7 @@
 
 void synthesizer::Generator_Sawtooth::generate(noteBuffer& noteBuffer, const uchar* keyState, const settings& settings, const double* dynamicsProfile, const double* releaseProfile){
     uint i = 0;
-    for (; i < settings.sampleSize; i++){
+    for (; i < settings.sampleSize; i++){//TODO: seems as it is little bit out of tune
         if (keyState[i]){
             noteBuffer.phaze++;
             noteBuffer.pressSamplessPassed++;
