@@ -16,9 +16,9 @@ InputMap::InputMap(std::string path){
 }
 
 InputMap::~InputMap(){
-    // if (arr != nullptr){
-    //     delete [] arr;
-    // }TODO: uncoment this
+    if (arr != nullptr){
+        delete [] arr;
+    }
 }
 
 ushort InputMap::map(const ushort& key){

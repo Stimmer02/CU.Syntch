@@ -18,13 +18,12 @@ public:
     char closeFile();
 
 private:
-    char initFile(const audioFormatInfo& info);
     void writeInverted(ulong input, uchar length);
 
-    FILE* file;
+    std::fstream* file;
     uint savedData;
-    fpos_t fileSizePosition;
-    fpos_t dataSizePosition;
+    long fileSizePosition;
+    long dataSizePosition;
 };
 
 #endif

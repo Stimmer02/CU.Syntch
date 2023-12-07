@@ -105,7 +105,7 @@ void SynthUserInterface::parseInput(){
                 audioPipeline->stopRecording();
                 recordingIndicatorBlink = 0;
             } else {
-                audioPipeline->startRecording();
+                audioPipeline->startRecording("test.wav");
             }
         }
     } else {

@@ -8,10 +8,11 @@ void synthesizer::Generator_Sine::generate(noteBuffer& noteBuffer, const uchar* 
             noteBuffer.pressSamplessPassed++;
             noteBuffer.pressSamplessPassedCopy = noteBuffer.pressSamplessPassed;
             noteBuffer.releaseSamplesPassed = 0;
+            noteBuffer.velocity = keyState[i]/127.0;
             if (settings.dynamicsDuration > noteBuffer.pressSamplessPassed){
-                noteBuffer.buffer[i] = sin(noteBuffer.phaze*noteBuffer.multiplier) * settings.volume * dynamicsProfile[noteBuffer.pressSamplessPassed];
+                noteBuffer.buffer[i] = sin(noteBuffer.phaze*noteBuffer.multiplier) * settings.volume * noteBuffer.velocity * dynamicsProfile[noteBuffer.pressSamplessPassed];
             } else {
-                noteBuffer.buffer[i] = sin(noteBuffer.phaze*noteBuffer.multiplier) * settings.volume * settings.fadeTo;
+                noteBuffer.buffer[i] = sin(noteBuffer.phaze*noteBuffer.multiplier) * settings.volume * noteBuffer.velocity * settings.fadeTo;
             }
         } else if (noteBuffer.releaseSamplesPassed < settings.release.duration){
             noteBuffer.phaze++;
@@ -26,7 +27,7 @@ void synthesizer::Generator_Sine::generate(noteBuffer& noteBuffer, const uchar* 
             }
 
             noteBuffer.pressSamplessPassed = (settings.attack.duration - 1) * dynamicsMultiplier;
-            noteBuffer.buffer[i] = sin(noteBuffer.phaze * noteBuffer.multiplier) * settings.volume * dynamicsMultiplier;//BUG: this line crashes if I increase release time while playing any sound
+            noteBuffer.buffer[i] = sin(noteBuffer.phaze * noteBuffer.multiplier) * settings.volume * noteBuffer.velocity * dynamicsMultiplier;//BUG: this line crashes if I increase release time while playing any sound
 
         } else {
             noteBuffer.phaze = 0;

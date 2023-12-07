@@ -21,16 +21,20 @@ keyboardTransferBuffer::~keyboardTransferBuffer(){
 }
 
 void keyboardTransferBuffer::convertBuffer(KeyboardDoubleBuffer* keyboardBuffer){
-    uchar** kBuffer = keyboardBuffer->getInactiveBuffer();
+    convertBuffer(keyboardBuffer->getInactiveBuffer());
+}
+
+void inline keyboardTransferBuffer::convertBuffer(uchar* buff[127]){
     for (uint i = 0; i < keyCount; i++){
         for (uint j = 0; j < sampleSize; j++){
-            if (kBuffer[i][j] == 1){
+            if (buff[i][j] == 255){
                 lastState[i] = 0;
-            } else if (kBuffer[i][j] > 1){
-                lastState[i] = 1;
+            } else if (buff[i][j] > 0){
+                lastState[i] = buff[i][j];
             }
-            buffer[i][j] = lastState[i];//TODO:ELIMINATE THIS BUG
+            buffer[i][j] = lastState[i];
         }
     }
 }
+
 

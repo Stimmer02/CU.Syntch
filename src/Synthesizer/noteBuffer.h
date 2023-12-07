@@ -8,6 +8,8 @@ namespace synthesizer{
     struct noteBuffer{
         double* buffer;
 
+        double velocity;
+
         uint phaze;
         uint pressSamplessPassed;
         uint pressSamplessPassedCopy;

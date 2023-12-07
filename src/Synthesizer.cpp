@@ -8,13 +8,14 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
     settings.keyCount = keyCount;
     settings.sampleSize = audioInfo.sampleSize;
     settings.sampleRate = audioInfo.sampleRate;
-    settings.pitch = -24;
+    settings.pitch = -12;
     settings.volume = 0.15;
-    settings.attack.set(0.2, audioInfo.sampleRate);
-    settings.sustain.set(0, audioInfo.sampleRate);
-    settings.fade.set(0, audioInfo.sampleRate);
-    settings.fadeTo = 0;
-    settings.release.set(0.2, audioInfo.sampleRate);
+    settings.attack.set(1, audioInfo.sampleRate);
+    settings.sustain.set(1, audioInfo.sampleRate);
+    settings.fade.set(0.5, audioInfo.sampleRate);
+    settings.rawFadeTo = 0.8;
+    settings.fadeTo = 0.8;
+    settings.release.set(1.2, audioInfo.sampleRate);
     settings.stereoMix = 0.5;
 
     settings.maxValue = 0;
@@ -86,7 +87,7 @@ void Synthesizer::setSettings(const settings_name& settingsName, const double& v
 
         case synthesizer::FADETO:
             settings.rawFadeTo = value;
-            if (settings.fade.duration != 0){//TODO: check if this is even necessary
+            if (settings.fade.duration != 0){
                 settings.fadeTo = value;
             }
             dynamicsController.calculateDynamicsProfile(settings);
@@ -123,12 +124,12 @@ void Synthesizer::setGenerator(const generator_type& type){
 void Synthesizer::calculateFrequencies(){
     if (generatorType == SINE){
         for (int i = 0; i < settings.keyCount; i++){
-            notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch)/12.0);
+            notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch-69)/12.0);
             notes[i].multiplier = PI*2 * notes[i].frequency / settings.sampleRate;
         }
     } else {
         for (int i = 0; i < settings.keyCount; i++){
-            notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch)/12.0);
+            notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch-69)/12.0);
             notes[i].multiplier = settings.sampleRate / notes[i].frequency;
         }
     }

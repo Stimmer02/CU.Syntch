@@ -1,5 +1,4 @@
 #include "AudioRecorder.h"
-#include <cstdio>
 
 AudioRecorder::AudioRecorder(){
     file = nullptr;
@@ -17,69 +16,48 @@ void AudioRecorder::writeInverted(uint64_t input, uchar length){
         input >>= 8;
     }
 
-    std::fwrite(writeBuffer, sizeof(char), length, file);
+    file->write(writeBuffer, length);
+}
+
+char AudioRecorder::init(const audioFormatInfo& info){
+    return init(info, "./out.wav");
 }
 
 char AudioRecorder::init(const audioFormatInfo& info, std::string fileName){
     if (file != nullptr){
         closeFile();
     }
-    file = std::fopen(fileName.c_str(), "wb");
-    if (std::ferror(file)){
-        fclose(file);
+    file = new std::fstream(fileName, std::ios_base::out | std::ios_base::binary);
+    if (file->bad()){
+        delete file;
         return 1;
     }
-    if (initFile(info)){
-        return 2;
-    }
 
-    return 0;
-}
-
-char AudioRecorder::initFile(const audioFormatInfo& info){
     uint subchunk1Size = 16, audioFormat = 1, empty = 0;
 
     if (info.littleEndian){
-        std::fwrite("RIFF", sizeof(char), 4, file);
+        file->write("RIFF", 4);
     } else {
-        return 1;
-        // file->write("RIFX", 4);
+        file->write("RIFX", 4);
     }
-    std::fgetpos(file, &fileSizePosition);
-    std::fwrite(&empty, sizeof(uint), 1, file);
-    std::fwrite("WAVE", sizeof(char), 4, file);
-    std::fwrite("fmt ", sizeof(char), 4, file);
+    fileSizePosition = file->tellp();
+    file->write(reinterpret_cast<const char *>(&empty), 4);
+    file->write("WAVE", 4);
+    file->write("fmt ", 4);
     writeInverted(subchunk1Size, 4);
     writeInverted(audioFormat, 2);
-    std::fwrite(&info.channels, sizeof(char), 1, file);
-    std::fwrite(&empty, sizeof(char), 1, file);
+    file->write(reinterpret_cast<const char *>(&info.channels), 1);
+    file->write(reinterpret_cast<const char *>(&empty), 1);
     writeInverted(info.sampleRate, 4);
     writeInverted(info.byteRate, 4);
     writeInverted(info.blockAlign, 2);
-    std::fwrite(&info.bitDepth, sizeof(char), 1, file);
-    std::fwrite(&empty, sizeof(char), 1, file);
-    std::fwrite("data", sizeof(char), 4, file);
-    std::fgetpos(file, &dataSizePosition);
-    std::fwrite(&empty, sizeof(uint), 1, file);
+    file->write(reinterpret_cast<const char *>(&info.bitDepth), 1);
+    file->write(reinterpret_cast<const char *>(&empty), 1);
+    file->write("data", 4);
+    dataSizePosition = file->tellp();
+    file->write(reinterpret_cast<const char *>(&empty), 4);
 
     savedData = 0;
-
-    return 0;
-}
-
-char AudioRecorder::init(const audioFormatInfo& info){
-    if (file != nullptr){
-        closeFile();
-    }
-    freopen(NULL, "wb", stdout);
-    file = stdout;
-    if (std::ferror(file)){
-        fclose(file);
-        return 1;
-    }
-    if (initFile(info)){
-        return 2;
-    }
 
     return 0;
 }
@@ -89,7 +67,7 @@ char AudioRecorder::saveBuffer(const audioBuffer* buffer){
         return 1;
     }
 
-    std::fwrite(buffer->buff, sizeof(char), buffer->count, file);
+    file->write((char*)(buffer->buff), buffer->count);
     savedData += buffer->count;
 
     return 0;
@@ -99,18 +77,18 @@ char AudioRecorder::closeFile(){
     if (file == nullptr){
         return 1;
     }
-    // if (file->is_open() == false){
-    //     return 2;
-    // }
-    std::fsetpos(file, &dataSizePosition);
-    std::fwrite(&savedData, sizeof(uint), 1, file);
-    savedData += 36;
-    std::fsetpos(file, &fileSizePosition);
-    std::fwrite(&savedData, sizeof(uint), 1, file);
-
-    if (file != stdout){
-        fclose(file);
+    if (file->is_open() == false){
+        return 2;
     }
-    // delete file;
+
+    file->seekp(dataSizePosition, std::ios_base::beg);
+    file->write(reinterpret_cast<const char *>(&savedData), 4);
+    savedData += 36;
+    file->seekp(fileSizePosition, std::ios_base::beg);
+    file->write(reinterpret_cast<const char *>(&savedData), 4);
+
+    file->close();
+    delete file;
+    file = nullptr;
     return 0;
 }

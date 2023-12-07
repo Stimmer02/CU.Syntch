@@ -4,7 +4,6 @@
 KeyboardRecorder_DevInput::KeyboardRecorder_DevInput(const ushort& keyCount) : keyCount(keyCount){
     buffer = nullptr;
     running = false;
-
 }
 
 KeyboardRecorder_DevInput::~KeyboardRecorder_DevInput(){
@@ -125,6 +124,7 @@ bool KeyboardRecorder_DevInput::isRunning(){
 
 
 void KeyboardRecorder_DevInput::scannerThreadFunction(){
+    static const uchar eventValueMap[3] = {255, 127, 127};
     input_event event;
     ulong samplePosition;
     ulong sampleLength = 1000000/sampleRate;
@@ -139,13 +139,13 @@ void KeyboardRecorder_DevInput::scannerThreadFunction(){
             ushort mappedKey = keyboardMap->map(event.code);
             if (samplePosition < sampleSize){
                 if (mappedKey < keyCount){
-                    buffer->getActiveBuffer()[mappedKey][samplePosition] = event.value+1;
+                    buffer->getActiveBuffer()[mappedKey][samplePosition] = eventValueMap[event.value];
                 } else {
                     std::printf("UNMAPPED KEY:%d\n", event.code);
                 }
             } else {
                 if (mappedKey < keyCount){
-                    buffer->getActiveBuffer()[mappedKey][sampleSize-1] = event.value+1;
+                    buffer->getActiveBuffer()[mappedKey][sampleSize-1] = eventValueMap[event.value];
                     std::printf("WARNING: KeyboardRecorder_DevInput::scannerThreadFunction BUFFER WAS NOT SWAPPED FAST ENOUGH\n");
                 }
             }

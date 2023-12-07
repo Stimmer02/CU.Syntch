@@ -7,6 +7,7 @@
 #include "Synthesizer/settings.h"
 #include "UserInput/AKeyboardRecorder.h"
 #include "UserInput/KeyboardRecorder_DevInput.h"
+#include "UserInput/MIDI/MidiFileReader.h"
 #include "UserInput/keyboardTransferBuffer.h"
 #include "AudioOutput/IOutStream.h"
 #include "AudioOutput/audioBuffer.h"
@@ -46,6 +47,8 @@ public:
     synthesizer::generator_type getSynthType(const ushort& id);
     void setSynthSettings(const ushort& id, const synthesizer::settings_name& settingsName, const double& value);
     void setSynthSettings(const ushort& id, const synthesizer::generator_type& type);
+
+    void recordUntilStreamEmpty(MIDI::MidiFileReader& midi, std::string filename = "");
 
 private:
     void pipelineThreadFunction();

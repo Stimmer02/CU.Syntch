@@ -1,4 +1,5 @@
 #include "KeyboardDoubleBuffer.h"
+#include <cstring>
 
 KeyboardDoubleBuffer::KeyboardDoubleBuffer(const uint& sampleSize, const ushort& keyCount) : keyCount(keyCount), sampleSize(sampleSize){
     buffer[0] = new uchar*[keyCount];
@@ -42,8 +43,6 @@ void KeyboardDoubleBuffer::swapActiveBuffer(){
 
 void KeyboardDoubleBuffer::clearInactiveBuffer(){
     for (uint i = 0; i < keyCount; i++){
-        for (uint j = 0; j < sampleSize; j++){
-            buffer[!activeBuffer][i][j] = 0;
-        }
+        std::memset(buffer[!activeBuffer][i], 0, sampleSize);
     }
 }

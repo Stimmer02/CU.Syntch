@@ -102,7 +102,7 @@ void AudioPipelineSubstitute::startRecording(){
     if (recording) {
         return;
     }
-    if (audioRecorder.init(audioInfo, "test.wav")){
+    if (audioRecorder.init(audioInfo)){
         return;
     }
     recording = true;
@@ -180,6 +180,31 @@ void AudioPipelineSubstitute::pipelineThreadFunction(){
     }
 }
 
+void AudioPipelineSubstitute::recordUntilStreamEmpty(MIDI::MidiFileReader& midi, std::string filename){
+    midi.rewindFile();
+    if (filename.empty()){
+        startRecording();
+    } else {
+        startRecording(filename);
+    }
+
+    while (midi.isFileReady() && !midi.eofChunk(0)){
+        midi.fillBuffer(keyboardState, 0);
+        synth->generateSample(pipelineBuffer, keyboardState);
+        bufferConverter->toPCM(pipelineBuffer, buffer);
+        audioRecorder.saveBuffer(buffer);
+    }
+
+    for (uint i = 0; i <= 2*audioInfo.sampleRate/audioInfo.sampleSize; i++){
+        synth->generateSample(pipelineBuffer, keyboardState);
+        bufferConverter->toPCM(pipelineBuffer, buffer);
+        audioRecorder.saveBuffer(buffer);
+    }
+    stopRecording();
+}
+
+
+
 const statistics::pipelineStatistics* AudioPipelineSubstitute::getStatistics(){
     return statisticsService->getStatistics();
 }
@@ -196,7 +221,6 @@ synthesizer::generator_type AudioPipelineSubstitute::getSynthType(const ushort& 
     return synth->getGeneratorType();
 }
 
-// template<typename T>
 void AudioPipelineSubstitute::setSynthSettings(const ushort& id, const synthesizer::settings_name& settingsName, const double& value){
     synth->setSettings(settingsName, value);
 }

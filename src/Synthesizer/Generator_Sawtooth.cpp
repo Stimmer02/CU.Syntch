@@ -8,10 +8,11 @@ void synthesizer::Generator_Sawtooth::generate(noteBuffer& noteBuffer, const uch
             noteBuffer.pressSamplessPassed++;
             noteBuffer.pressSamplessPassedCopy = noteBuffer.pressSamplessPassed;
             noteBuffer.releaseSamplesPassed = 0;
+            noteBuffer.velocity = keyState[i]/127.0;
             if (settings.dynamicsDuration > noteBuffer.pressSamplessPassed){
-                noteBuffer.buffer[i] = (((noteBuffer.phaze)%uint(noteBuffer.multiplier))/noteBuffer.multiplier*2 - 1) * settings.volume * dynamicsProfile[noteBuffer.pressSamplessPassed];
+                noteBuffer.buffer[i] = (((noteBuffer.phaze)%uint(noteBuffer.multiplier))/noteBuffer.multiplier*2 - 1) * settings.volume * noteBuffer.velocity * dynamicsProfile[noteBuffer.pressSamplessPassed];
             } else {
-                noteBuffer.buffer[i] = (((noteBuffer.phaze)%uint(noteBuffer.multiplier))/noteBuffer.multiplier*2 - 1) * settings.volume * settings.fadeTo;
+                noteBuffer.buffer[i] = (((noteBuffer.phaze)%uint(noteBuffer.multiplier))/noteBuffer.multiplier*2 - 1) * settings.volume * noteBuffer.velocity * settings.fadeTo;
             }
         } else if (noteBuffer.releaseSamplesPassed < settings.release.duration){
             noteBuffer.phaze++;
@@ -26,7 +27,7 @@ void synthesizer::Generator_Sawtooth::generate(noteBuffer& noteBuffer, const uch
             }
 
             noteBuffer.pressSamplessPassed = (settings.attack.duration - 1) * dynamicsMultiplier;
-            noteBuffer.buffer[i] = (((noteBuffer.phaze)%uint(noteBuffer.multiplier))/noteBuffer.multiplier*2 - 1) * settings.volume * dynamicsMultiplier;
+            noteBuffer.buffer[i] = (((noteBuffer.phaze)%uint(noteBuffer.multiplier))/noteBuffer.multiplier*2 - 1) * settings.volume * noteBuffer.velocity * dynamicsMultiplier;
 
         } else {
             noteBuffer.phaze = 0;

@@ -7,6 +7,7 @@ struct keyboardTransferBuffer{
     keyboardTransferBuffer(const uint& sampleSize, const ushort& keyCount);
     ~keyboardTransferBuffer();
     void convertBuffer(KeyboardDoubleBuffer* keyboardBuffer);
+    void convertBuffer(uchar* buff[127]);
 
     uchar** buffer;
     uchar* lastState;
