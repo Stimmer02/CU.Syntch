@@ -50,6 +50,9 @@ public:
 
     void recordUntilStreamEmpty(MIDI::MidiFileReader& midi, std::string filename = "");
 
+    char saveSynthConfig(std::string path, ushort id);
+    char loadSynthConfig(std::string path, ushort id);
+
 private:
     void pipelineThreadFunction();
 

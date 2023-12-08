@@ -34,6 +34,7 @@ int main(int argc, char** argv){
 
         MIDI::MidiFileReader midiReader(audioInfo.sampleSize, audioInfo.sampleRate);
         AudioPipelineSubstitute audioPipeline(audioInfo, keyCount, nullptr);
+        audioPipeline.loadSynthConfig("./config/synth.config", 0);
         audioPipeline.recordUntilStreamEmpty(midiReader);
 
         return 0;
@@ -44,6 +45,7 @@ int main(int argc, char** argv){
 
         MIDI::MidiFileReader midiReader(argv[1] ,audioInfo.sampleSize, audioInfo.sampleRate);
         AudioPipelineSubstitute audioPipeline(audioInfo, keyCount, nullptr);
+        audioPipeline.loadSynthConfig("./config/synth.config", 0);
         audioPipeline.recordUntilStreamEmpty(midiReader, argv[2]);
 
         return 0;

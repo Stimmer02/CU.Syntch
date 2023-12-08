@@ -167,3 +167,65 @@ void Synthesizer::generateSample(pipelineAudioBuffer* audioBuffer,  const keyboa
     }
     mixAudio(audioBuffer);
 }
+
+char Synthesizer::saveConfig(std::string path){
+    std::ofstream file(path, std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
+    if (file.fail()){
+        std::fprintf(stderr, "ERR Synthesizer::saveConfig: CANNOT OPEN FILE %s\n", path.c_str());
+        return 1;
+    }
+    file.write(reinterpret_cast<char*>(&settings.pitch), sizeof(settings.pitch));
+    file.write(reinterpret_cast<char*>(&settings.volume), sizeof(settings.volume));
+    file.write(reinterpret_cast<char*>(&settings.attack.raw), sizeof(settings.attack.raw));
+    file.write(reinterpret_cast<char*>(&settings.sustain.raw), sizeof(settings.sustain.raw));
+    file.write(reinterpret_cast<char*>(&settings.fade.raw), sizeof(settings.fade.raw));
+    file.write(reinterpret_cast<char*>(&settings.fadeTo), sizeof(settings.fadeTo));
+    file.write(reinterpret_cast<char*>(&settings.rawFadeTo), sizeof(settings.rawFadeTo));
+    file.write(reinterpret_cast<char*>(&settings.attack.raw), sizeof(settings.attack.raw));
+    file.write(reinterpret_cast<char*>(&settings.dynamicsDuration), sizeof(settings.dynamicsDuration));
+    file.write(reinterpret_cast<char*>(&settings.stereoMix), sizeof(settings.stereoMix));
+
+    file.close();
+    return 0;
+}
+
+char Synthesizer::loadConfig(std::string path){
+    std::ifstream file(path, std::ifstream::in | std::ifstream::binary | std::ifstream::ate);
+    if (file.fail()){
+        std::fprintf(stderr, "ERR Synthesizer::loadConfig: CANNOT OPEN FILE %s\n", path.c_str());
+        return 1;
+    }
+    long size = file.tellg();
+    // std::printf("size = %li\n", size);
+    if (size != 49){
+        std::fprintf(stderr, "ERR Synthesizer::loadConfig: FILE %s IS NOT RIGHT SIZE\n", path.c_str());
+        return 2;
+    }
+
+    float fade, release, sustain, attack;
+
+    file.seekg(std::ios_base::beg);
+    file.read(reinterpret_cast<char*>(&settings.pitch), sizeof(settings.pitch));
+    file.read(reinterpret_cast<char*>(&settings.volume), sizeof(settings.volume));
+    file.read(reinterpret_cast<char*>(&attack), sizeof(attack));
+    file.read(reinterpret_cast<char*>(&sustain), sizeof(sustain));
+    file.read(reinterpret_cast<char*>(&fade), sizeof(fade));
+    file.read(reinterpret_cast<char*>(&settings.fadeTo), sizeof(settings.fadeTo));
+    file.read(reinterpret_cast<char*>(&settings.rawFadeTo), sizeof(settings.rawFadeTo));
+    file.read(reinterpret_cast<char*>(&attack), sizeof(attack));
+    file.read(reinterpret_cast<char*>(&settings.dynamicsDuration), sizeof(settings.dynamicsDuration));
+    file.read(reinterpret_cast<char*>(&settings.stereoMix), sizeof(settings.stereoMix));
+
+    settings.attack.set(attack, settings.sampleRate);
+    settings.sustain.set(sustain, settings.sampleRate);
+    settings.release.set(release, settings.sampleRate);
+    settings.fade.set(fade, settings.sampleRate);
+
+    dynamicsController.calculateDynamicsProfile(settings);
+    dynamicsController.calculateReleaseProfile(settings);
+    calculateFrequencies();
+    calculateStereoFactor();
+
+    file.close();
+    return 0;
+}

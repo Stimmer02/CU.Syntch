@@ -11,6 +11,8 @@ SynthUserInterface::SynthUserInterface(audioFormatInfo audioInfo, AKeyboardRecor
     this->keyCount = keyCount;
 
     audioPipeline = new AudioPipelineSubstitute(audioInfo, keyCount, keyboardInput);
+    audioPipeline->loadSynthConfig("./config/synth.config", 0);
+
     if (userInput->start()){
         delete userInput;
         userInput = nullptr;
@@ -119,7 +121,7 @@ const std::string recordingMessage[3] = {"\033[1mNOT RECORDING\33[0m", "\033[1m\
 void SynthUserInterface::drawSyntchSettings(){
     static const std::string synthNames[3] = {"SINE", "SQARE", "SAWTOOTH"};
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
-    static char ansi[10][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
+    static char ansi[12][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
     static int lastYPosition = 0;
     uint synthType = audioPipeline->getSynthType(0);
     std::strcpy(ansi[lastYPosition], "\33[0m");
@@ -139,8 +141,10 @@ void SynthUserInterface::drawSyntchSettings(){
     "%s    Fade to: %2.2f\n"
     "%s    Release: %2.2f\n\n"
     "%sGenerator type: %s\n"
+    "\n%sSAVE TO FILE\n"
+    "%sLOAD FROM FILE\n"
     "%s\n\n\33[31m",
-    recordingMessage[audioPipeline->isRecording()+recordingIndicatorBlink].c_str(), ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->stereoMix, ansi[3], settings->attack.raw, ansi[4], settings->sustain.raw, ansi[5], settings->fade.raw, ansi[6], settings->rawFadeTo, ansi[7], settings->release.raw, ansi[8], synthNames[synthType].c_str(), ansi[9]);
+    recordingMessage[audioPipeline->isRecording()+recordingIndicatorBlink].c_str(), ansi[0], settings->pitch, ansi[1], settings->volume, ansi[2], settings->stereoMix, ansi[3], settings->attack.raw, ansi[4], settings->sustain.raw, ansi[5], settings->fade.raw, ansi[6], settings->rawFadeTo, ansi[7], settings->release.raw, ansi[8], synthNames[synthType].c_str(), ansi[9], ansi[10], ansi[11]);
 }
 
 void SynthUserInterface::drawStatistics(){
@@ -187,10 +191,25 @@ void SynthUserInterface::drawFormatSettings(){
 void SynthUserInterface::parseMenuSynthSetting(){
     static const ushort* pressedKeys = userInput->getPressedKeysArr();
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
-    static const int maxY = 8;
+    static const int maxY = 10;
 
     switch (pressedKeys[0]){
         case KEY_ENTER:
+            switch (yPosition) {
+                case 9:
+                    if (audioPipeline->saveSynthConfig("./config/synth.config", 0) == 0){
+                        std::printf("SAVED!\n");
+                    }
+                    waitUntilKeyReleased(KEY_ENTER);
+                    break;
+
+                case 10:
+                    if (audioPipeline->loadSynthConfig("./config/synth.config", 0) == 0){
+                        std::printf("LOADED!\n");
+                    }
+                    waitUntilKeyReleased(KEY_ENTER);
+                    break;
+            }
 
             break;
 
@@ -500,8 +519,8 @@ void SynthUserInterface::parseMenuStatistics(){
 void SynthUserInterface::waitUntilKeyReleased(ushort key){
     while (userInput->getKeyState(key)){
         std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
-         if (toUpdate){
             toUpdate = false;
+         if (toUpdate){
             (*this.*renderMethod)();
          }
     }

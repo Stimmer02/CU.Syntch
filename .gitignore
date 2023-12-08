@@ -34,3 +34,6 @@
 # Audio files
 *.wav
 *.MID
+
+# Folder contents
+config/*

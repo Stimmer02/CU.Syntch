@@ -229,5 +229,13 @@ void AudioPipelineSubstitute::setSynthSettings(const ushort& id, const synthesiz
     synth->setGenerator(type);
 }
 
+char AudioPipelineSubstitute::saveSynthConfig(std::string path, ushort id){
+    return synth->saveConfig(path);
+}
+
+char AudioPipelineSubstitute::loadSynthConfig(std::string path, ushort id){
+    return synth->loadConfig(path);
+}
+
 
 

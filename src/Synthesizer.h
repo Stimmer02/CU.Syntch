@@ -14,6 +14,7 @@
 #include "UserInput/keyboardTransferBuffer.h"
 
 // #include <mad.h>
+#include <fstream>
 
 #define PI 3.1415926595
 
@@ -41,6 +42,9 @@ namespace synthesizer {
         void setSettings(const settings_name& settingsName, const double& value);
         void setGenerator(const generator_type& type);
         generator_type getGeneratorType();
+
+        char saveConfig(std::string path);
+        char loadConfig(std::string path);
 
     private:
         void calculateFrequencies();
