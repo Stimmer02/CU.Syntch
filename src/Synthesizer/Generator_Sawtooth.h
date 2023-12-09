@@ -6,7 +6,7 @@
 namespace synthesizer{
     class Generator_Sawtooth : public AGenerator{
     public:
-        double soundFunction(noteBuffer& noteBuffer) override;
+        float soundFunction(noteBuffer& noteBuffer) override;
     };
 }
 

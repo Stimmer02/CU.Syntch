@@ -45,7 +45,7 @@ public:
     const audioFormatInfo* getAudioInfo();
     const synthesizer::settings* getSynthSettings(const ushort& id);
     synthesizer::generator_type getSynthType(const ushort& id);
-    void setSynthSettings(const ushort& id, const synthesizer::settings_name& settingsName, const double& value);
+    void setSynthSettings(const ushort& id, const synthesizer::settings_name& settingsName, const float& value);
     void setSynthSettings(const ushort& id, const synthesizer::generator_type& type);
 
     void recordUntilStreamEmpty(MIDI::MidiFileReader& midi, std::string filename = "");

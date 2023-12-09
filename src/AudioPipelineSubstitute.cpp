@@ -1,8 +1,4 @@
 #include "AudioPipelineSubstitute.h"
-#include "Pipeline/Statistics/PipelineStatisticsService.h"
-#include "Synthesizer.h"
-#include "Synthesizer/settings.h"
-#include <cstdio>
 
 AudioPipelineSubstitute::AudioPipelineSubstitute(audioFormatInfo audioInfo, ushort keyCount, AKeyboardRecorder* midiInput){
     this->audioInfo = audioInfo;
@@ -222,7 +218,7 @@ synthesizer::generator_type AudioPipelineSubstitute::getSynthType(const ushort& 
     return synth->getGeneratorType();
 }
 
-void AudioPipelineSubstitute::setSynthSettings(const ushort& id, const synthesizer::settings_name& settingsName, const double& value){
+void AudioPipelineSubstitute::setSynthSettings(const ushort& id, const synthesizer::settings_name& settingsName, const float& value){
     synth->setSettings(settingsName, value);
 }
 

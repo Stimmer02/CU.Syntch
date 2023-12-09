@@ -6,16 +6,16 @@ typedef unsigned char uchar;
 
 namespace synthesizer{
     struct noteBuffer{
-        double* buffer;
-        double velocity;
+        float* buffer;
+        float velocity;
 
         uint phaze;
         uint pressSamplessPassed;
         uint pressSamplessPassedCopy;
         uint releaseSamplesPassed;
 
-        double stereoFactorL;
-        double stereoFactorR;
+        float stereoFactorL;
+        float stereoFactorR;
 
         float frequency;
         float multiplier;
@@ -33,7 +33,7 @@ namespace synthesizer{
             multiplier = 0;
         }
         noteBuffer(const uint& bufferSize){
-            buffer = new double[bufferSize];
+            buffer = new float[bufferSize];
             phaze = 0;
             pressSamplessPassed = 0;
             pressSamplessPassedCopy = 0;
@@ -49,7 +49,7 @@ namespace synthesizer{
                 delete[] buffer;
                 // delete[] state;
             }
-            buffer = new double[bufferSize];
+            buffer = new float[bufferSize];
             // state = new uchar[bufferSize];
         }
         ~noteBuffer(){

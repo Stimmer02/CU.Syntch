@@ -1,6 +1,6 @@
 #include "Generator_Sawtooth.h"
 
-inline double synthesizer::Generator_Sawtooth::soundFunction(noteBuffer& noteBuffer){
+inline float synthesizer::Generator_Sawtooth::soundFunction(noteBuffer& noteBuffer){
     float volume = noteBuffer.phaze/noteBuffer.multiplier;
     uint round = volume;
     volume -= round;

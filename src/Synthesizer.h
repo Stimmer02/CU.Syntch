@@ -41,7 +41,7 @@ namespace synthesizer {
         void generateSample(pipelineAudioBuffer* audioBuffer, const keyboardTransferBuffer* keyboardState);
 
         const struct settings* getSettings();
-        void setSettings(const settings_name& settingsName, const double& value);
+        void setSettings(const settings_name& settingsName, const float& value);
         void setGenerator(const generator_type& type);
         generator_type getGeneratorType();
 

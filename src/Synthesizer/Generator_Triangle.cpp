@@ -1,6 +1,6 @@
 #include "Generator_Triangle.h"
 
-inline double synthesizer::Generator_Triangle::soundFunction(noteBuffer& noteBuffer){
+inline float synthesizer::Generator_Triangle::soundFunction(noteBuffer& noteBuffer){
     float volume = noteBuffer.phaze/noteBuffer.multiplier;
     uint round = volume;
     volume -= round;

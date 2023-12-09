@@ -13,14 +13,14 @@ namespace synthesizer{
     public:
         void calculateDynamicsProfile(settings& settings);
         void calculateReleaseProfile(settings& settings);
-        const double* getDynamicsProfile();
-        const double* getReleaseProfile();
+        const float* getDynamicsProfile();
+        const float* getReleaseProfile();
         uint getDynamicsProfileLength();
         uint getReleaseProfileLength();
 
     private:
-        std::vector<double> noteDynamicsProfile;
-        std::vector<double> noteReleaseProfile;
+        std::vector<float> noteDynamicsProfile;
+        std::vector<float> noteReleaseProfile;
     };
 }
 

@@ -3,6 +3,7 @@
 
 #include "../../AudioOutput/audioBuffer.h"
 #include "../pipelineAudioBuffer.h"
+#include <immintrin.h>
 
 class IBufferConverter{
 public:

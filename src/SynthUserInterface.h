@@ -26,7 +26,7 @@ private:
 
     void drawXTimes(uint x);
     void waitUntilKeyReleased(ushort key);
-    void syntchSettingsChange(const ushort& id, const synthesizer::settings_name& settingsName, const double& value, const uint& keyID);
+    // void syntchSettingsChange(const ushort& id, const synthesizer::settings_name& settingsName, const float& value, const uint& keyID);
 
     void parseMenuSynthSetting();
     void parseMenuStatistics();

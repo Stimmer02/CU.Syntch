@@ -10,8 +10,8 @@ namespace synthesizer {
     class AGenerator{
     public:
         virtual ~AGenerator(){};
-        void generate(noteBuffer& noteBuffer, const uchar* keyState, const settings& settings, const double* dynamicsProfile, const double* releaseProfile);
-        virtual inline double soundFunction(noteBuffer& noteBuffer) = 0;
+        void generate(noteBuffer& noteBuffer, const uchar* keyState, const settings& settings, const float* dynamicsProfile, const float* releaseProfile);
+        virtual inline float soundFunction(noteBuffer& noteBuffer) = 0;
     };
 
     enum generator_type{

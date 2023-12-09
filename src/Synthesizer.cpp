@@ -1,6 +1,5 @@
 #include "Synthesizer.h"
-
-
+#include "Synthesizer/AGenerator.h"
 
 using namespace synthesizer;
 
@@ -27,7 +26,7 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
     settings.maxValue -= 1;
 
     soundGenerator = new Generator_Sine();
-    generatorType = SINE;
+    generatorType = generator_type(0);
 
     notes = new noteBuffer[keyCount];
     for (uint i = 0; i < keyCount; i++){
@@ -49,7 +48,7 @@ const struct settings* Synthesizer::getSettings(){
     return &this->settings;
 }
 
-void Synthesizer::setSettings(const settings_name& settingsName, const double& value){
+void Synthesizer::setSettings(const settings_name& settingsName, const float& value){
     switch (settingsName) {
         case synthesizer::PITCH:
             settings.pitch = value;
@@ -158,8 +157,8 @@ void Synthesizer::calculateFrequencies(){
 }
 
 void Synthesizer::calculateStereoFactor(){
-    double stereoFactorL = 1, stereoFactorR = settings.stereoMix;
-    double multiplierStep = (stereoFactorL-stereoFactorR) / settings.keyCount;
+    float stereoFactorL = 1, stereoFactorR = settings.stereoMix;
+    float multiplierStep = (stereoFactorL-stereoFactorR) / settings.keyCount;
 
     for (uint i = 0; i < settings.keyCount; i++){
         notes[i].stereoFactorL = stereoFactorL;
@@ -220,8 +219,8 @@ char Synthesizer::loadConfig(std::string path){
         return 1;
     }
     long size = file.tellg();
-    std::printf("size = %li\n", size);
-    if (size != 53){
+    // std::printf("size = %li\n", size);
+    if (size != 41){
         std::fprintf(stderr, "ERR Synthesizer::loadConfig: FILE %s IS NOT RIGHT SIZE\n", path.c_str());
         return 2;
     }
@@ -250,8 +249,13 @@ char Synthesizer::loadConfig(std::string path){
 
     dynamicsController.calculateDynamicsProfile(settings);
     dynamicsController.calculateReleaseProfile(settings);
-    setGenerator(tempGenerator);
     calculateStereoFactor();
+
+    if (tempGenerator > generator_type::LAST){
+        generatorType = generator_type::SINE;
+        std::fprintf(stderr, "WARING Synthesizer::loadConfig: DATA MAY BE DAMAGED\n");
+    }
+    setGenerator(tempGenerator);
 
     file.close();
     return 0;

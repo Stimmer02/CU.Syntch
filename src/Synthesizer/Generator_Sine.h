@@ -6,7 +6,7 @@
 namespace synthesizer{
     class Generator_Sine : public AGenerator{
     public:
-        double soundFunction(noteBuffer& noteBuffer) override;
+        float soundFunction(noteBuffer& noteBuffer) override;
     };
 }
 
