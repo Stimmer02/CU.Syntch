@@ -1,5 +1,5 @@
-#ifndef KEYBOARDINPUT_DEVINPUT
-#define KEYBOARDINPUT_DEVINPUT
+#ifndef KEYBOARDINPUT_DEVINPUT_H
+#define KEYBOARDINPUT_DEVINPUT_H
 
 #include <sys/types.h>
 #include <thread>

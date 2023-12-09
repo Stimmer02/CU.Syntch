@@ -1,5 +1,5 @@
-#ifndef _DYNAMICS_H
-#define _DYNAMICS_H
+#ifndef DYNAMICS_H
+#define DYNAMICS_H
 
 typedef unsigned int uint;
 

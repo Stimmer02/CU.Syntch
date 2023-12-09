@@ -1,5 +1,5 @@
-#ifndef _PIPELIESTATISTICS_H
-#define _PIPELIESTATISTICS_H
+#ifndef PIPELIESTATISTICS_H
+#define PIPELIESTATISTICS_H
 
 typedef unsigned long int ulong;
 

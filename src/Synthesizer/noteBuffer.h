@@ -1,5 +1,5 @@
-#ifndef _NOTEBUFFER_H
-#define _NOTEBUFFER_H
+#ifndef NOTEBUFFER_H
+#define NOTEBUFFER_H
 
 typedef unsigned int uint;
 typedef unsigned char uchar;

@@ -1,5 +1,5 @@
-#ifndef _STATISTICSBUFFER_H
-#define _STATISTICSBUFFER_H
+#ifndef STATISTICSBUFFER_H
+#define STATISTICSBUFFER_H
 
 typedef unsigned int uint;
 

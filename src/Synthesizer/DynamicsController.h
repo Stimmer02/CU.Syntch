@@ -1,5 +1,5 @@
-#ifndef _DYNAMICSCONTROLLER_H
-#define _DYNAMICSCONTROLLER_H
+#ifndef DYNAMICSCONTROLLER_H
+#define DYNAMICSCONTROLLER_H
 
 #include "dynamics.h"
 #include "settings.h"

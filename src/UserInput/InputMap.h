@@ -1,5 +1,5 @@
-#ifndef _INPUTMAP_H
-#define _INPUTMAP_H
+#ifndef INPUTMAP_H
+#define INPUTMAP_H
 
 #include <fstream>
 
@@ -11,9 +11,9 @@ public:
     InputMap(std::string path);
     ~InputMap();
 
-    ushort map(const ushort& key);
-    void replace(ushort& key);
-    ushort getMaxValue();
+    ushort map(const ushort& key)const;
+    void replace(ushort& key)const;
+    ushort getMaxValue()const;
 
 private:
     ushort keyCount;

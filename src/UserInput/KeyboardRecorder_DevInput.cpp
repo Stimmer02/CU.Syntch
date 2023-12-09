@@ -1,8 +1,10 @@
 #include "KeyboardRecorder_DevInput.h"
 
 
-KeyboardRecorder_DevInput::KeyboardRecorder_DevInput(const ushort& keyCount) : keyCount(keyCount){
+KeyboardRecorder_DevInput::KeyboardRecorder_DevInput(const ushort& keyCount, const InputMap* keyboardMap) : keyCount(keyCount), keyboardMap(keyboardMap){
     buffer = nullptr;
+    inputStream = nullptr;
+    scannerThread = nullptr;
     running = false;
 }
 
@@ -24,7 +26,7 @@ KeyboardRecorder_DevInput::~KeyboardRecorder_DevInput(){
     }
 }
 
-char KeyboardRecorder_DevInput::init(const std::string path, const uint& sampleSize, const uint& sampleRate, InputMap* keyboardMap){
+char KeyboardRecorder_DevInput::init(const std::string path, const uint& sampleSize, const uint& sampleRate){
     if (running){
         std::fprintf(stderr, "ERR: KeyboardRecorder_DevInput::init CANNOT INITAILIZE WHILE READIONG THREAD IS RUNNING\n");
         return -1;
@@ -54,7 +56,6 @@ char KeyboardRecorder_DevInput::init(const std::string path, const uint& sampleS
         std::fprintf(stderr, "ERR: KeyboardRecorder_DevInput::init BAD BIT IS SET AFTER OPPENING FILE \"%s\"\n", path.c_str());
         return -3;
     }
-    this->keyboardMap = keyboardMap;
     this->path = path;
     return 0;
 }

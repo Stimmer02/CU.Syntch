@@ -1,5 +1,5 @@
-#ifndef _PIPELINESTATISTICSSERVICE_H
-#define _PIPELINESTATISTICSSERVICE_H
+#ifndef PIPELINESTATISTICSSERVICE_H
+#define PIPELINESTATISTICSSERVICE_H
 
 #include "StatisticsBuffer.h"
 #include "pipelineStatistics.h"

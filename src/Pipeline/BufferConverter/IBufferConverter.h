@@ -1,5 +1,5 @@
-#ifndef _IBUFFERCONVERTER_H
-#define _IBUFFERCONVERTER_H
+#ifndef IBUFFERCONVERTER_H
+#define IBUFFERCONVERTER_H
 
 #include "../../AudioOutput/audioBuffer.h"
 #include "../pipelineAudioBuffer.h"

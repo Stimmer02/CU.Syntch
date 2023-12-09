@@ -1,5 +1,5 @@
-#ifndef _IOUTSTREAM_H
-#define _IOUTSTREAM_H
+#ifndef IOUTSTREAM_H
+#define IOUTSTREAM_H
 
 #include <pulse/simple.h>
 #include <pulse/error.h>

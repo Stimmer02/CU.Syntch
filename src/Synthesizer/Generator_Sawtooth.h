@@ -1,5 +1,5 @@
-#ifndef _IGENERATOR_SAWTOOTH_H
-#define _IGENERATOR_SAWTOOTH_H
+#ifndef IGENERATOR_SAWTOOTH_H
+#define IGENERATOR_SAWTOOTH_H
 
 #include "IGenerator.h"
 

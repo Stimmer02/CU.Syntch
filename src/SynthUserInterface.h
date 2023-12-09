@@ -1,5 +1,5 @@
-#ifndef _SYNTHUSERINTERFACE_H
-#define _SYNTHUSERINTERFACE_H
+#ifndef SYNTHUSERINTERFACE_H
+#define SYNTHUSERINTERFACE_H
 
 #include "AudioOutput/audioFormatInfo.h"
 #include "UserInput/AKeyboardRecorder.h"

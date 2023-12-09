@@ -1,5 +1,5 @@
-#ifndef _AUDIOFORMATINFO_H
-#define _AUDIOFORMATINFO_H
+#ifndef AUDIOFORMATINFO_H
+#define AUDIOFORMATINFO_H
 
 #include <inttypes.h>
 #include <string>

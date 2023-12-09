@@ -1,5 +1,5 @@
-#ifndef _AUDIOBUFFER_H
-#define _AUDIOBUFFER_H
+#ifndef AUDIOBUFFER_H
+#define AUDIOBUFFER_H
 
 #include <inttypes.h>
 #include <sys/types.h>

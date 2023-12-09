@@ -1,5 +1,5 @@
-#ifndef _IGENERATOR_H
-#define _IGENERATOR_H
+#ifndef IGENERATOR_H
+#define IGENERATOR_H
 
 #include "noteBuffer.h"
 #include "settings.h"

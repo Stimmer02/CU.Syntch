@@ -21,21 +21,21 @@ InputMap::~InputMap(){
     }
 }
 
-ushort InputMap::map(const ushort& key){
+ushort InputMap::map(const ushort& key)const{
     if (key > keyCount){
         return -1;
     }
     return arr[key];
 }
 
-void InputMap::replace(ushort& key){
+void InputMap::replace(ushort& key)const{
     if (key > keyCount){
         key = -1;
     }
     key = arr[key];
 }
 
-ushort InputMap::getMaxValue(){
+ushort InputMap::getMaxValue()const{
     uint max = -1;
     for (uint i = 0; i <keyCount; i++){
         if (arr[i] > max){

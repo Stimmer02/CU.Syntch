@@ -1,5 +1,5 @@
-#ifndef _IGENERATOR_SINE_H
-#define _IGENERATOR_SINE_H
+#ifndef IGENERATOR_SINE_H
+#define IGENERATOR_SINE_H
 
 #include "IGenerator.h"
 

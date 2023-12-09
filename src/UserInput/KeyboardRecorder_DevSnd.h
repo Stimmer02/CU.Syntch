@@ -1,5 +1,5 @@
-#ifndef KEYBOARDRECORDER_DEVINPUT_H
-#define KEYBOARDRECORDER_DEVINPUT_H
+#ifndef KEYBOARDRECORDER_DEVSND_H
+#define KEYBOARDRECORDER_DEVSND_H
 
 #include <string>
 #include <fstream>
@@ -8,13 +8,13 @@
 
 
 #include "AKeyboardRecorder.h"
-#include "InputMap.h"
+#include "MIDI/MidiMessageInterpreter.h"
 
 
-class KeyboardRecorder_DevInput :public AKeyboardRecorder {
+class KeyboardRecorder_DevSnd :public AKeyboardRecorder {
     public:
-    KeyboardRecorder_DevInput(const ushort& keyCount, const InputMap* keyboardMap);
-    ~KeyboardRecorder_DevInput();
+    KeyboardRecorder_DevSnd(const ushort& keyCount);
+    ~KeyboardRecorder_DevSnd();
     char init(const std::string path, const uint& sampleSize, const uint& sampleFrequency);
     char reInit(const uint& sampleSize, const uint& sampleFrequency);
     char start();
@@ -28,12 +28,12 @@ class KeyboardRecorder_DevInput :public AKeyboardRecorder {
 
     bool running;
     std::string path;
-    std::fstream* inputStream;
+    std::ifstream* inputStream;
     std::thread* scannerThread;
 
     uint sampleSize;
     uint sampleRate;
 
-    const InputMap* keyboardMap;
+    MIDI::MidiMessageInterpreter interpreter;
 };
 #endif

@@ -188,12 +188,38 @@ void SynthUserInterface::drawFormatSettings(){
     recordingMessage[audioPipeline->isRecording()+recordingIndicatorBlink].c_str(), ansi[0], unappliedAudioInfo.bitDepth, ansi[1], unappliedAudioInfo.channels, ansi[2], unappliedAudioInfo.sampleRate, ansi[3], unappliedAudioInfo.sampleSize, ansi[4], ansi[5], applyMessage[fromatSettingsApplied].c_str());
 }
 
+
+float incrementValue(const float& in){
+    if (in > 0.098){
+        return 0.1 + in;
+    } else {
+        return 0.01 + in;
+    }
+}
+
+float decrementValue(const float& in){
+    float out;
+    if (in > 0.11){
+        out = in - 0.1;
+    } else {
+        out = in - 0.01;
+    }
+    return out > 0 ? out : in;
+}
+
 void SynthUserInterface::parseMenuSynthSetting(){
     static const ushort* pressedKeys = userInput->getPressedKeysArr();
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
     static const int maxY = 10;
 
-    switch (pressedKeys[0]){
+    ushort keyPressed;
+    if (pressedKeys[0] == KEY_LEFTSHIFT && userInput->getPressedKeysCount() > 1){
+        keyPressed = pressedKeys[1];
+    } else {
+        keyPressed = pressedKeys[0];
+    }
+
+    switch (keyPressed){
         case KEY_ENTER:
             switch (yPosition) {
                 case 9:
@@ -238,27 +264,27 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     break;
 
                 case 2:
-                    audioPipeline->setSynthSettings(0, synthesizer::STEREO, settings->stereoMix - 0.01*(settings->stereoMix - 0.01 >= 0));
+                    audioPipeline->setSynthSettings(0, synthesizer::STEREO, decrementValue(settings->stereoMix));
                     break;
 
                 case 3:
-                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw - 0.1*(settings->attack.raw - 0.1 >= 0));
+                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, decrementValue(settings->attack.raw));
                     break;
 
                 case 4:
-                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw - 0.1*(settings->sustain.raw - 0.1 >= 0));
+                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, decrementValue(settings->sustain.raw));
                     break;
 
                 case 5:
-                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw - 0.1*(settings->fade.raw - 0.1 >= 0));
+                    audioPipeline->setSynthSettings(0, synthesizer::FADE, decrementValue(settings->fade.raw));
                     break;
 
                 case 6:
-                    audioPipeline->setSynthSettings(0, synthesizer::FADETO, settings->rawFadeTo - 0.1*(settings->rawFadeTo - 0.1 >= 0));
+                    audioPipeline->setSynthSettings(0, synthesizer::FADETO, decrementValue(settings->rawFadeTo));
                     break;
 
                 case 7:
-                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw - 0.1*(settings->release.raw - 0.1 >= 0));
+                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, decrementValue(settings->release.raw));
                     break;
 
                 case 8:
@@ -269,6 +295,9 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     }
                     waitUntilKeyReleased(KEY_LEFT);
                     break;
+            }
+            if (userInput->getKeyState(KEY_LEFTSHIFT) == false){
+                waitUntilKeyReleased(KEY_LEFT);
             }
             break;
 
@@ -283,27 +312,27 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     break;
 
                 case 2:
-                    audioPipeline->setSynthSettings(0, synthesizer::STEREO, settings->stereoMix + 0.01);
+                    audioPipeline->setSynthSettings(0, synthesizer::STEREO, incrementValue(settings->stereoMix));
                     break;
 
                 case 3:
-                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, settings->attack.raw + 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::ATTACK, incrementValue(settings->attack.raw));
                     break;
 
                 case 4:
-                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, settings->sustain.raw + 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::SUSTAIN, incrementValue(settings->sustain.raw));
                     break;
 
                 case 5:
-                    audioPipeline->setSynthSettings(0, synthesizer::FADE, settings->fade.raw + 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::FADE, incrementValue(settings->fade.raw));
                     break;
 
                 case 6:
-                    audioPipeline->setSynthSettings(0, synthesizer::FADETO, settings->rawFadeTo + 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::FADETO, incrementValue(settings->rawFadeTo));
                     break;
 
                 case 7:
-                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, settings->release.raw + 0.1);
+                    audioPipeline->setSynthSettings(0, synthesizer::RELEASE, incrementValue(settings->release.raw));
                     break;
 
                 case 8:
@@ -315,6 +344,9 @@ void SynthUserInterface::parseMenuSynthSetting(){
                     waitUntilKeyReleased(KEY_RIGHT);
                     break;
 
+            }
+            if (userInput->getKeyState(KEY_LEFTSHIFT) == false){
+                waitUntilKeyReleased(KEY_RIGHT);
             }
             break;
     }
@@ -519,8 +551,8 @@ void SynthUserInterface::parseMenuStatistics(){
 void SynthUserInterface::waitUntilKeyReleased(ushort key){
     while (userInput->getKeyState(key)){
         std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
-            toUpdate = false;
          if (toUpdate){
+            toUpdate = false;
             (*this.*renderMethod)();
          }
     }

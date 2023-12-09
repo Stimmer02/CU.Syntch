@@ -1,5 +1,4 @@
 #include "MidiFileReader.h"
-#include "midiEvent.h"
 
 
 using namespace MIDI;
@@ -9,38 +8,11 @@ MidiFileReader::MidiFileReader(std::string path, uint sampleSize, uint sampleRat
         tempNoteBuffer[i] = new uchar[sampleSize];
     }
 
-    file = std::fopen(path.c_str(), "rb");
-    if (file == nullptr){
+    file = new std::ifstream(path, std::ifstream::in | std::ifstream::binary);
+    if (file->is_open()){
         fileReady = false;
         return;
     }
-
-
-    fileReady = true;
-    chunks = nullptr;
-    if (parseFile() != 0){
-        close();
-    }
-}
-
-MidiFileReader::MidiFileReader(uint sampleSize, uint sampleRate) : sampleSize(sampleSize), sampleRate(sampleRate){
-    for (uint i = 0; i < 127; i++){
-        tempNoteBuffer[i] = new uchar[sampleSize];
-    }
-
-    freopen(NULL, "rb", stdin);
-    file = std::tmpfile();
-    if (file == nullptr){
-        fileReady = false;
-        return;
-    }
-    const uint transferBufferSize = 16;
-    uchar transferBuffer[transferBufferSize];
-    while (std::feof(stdin) == false){
-        std::fread(transferBuffer, sizeof(uchar), transferBufferSize, stdin);
-        std::fwrite(transferBuffer, sizeof(uchar), transferBufferSize, file);
-    }
-    std::rewind(file);
 
     fileReady = true;
     chunks = nullptr;
@@ -63,7 +35,7 @@ char MidiFileReader::close(){
     if (fileReady == false){
         return 1;
     }
-    std::fclose(file);
+    file->close();
     if (chunks != nullptr){
         delete[] chunks;
         delete[] lastEvent;
@@ -118,7 +90,7 @@ void MidiFileReader::fillBuffer(keyboardTransferBuffer* buffer, ushort chunkNumb
     }
 
     chunkTime[chunkNumber] += settings.ticksPerSample;
-    std::fsetpos(file, &chunks[chunkNumber].lastPosition);
+    file->seekg(chunks[chunkNumber].lastPosition);
 
     while (lastEventTime[chunkNumber] < chunkTime[chunkNumber]){
         if (interpreter.executeEvent(lastEvent[chunkNumber], tempNoteBuffer, settings, eventTimePlacement(chunkNumber), sampleSize, sampleRate, info)){
@@ -133,7 +105,7 @@ void MidiFileReader::fillBuffer(keyboardTransferBuffer* buffer, ushort chunkNumb
         }
         lastEventTime[chunkNumber] += lastEvent[chunkNumber].deltaTime;
     }
-    std::fgetpos(file, &chunks[chunkNumber].lastPosition);
+    chunks[chunkNumber].lastPosition = file->tellg();
     buffer->convertBuffer(tempNoteBuffer);
 }
 
@@ -143,37 +115,37 @@ uint MidiFileReader::eventTimePlacement(ushort chunkNumber){
 
 void MidiFileReader::readReverse(void* out, uint byteCount){
     static uint allocated = 0;
-    static std::unique_ptr<uchar[]> temp;
+    static std::unique_ptr<char[]> temp;
 
     if (byteCount > allocated){
         allocated = byteCount;
-        temp.reset(new uchar[allocated]);
+        temp.reset(new char[allocated]);
     }
 
-    std::fread(temp.get(), sizeof(uchar), byteCount, file);
+    file->read(temp.get(), byteCount);
     for (uint i = 0, j = byteCount-1; i < byteCount; i++, j--){
-        ((uchar*)out)[i] = temp.get()[j];
+        ((char*)out)[i] = temp.get()[j];
     }
 }
 
 void MidiFileReader::readReverse(uint16_t& out){
-    std::fread(&out, sizeof(uint16_t), 1, file);
+    file->read(reinterpret_cast<char*>(&out), sizeof(uint16_t));
     out = (out >> 8) | (out << 8);
 }
 
 void MidiFileReader::readReverse(uint32_t& out){
-    std::fread(&out, sizeof(uint32_t), 1, file);
+    file->read(reinterpret_cast<char*>(&out), sizeof(uint32_t));
     out = (out >> 24) | (out << 24) | ((out & 0x00FF0000) >> 8) | ((out & 0x0000FF00) << 8);
 }
 
 void MidiFileReader::readReverse(uint64_t& out){
-    std::fread(&out, sizeof(uint64_t), 1, file);
+    file->read(reinterpret_cast<char*>(&out), sizeof(uint64_t));
     out = (out >> 56) | (out << 56) | ((out & 0x00FF000000000000) >> 40) | ((out & 0x000000000000FF00) << 40) | ((out & 0x0000FF0000000000) >> 24) | ((out & 0x0000000000FF0000) << 24) | ((out & 0x000000FF00000000) >> 8) | ((out & 0x00000000FF000000) << 8);
 }
 
 
 char MidiFileReader::parseFile(){
-    std::fread(info.ID, sizeof(char), 4, file);
+    file->read(info.ID, 4);
     if (std::strcmp(info.ID, "MThd") != 0){
         std::fprintf(stderr, "ERR MidiFileReader::parseFile: SPECIFIED FILE DOES NOT HAVE PROPER MIDI HEADER CHUNK ID: %x %x %x %x %x\n", info.ID[0], info.ID[1], info.ID[2], info.ID[3], info.ID[4]);
         return 1;
@@ -183,7 +155,7 @@ char MidiFileReader::parseFile(){
     readReverse(info.trackCount);
     readReverse(info.timeDivision);
     std::printf("0x%08x; 0x%04x; 0x%04x; 0x%04x;\n", info.size, info.formatType, info.trackCount, info.timeDivision);
-    std::fgetpos(file, &info.dataPosition);
+    info.dataPosition = file->tellg();
     info.lastPosition = info.dataPosition;
 
     if (info.formatType != 0){
@@ -204,12 +176,12 @@ char MidiFileReader::parseFile(){
         endOfChunk[i] = false;
     }
 
-    int byte;
+    uchar byte;
     char ID[5] = "MTrk";
     for (uint i = 0; i < info.trackCount; i++){
         for (uint j = 0; j < 4;){
-            byte = std::fgetc(file);
-            if (byte == EOF){
+            file->get((char&)(byte));
+            if (file->eof()){
                 std::fprintf(stderr, "ERR MidiFileReader::parseFile: FILE DOES NOT CONTAIN SPECIFIED AMOUNT OF TRACKS (%i, but only %i found)\n", info.trackCount, i);
                 return 3;
             }
@@ -221,7 +193,7 @@ char MidiFileReader::parseFile(){
         }
         std::strcpy(chunks[i].ID, ID);
         readReverse(chunks[i].size);
-        std::fgetpos(file, &chunks[i].dataPosition);
+        chunks[i].dataPosition = file->tellg();
         chunks[i].lastPosition = chunks[i].dataPosition;
     }
 

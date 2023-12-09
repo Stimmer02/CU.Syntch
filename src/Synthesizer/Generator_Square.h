@@ -1,5 +1,5 @@
-#ifndef _IGENERATOR_SQUARE_H
-#define _IGENERATOR_SQUARE_H
+#ifndef IGENERATOR_SQUARE_H
+#define IGENERATOR_SQUARE_H
 
 #include "IGenerator.h"
 

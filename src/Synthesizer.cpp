@@ -181,9 +181,11 @@ char Synthesizer::saveConfig(std::string path){
     file.write(reinterpret_cast<char*>(&settings.fade.raw), sizeof(settings.fade.raw));
     file.write(reinterpret_cast<char*>(&settings.fadeTo), sizeof(settings.fadeTo));
     file.write(reinterpret_cast<char*>(&settings.rawFadeTo), sizeof(settings.rawFadeTo));
-    file.write(reinterpret_cast<char*>(&settings.attack.raw), sizeof(settings.attack.raw));
+    file.write(reinterpret_cast<char*>(&settings.release.raw), sizeof(settings.release.raw));
     file.write(reinterpret_cast<char*>(&settings.dynamicsDuration), sizeof(settings.dynamicsDuration));
     file.write(reinterpret_cast<char*>(&settings.stereoMix), sizeof(settings.stereoMix));
+    file.write(reinterpret_cast<char*>(&generatorType), sizeof(generatorType));
+
 
     file.close();
     return 0;
@@ -196,8 +198,8 @@ char Synthesizer::loadConfig(std::string path){
         return 1;
     }
     long size = file.tellg();
-    // std::printf("size = %li\n", size);
-    if (size != 49){
+    std::printf("size = %li\n", size);
+    if (size != 53){
         std::fprintf(stderr, "ERR Synthesizer::loadConfig: FILE %s IS NOT RIGHT SIZE\n", path.c_str());
         return 2;
     }
@@ -212,9 +214,10 @@ char Synthesizer::loadConfig(std::string path){
     file.read(reinterpret_cast<char*>(&fade), sizeof(fade));
     file.read(reinterpret_cast<char*>(&settings.fadeTo), sizeof(settings.fadeTo));
     file.read(reinterpret_cast<char*>(&settings.rawFadeTo), sizeof(settings.rawFadeTo));
-    file.read(reinterpret_cast<char*>(&attack), sizeof(attack));
+    file.read(reinterpret_cast<char*>(&release), sizeof(release));
     file.read(reinterpret_cast<char*>(&settings.dynamicsDuration), sizeof(settings.dynamicsDuration));
     file.read(reinterpret_cast<char*>(&settings.stereoMix), sizeof(settings.stereoMix));
+    file.read(reinterpret_cast<char*>(&generatorType), sizeof(generatorType));
 
     settings.attack.set(attack, settings.sampleRate);
     settings.sustain.set(sustain, settings.sampleRate);

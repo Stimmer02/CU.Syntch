@@ -1,5 +1,5 @@
-#ifndef _SYNTHESIZER_H
-#define _SYNTHESIZER_H
+#ifndef SYNTHESIZER_H
+#define SYNTHESIZER_H
 
 #include "Synthesizer/DynamicsController.h"
 #include "Synthesizer/noteBuffer.h"

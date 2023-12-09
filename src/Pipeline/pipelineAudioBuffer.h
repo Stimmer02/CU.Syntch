@@ -1,5 +1,5 @@
-#ifndef _PIPELINEAUDIOBUFFER_H
-#define _PIPELINEAUDIOBUFFER_H
+#ifndef PIPELINEAUDIOBUFFER_H
+#define PIPELINEAUDIOBUFFER_H
 
 typedef unsigned int uint;
 

@@ -8,6 +8,8 @@ KeyboardInput_DevInput::KeyboardInput_DevInput() : keyCount(512){
     running = false;
     pressedKeysArr = new ushort[keyCount];
     pressedKeysCount = 0;
+    inputStream = nullptr;
+    scannerThread = nullptr;
 }
 
 KeyboardInput_DevInput::~KeyboardInput_DevInput(){

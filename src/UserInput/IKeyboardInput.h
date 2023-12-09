@@ -1,5 +1,5 @@
-#ifndef _IKEYBOARD_INPUT
-#define _IKEYBOARD_INPUT
+#ifndef IKEYBOARD_INPUT
+#define IKEYBOARD_INPUT
 
 #include <thread>
 #include <string>

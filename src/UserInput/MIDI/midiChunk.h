@@ -1,5 +1,5 @@
-#ifndef _MIDICHUNK_H
-#define _MIDICHUNK_H
+#ifndef MIDICHUNK_H
+#define MIDICHUNK_H
 
 #include <cstdint>
 #include <cstdio>
@@ -8,8 +8,8 @@ namespace MIDI{
     struct midiChunk{
         char ID[5];
         uint32_t size;
-        fpos_t dataPosition;
-        fpos_t lastPosition;
+        long dataPosition;
+        long lastPosition;
 
         midiChunk(){
             ID[4] = 0;

@@ -1,5 +1,5 @@
-#ifndef _MIDIFILEREADR_H
-#define _MIDIFILEREADR_H
+#ifndef MIDIFILEREADR_H
+#define MIDIFILEREADR_H
 
 #include "../keyboardTransferBuffer.h"
 #include "MidiMessageInterpreter.h"
@@ -14,7 +14,6 @@ namespace MIDI{
     class MidiFileReader{
     public:
         MidiFileReader(std::string path, uint sampleSize, uint sampleRate);
-        MidiFileReader(uint sampleSize, uint sampleRate);
         ~MidiFileReader();
 
         char rewindFile();
@@ -48,7 +47,7 @@ namespace MIDI{
         bool* endOfChunk;
 
         bool fileReady;
-        FILE* file;
+        std::ifstream* file;
 
         const uint sampleSize;
         const uint sampleRate;

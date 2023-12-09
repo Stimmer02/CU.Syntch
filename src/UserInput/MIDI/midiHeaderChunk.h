@@ -1,5 +1,5 @@
-#ifndef _MIDIHEADERCHUNK_H
-#define _MIDIHEADERCHUNK_H
+#ifndef MIDIHEADERCHUNK_H
+#define MIDIHEADERCHUNK_H
 
 #include "midiChunk.h"
 

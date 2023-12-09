@@ -1,5 +1,5 @@
-#ifndef _MIDIEVENT_H
-#define _MIDIEVENT_H
+#ifndef MIDIEVENT_H
+#define MIDIEVENT_H
 
 #include <cstdint>
 

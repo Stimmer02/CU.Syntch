@@ -1,5 +1,5 @@
-#ifndef _TERMINALINPUTDISCARD_H
-#define _TERMINALINPUTDISCARD_H
+#ifndef TERMINALINPUTDISCARD_H
+#define TERMINALINPUTDISCARD_H
 
 #include <termios.h>
 #include <cstring>

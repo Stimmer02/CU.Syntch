@@ -2,12 +2,12 @@
 
 using namespace MIDI;
 
-char MidiMessageInterpreter::getVariableLengthValue(FILE* stream, uint32_t& out){
-    int byte;
+char MidiMessageInterpreter::getVariableLengthValue(std::ifstream* stream, uint32_t& out){
+    uchar byte;
     out = 0;
     do {
-        byte = std::fgetc(stream);
-        if (byte == EOF){
+        stream->get((char&)(byte));
+        if (stream->eof()){
             return 1;
         }
         out <<= 7;
@@ -16,38 +16,37 @@ char MidiMessageInterpreter::getVariableLengthValue(FILE* stream, uint32_t& out)
     return 0;
 }
 
-char MidiMessageInterpreter::getFileEvent(FILE* stream, midiEvent& event){
+char MidiMessageInterpreter::getFileEvent(std::ifstream* stream, midiEvent& event){
     if (getVariableLengthValue(stream, event.deltaTime)){
         return 1;
     }
-    int byte;
-    byte = std::fgetc(stream);
+    return getEvent(stream, event);
+}
 
-    event.message[0] = byte;
+char MidiMessageInterpreter::getEvent(std::ifstream* stream, midiEvent& event){
 
-    if (byte >= 0x80 && byte < 0xF0){
+    stream->get((char&)(event.message[0]));
+
+    if (event.message[0] >= 0x80 && event.message[0] < 0xF0){
         event.type = MIDI;
-        event.channel = byte & 0x0F;
-        byte = std::fgetc(stream);
-        event.message[1] = byte;
-        if (byte < 0xC0 || byte >= 0xE0){
-            byte = std::fgetc(stream);
-            event.message[2] = byte;
+        event.channel = event.message[0] & 0x0F;
+        stream->get((char&)(event.message[1]));
+        if (event.message[1] < 0xC0 || event.message[1] >= 0xE0){
+            stream->get((char&)(event.message[2]));
         }
-    } else if (byte == 0xF0){
+    } else if (event.message[0] == 0xF0){
         event.type = SYSEX;
         ignoreSysEx(stream);
-    } else if (byte == 0xF7){
+    } else if (event.message[0] == 0xF7){
         event.type = ESC;
         uint32_t messageLength;
         getVariableLengthValue(stream, messageLength);
         if (getLongerMessage(stream, event, messageLength)){
             return 1;
         }
-    } else if (byte == 0xFF){
+    } else if (event.message[0] == 0xFF){
         event.type = META;
-        byte = std::fgetc(stream);
-        event.message[1] = byte;
+        stream->get((char&)(event.message[1]));
         uint32_t messageLength;
         getVariableLengthValue(stream, messageLength);
         if (getLongerMessage(stream, event, messageLength)){
@@ -57,52 +56,56 @@ char MidiMessageInterpreter::getFileEvent(FILE* stream, midiEvent& event){
         event.type = NONE;
     }
 
-    if (byte == EOF){
+    if (stream->eof()){
         return 1;
     }
     return 0;
 }
 
+void MidiMessageInterpreter::executeMidiEvent(const midiEvent& event, uchar* buffer[127], uint timePlacement){
+    switch (event.message[0] & 0xF0){
+        case 0x80:
+            buffer[event.message[1]][timePlacement] = 255;
+            break;
+
+        case 0x90:
+            buffer[event.message[1]][timePlacement] = event.message[2] == 0 ? 255 : event.message[2];
+            break;
+
+        case 0xA0:
+            buffer[event.message[1]][timePlacement] = event.message[2] == 0 ? 255 : event.message[2];
+            break;
+
+        case 0xB0:
+            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Controller unimplemented\n");
+            break;
+
+        case 0xC0:
+            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Program change unimplemented\n");
+            break;
+
+        case 0xD0:
+            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Channel pressure unimplemented\n");
+            break;
+
+        case 0xE0:
+            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Pitch / modulation wheel unimplemented\n");
+            break;
+
+        case 0x00:
+            //TODO: this happens before the first event is even read, fix MidiFileReader::fillBuffer
+            break;
+
+        default:
+            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: unrecognised MIDI event: 0x%02x\n", event.message[0]);
+            break;
+    }
+}
+
 char MidiMessageInterpreter::executeEvent(const midiEvent& event, uchar* buffer[127], midiSettings& settings, uint timePlacement, const uint& sampleSize, const uint& sampleRate, const midiCheaderChunk& info){
     switch (event.type){
         case MIDI:
-            switch (event.message[0] & 0xF0){
-                case 0x80:
-                    buffer[event.message[1]][timePlacement] = 255;
-                    break;
-
-                case 0x90:
-                    buffer[event.message[1]][timePlacement] = event.message[2];
-                    break;
-
-                case 0xA0:
-                    buffer[event.message[1]][timePlacement] = event.message[2];
-                    break;
-
-                case 0xB0:
-                    std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Controller unimplemented\n");
-                    break;
-
-                case 0xC0:
-                    std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Program change unimplemented\n");
-                    break;
-
-                case 0xD0:
-                    std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Channel pressure unimplemented\n");
-                    break;
-
-                case 0xE0:
-                    std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Pitch / modulation wheel unimplemented\n");
-                    break;
-
-                case 0x00:
-                    //TODO: this happens before the first event is even read, fix MidiFileReader::fillBuffer
-                    break;
-
-                default:
-                    std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: unrecognised MIDI event: 0x%02x\n", event.message[0]);
-                    break;
-            }
+            executeMidiEvent(event, buffer, timePlacement);
             break;
 
         case SYSEX:
@@ -197,11 +200,11 @@ char MidiMessageInterpreter::executeEvent(const midiEvent& event, uchar* buffer[
     return 0;
 }
 
-char MidiMessageInterpreter::ignoreSysEx(FILE* stream){
-    int byte;
+char MidiMessageInterpreter::ignoreSysEx(std::ifstream* stream){
+    uchar byte;
     do {
-        byte = std::fgetc(stream);
-        if (byte == EOF){
+        stream->get((char&)(byte));
+        if (stream->eof()){
             return 1;
         }
     } while (byte != 0xF7);
@@ -210,9 +213,9 @@ char MidiMessageInterpreter::ignoreSysEx(FILE* stream){
 
 
 
-char MidiMessageInterpreter::getLongerMessage(FILE* stream, midiEvent& event, uint32_t length){
+char MidiMessageInterpreter::getLongerMessage(std::ifstream* stream, midiEvent& event, uint32_t length){
     event.setMessageLength(length+1);
-    std::fread(event.longerMessage, sizeof(char), length, stream);
+    stream->read(event.longerMessage, length);
     event.longerMessage[length] = 0;
     return 0;
 }

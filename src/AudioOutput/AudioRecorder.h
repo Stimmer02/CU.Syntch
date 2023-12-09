@@ -1,5 +1,5 @@
-#ifndef _AUDIORECORDER_H
-#define _AUDIORECORDER_H
+#ifndef AUDIORECORDER_H
+#define AUDIORECORDER_H
 
 #include "audioBuffer.h"
 #include "audioFormatInfo.h"

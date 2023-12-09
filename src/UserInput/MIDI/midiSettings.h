@@ -1,5 +1,5 @@
-#ifndef _MIDISETTINGS_H
-#define _MIDISETTINGS_H
+#ifndef MIDISETTINGS_H
+#define MIDISETTINGS_H
 
 // #include <cmath>
 #include <cstdint>
