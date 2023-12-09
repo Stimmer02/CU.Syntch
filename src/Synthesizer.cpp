@@ -1,5 +1,7 @@
 #include "Synthesizer.h"
 
+
+
 using namespace synthesizer;
 
 Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCount){
@@ -114,23 +116,45 @@ void Synthesizer::setGenerator(const generator_type& type){
         case SAWTOOTH:
             soundGenerator = new Generator_Sawtooth();
             break;
-    }
+        case TRIANGLE:
+            soundGenerator = new Generator_Triangle();
+            break;
+        case NOISE1:
+            soundGenerator = new Generator_Noise1();
+            break;
+        }
     calculateFrequencies();
 }
 
 
 void Synthesizer::calculateFrequencies(){
-    if (generatorType == SINE){
-        for (int i = 0; i < settings.keyCount; i++){
-            notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch-69)/12.0);
-            notes[i].multiplier = PI*2 * notes[i].frequency / settings.sampleRate;
+    switch (generatorType) {
+        case SINE:
+            for (int i = 0; i < settings.keyCount; i++){
+                notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch-69)/12.0);
+                notes[i].multiplier = PI*2 * notes[i].frequency / settings.sampleRate;
+            }
+            break;
+        case SQUARE:
+        case SAWTOOTH:
+            for (int i = 0; i < settings.keyCount; i++){
+                notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch-69)/12.0);
+                notes[i].multiplier = settings.sampleRate / notes[i].frequency;
+            }
+            break;
+        case TRIANGLE:
+            for (int i = 0; i < settings.keyCount; i++){
+                notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch-69)/12.0);
+                notes[i].multiplier = settings.sampleRate / notes[i].frequency / 2;
+            }
+            break;
+        case NOISE1:
+            for (int i = 0; i < settings.keyCount; i++){
+                notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch-69)/12.0);
+                notes[i].multiplier = settings.sampleRate / notes[i].frequency;
+            }
+            break;
         }
-    } else {
-        for (int i = 0; i < settings.keyCount; i++){
-            notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch-69)/12.0);
-            notes[i].multiplier = settings.sampleRate / notes[i].frequency;
-        }
-    }
 }
 
 void Synthesizer::calculateStereoFactor(){
@@ -203,6 +227,7 @@ char Synthesizer::loadConfig(std::string path){
     }
 
     float fade, release, sustain, attack;
+    generator_type tempGenerator;
 
     file.seekg(std::ios_base::beg);
     file.read(reinterpret_cast<char*>(&settings.pitch), sizeof(settings.pitch));
@@ -215,7 +240,8 @@ char Synthesizer::loadConfig(std::string path){
     file.read(reinterpret_cast<char*>(&release), sizeof(release));
     file.read(reinterpret_cast<char*>(&settings.dynamicsDuration), sizeof(settings.dynamicsDuration));
     file.read(reinterpret_cast<char*>(&settings.stereoMix), sizeof(settings.stereoMix));
-    file.read(reinterpret_cast<char*>(&generatorType), sizeof(generatorType));
+    file.read(reinterpret_cast<char*>(&tempGenerator), sizeof(tempGenerator));
+
 
     settings.attack.set(attack, settings.sampleRate);
     settings.sustain.set(sustain, settings.sampleRate);
@@ -224,7 +250,7 @@ char Synthesizer::loadConfig(std::string path){
 
     dynamicsController.calculateDynamicsProfile(settings);
     dynamicsController.calculateReleaseProfile(settings);
-    calculateFrequencies();
+    setGenerator(tempGenerator);
     calculateStereoFactor();
 
     file.close();

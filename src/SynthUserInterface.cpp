@@ -114,7 +114,7 @@ const std::string recordingMessage[3] = {"\033[1mNOT RECORDING\33[0m", "\033[1m\
 
 
 void SynthUserInterface::drawSyntchSettings(){
-    static const std::string synthNames[3] = {"SINE", "SQARE", "SAWTOOTH"};
+    static const std::string synthNames[5] = {"SINE", "SQARE", "SAWTOOTH", "TRIANGLE", "NOISE1"};
     static const synthesizer::settings* settings = audioPipeline->getSynthSettings(0);
     static char ansi[12][6] = {"\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m", "\33[0m"};
     static int lastYPosition = 0;

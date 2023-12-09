@@ -8,6 +8,8 @@
 #include "Synthesizer/Generator_Sine.h"
 #include "Synthesizer/Generator_Square.h"
 #include "Synthesizer/Generator_Sawtooth.h"
+#include "Synthesizer/Generator_Triangle.h"
+#include "Synthesizer/Generator_Noise1.h"
 #include "UserInput/KeyboardDoubleBuffer.h"
 #include "Pipeline/pipelineAudioBuffer.h"
 #include "AudioOutput/audioFormatInfo.h"

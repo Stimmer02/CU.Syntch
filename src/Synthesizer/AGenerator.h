@@ -18,7 +18,9 @@ namespace synthesizer {
         SINE = 0,
         SQUARE = 1,
         SAWTOOTH = 2,
-        LAST = SAWTOOTH,
+        TRIANGLE = 3,
+        NOISE1 = 4,
+        LAST = NOISE1,
     };
 }
 
