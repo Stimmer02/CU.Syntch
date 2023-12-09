@@ -1,6 +1,4 @@
 #include "Synthesizer.h"
-#include "Synthesizer/IGenerator.h"
-#include "Synthesizer/settings.h"
 
 using namespace synthesizer;
 

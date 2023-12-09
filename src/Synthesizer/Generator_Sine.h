@@ -1,12 +1,12 @@
 #ifndef IGENERATOR_SINE_H
 #define IGENERATOR_SINE_H
 
-#include "IGenerator.h"
+#include "AGenerator.h"
 
 namespace synthesizer{
-    class Generator_Sine : public IGenerator{
+    class Generator_Sine : public AGenerator{
     public:
-        void generate(noteBuffer& noteBuffer, const uchar* keyState, const settings& settings, const double* dynamicsProfile, const double* releaseProfile);
+        double soundFunction(noteBuffer& noteBuffer) override;
     };
 }
 

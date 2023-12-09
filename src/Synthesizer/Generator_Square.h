@@ -1,12 +1,12 @@
 #ifndef IGENERATOR_SQUARE_H
 #define IGENERATOR_SQUARE_H
 
-#include "IGenerator.h"
+#include "AGenerator.h"
 
 namespace synthesizer{
-    class Generator_Square : public IGenerator{
+    class Generator_Square : public AGenerator{
     public:
-        void generate(noteBuffer& noteBuffer, const uchar* keyState, const settings& settings, const double* dynamicsProfile, const double* releaseProfile);
+        double soundFunction(noteBuffer& noteBuffer) override;
     };
 }
 

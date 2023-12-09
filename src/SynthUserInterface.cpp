@@ -1,9 +1,4 @@
 #include "SynthUserInterface.h"
-#include "AudioPipelineSubstitute.h"
-#include "Synthesizer.h"
-#include "Synthesizer/IGenerator.h"
-#include <linux/input-event-codes.h>
-
 
 SynthUserInterface::SynthUserInterface(audioFormatInfo audioInfo, AKeyboardRecorder* keyboardInput, IKeyboardInput* userInput, ushort keyCount){
     this->userInput = userInput;

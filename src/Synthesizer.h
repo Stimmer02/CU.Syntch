@@ -4,7 +4,7 @@
 #include "Synthesizer/DynamicsController.h"
 #include "Synthesizer/noteBuffer.h"
 #include "Synthesizer/settings.h"
-#include "Synthesizer/IGenerator.h"
+#include "Synthesizer/AGenerator.h"
 #include "Synthesizer/Generator_Sine.h"
 #include "Synthesizer/Generator_Square.h"
 #include "Synthesizer/Generator_Sawtooth.h"
@@ -51,7 +51,7 @@ namespace synthesizer {
         void calculateStereoFactor();
         void mixAudio(pipelineAudioBuffer*& audioBuffer);
 
-        IGenerator* soundGenerator;
+        AGenerator* soundGenerator;
         generator_type generatorType;
         noteBuffer* notes;
         DynamicsController dynamicsController;

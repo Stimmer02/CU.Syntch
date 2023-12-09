@@ -3,7 +3,7 @@
 
 
 #include "AudioOutput/audioFormatInfo.h"
-#include "Synthesizer/IGenerator.h"
+#include "Synthesizer/AGenerator.h"
 #include "Synthesizer/settings.h"
 #include "UserInput/AKeyboardRecorder.h"
 #include "UserInput/KeyboardRecorder_DevInput.h"
