@@ -1,15 +1,16 @@
 #include "KeyboardInput_DevInput.h"
 
 KeyboardInput_DevInput::KeyboardInput_DevInput() : keyCount(512){
-    this->keyStates = new ushort[keyCount];
+    keyStates = new ushort[keyCount];
     for (uint i = 0; i < keyCount; i++){
-        this->keyStates[i] = false;
+        keyStates[i] = false;
     }
     running = false;
     pressedKeysArr = new ushort[keyCount];
     pressedKeysCount = 0;
     inputStream = nullptr;
     scannerThread = nullptr;
+    path = "";
 }
 
 KeyboardInput_DevInput::~KeyboardInput_DevInput(){

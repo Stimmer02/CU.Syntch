@@ -2,6 +2,9 @@
 
 AudioRecorder::AudioRecorder(){
     file = nullptr;
+    savedData = 0;
+    fileSizePosition = 0;
+    dataSizePosition = 0;
 }
 
 AudioRecorder::~AudioRecorder(){

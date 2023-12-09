@@ -42,11 +42,6 @@ void PipelineStatisticsService::firstInvocation(){
     loopWorkEndPoint = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
 }
 
-// void PipelineStatisticsService::loopEnd(){
-//     loopEndPoint = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
-//
-// }
-
 const pipelineStatistics* PipelineStatisticsService::getStatistics(){
     pStatistics.averageLoopLength = loopLengthBuffer.average();
     pStatistics.averageWorkTime = workLengthBuffer.average();

@@ -9,8 +9,9 @@ KeyboardDoubleBuffer::KeyboardDoubleBuffer(const uint& sampleSize, const ushort&
         buffer[1][i] = new uchar[sampleSize];
     }
     activeBuffer = 0;
+    swapActiveBuffer();
     clearInactiveBuffer();
-    activeBuffer = 1;
+    swapActiveBuffer();
     clearInactiveBuffer();
 }
 

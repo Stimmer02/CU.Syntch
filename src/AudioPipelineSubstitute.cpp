@@ -6,7 +6,7 @@
 
 AudioPipelineSubstitute::AudioPipelineSubstitute(audioFormatInfo audioInfo, ushort keyCount, AKeyboardRecorder* midiInput){
     this->audioInfo = audioInfo;
-    this-> keyCount = keyCount;
+    this->keyCount = keyCount;
     this->midiInput = midiInput;
 
     keyboardState = new keyboardTransferBuffer(audioInfo.sampleSize, keyCount);
@@ -20,6 +20,7 @@ AudioPipelineSubstitute::AudioPipelineSubstitute(audioFormatInfo audioInfo, usho
     running = false;
     recording = false;
     pipelineThread = nullptr;
+
 
     if (audioInfo.channels == 1){
         if (audioInfo.bitDepth <= 8){

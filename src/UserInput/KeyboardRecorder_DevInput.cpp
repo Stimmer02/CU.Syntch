@@ -6,6 +6,9 @@ KeyboardRecorder_DevInput::KeyboardRecorder_DevInput(const ushort& keyCount, con
     inputStream = nullptr;
     scannerThread = nullptr;
     running = false;
+    path = "";
+    sampleRate = 0;
+    sampleSize = 0;
 }
 
 KeyboardRecorder_DevInput::~KeyboardRecorder_DevInput(){
