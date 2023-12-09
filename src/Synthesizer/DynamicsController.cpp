@@ -24,12 +24,14 @@ void DynamicsController::calculateDynamicsProfile(settings& settings){
     }
 }
 
-void DynamicsController::calculateReleaseProfile(settings& settings){
+void DynamicsController::calculateReleaseProfile(settings& settings, float releaseRawDuration){
     noteReleaseProfile.clear();
-
-    for (uint i = 0; i < settings.release.duration; i++){
-        noteReleaseProfile.push_back(1-i/float(settings.release.duration));
+    dynamics release;
+    release.set(releaseRawDuration, settings.sampleRate);
+    for (uint i = 0; i < release.duration; i++){
+        noteReleaseProfile.push_back(1-i/float(release.duration));
     }
+    settings.release = release;
 }
 
 

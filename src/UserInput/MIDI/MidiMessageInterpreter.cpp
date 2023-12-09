@@ -93,7 +93,7 @@ void MidiMessageInterpreter::executeMidiEvent(const midiEvent& event, uchar* buf
             break;
 
         case 0x00:
-            //TODO: this happens before the first event is even read, fix MidiFileReader::fillBuffer
+            //this happens before the first event is even read
             break;
 
         default:

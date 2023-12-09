@@ -12,7 +12,7 @@ namespace synthesizer{
     class DynamicsController{
     public:
         void calculateDynamicsProfile(settings& settings);
-        void calculateReleaseProfile(settings& settings);
+        void calculateReleaseProfile(settings& settings, float releaseRawDuration);
         const float* getDynamicsProfile();
         const float* getReleaseProfile();
         uint getDynamicsProfileLength();

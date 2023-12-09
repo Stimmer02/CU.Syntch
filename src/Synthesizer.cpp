@@ -36,7 +36,7 @@ Synthesizer::Synthesizer(const audioFormatInfo& audioInfo, const ushort& keyCoun
     calculateFrequencies();
     calculateStereoFactor();
     dynamicsController.calculateDynamicsProfile(settings);
-    dynamicsController.calculateReleaseProfile(settings);
+    dynamicsController.calculateReleaseProfile(settings, settings.release.raw); //really bad way to do this during main loop since it could invoke segmentation fault, however this is a constructor (the only save place)
 }
 
 Synthesizer::~Synthesizer(){
@@ -71,8 +71,7 @@ void Synthesizer::setSettings(const settings_name& settingsName, const float& va
             break;
 
         case synthesizer::RELEASE:
-            settings.release.set(value, settings.sampleRate);
-            dynamicsController.calculateReleaseProfile(settings);
+            dynamicsController.calculateReleaseProfile(settings, value);
             break;
 
         case synthesizer::VOLUME:
@@ -244,11 +243,10 @@ char Synthesizer::loadConfig(std::string path){
 
     settings.attack.set(attack, settings.sampleRate);
     settings.sustain.set(sustain, settings.sampleRate);
-    settings.release.set(release, settings.sampleRate);
     settings.fade.set(fade, settings.sampleRate);
 
     dynamicsController.calculateDynamicsProfile(settings);
-    dynamicsController.calculateReleaseProfile(settings);
+    dynamicsController.calculateReleaseProfile(settings, release);
     calculateStereoFactor();
 
     if (tempGenerator > generator_type::LAST){
