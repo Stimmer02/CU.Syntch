@@ -151,9 +151,6 @@ void AudioPipelineSubstitute::pipelineThreadFunction(){
     ulong nextLoop = midiInput->buffer->getActivationTimestamp() + sampleTimeLength;
     statisticsService->firstInvocation();
 
-#ifdef _WIN32
-    *((unsigned int*)0XD) = 0xDEAD;
-#endif
 
     while (running){
         std::this_thread::sleep_until(std::chrono::time_point<std::chrono::system_clock>(std::chrono::nanoseconds((nextLoop)*1000)));
@@ -167,7 +164,7 @@ void AudioPipelineSubstitute::pipelineThreadFunction(){
 
 
         synth->generateSample(pipelineBuffer, keyboardState);
-        printLastBuffer(pipelineBuffer->bufferL, pipelineBuffer->size);
+        // printLastBuffer(pipelineBuffer->bufferL, pipelineBuffer->size);
         bufferConverter->toPCM(pipelineBuffer, buffer);
         statisticsService->loopWorkEnd();
         audioOutput->playBuffer(buffer);
