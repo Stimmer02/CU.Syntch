@@ -1,6 +1,8 @@
 #ifndef PIPELINEAUDIOBUFFER_H
 #define PIPELINEAUDIOBUFFER_H
 
+#include <cstdlib>
+
 typedef unsigned int uint;
 
 struct pipelineAudioBuffer {
@@ -9,12 +11,12 @@ struct pipelineAudioBuffer {
     const uint size;
 
     pipelineAudioBuffer(const uint& sampleSize) : size(sampleSize){
-        bufferL = new float[sampleSize];
-        bufferR = new float[sampleSize];
+        bufferL = static_cast<float*>(std::aligned_alloc(32, sampleSize * sizeof(float)));
+        bufferR = static_cast<float*>(std::aligned_alloc(32, sampleSize * sizeof(float)));
     }
     ~pipelineAudioBuffer(){
-        delete[] bufferL;
-        delete[] bufferR;
+        free(bufferL);
+        free(bufferR);
     }
 };
 

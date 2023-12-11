@@ -2,6 +2,7 @@
 #define IBUFFERCONVERTER_MONO24_H
 
 #include "IBufferConverter.h"
+#include <cstring>
 
 class BufferConverter_Mono24 : public IBufferConverter{
 public:

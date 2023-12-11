@@ -5,6 +5,8 @@
 #include "../pipelineAudioBuffer.h"
 #include <immintrin.h>
 
+#define AVX2
+
 class IBufferConverter{
 public:
     virtual ~IBufferConverter(){};
