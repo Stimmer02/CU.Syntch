@@ -127,16 +127,16 @@ bool AudioPipelineSubstitute::isRecording(){
     return recording;
 }
 
-void printLastBuffer(const audioBuffer* buff2){
+void printLastBuffer(const float* buffer, const uint& size){
     static FILE* dumpFile = fopen("streamDump.txt", "w");
     static char space1[101] = "                                                                                                   ";
     static char space2[101] = "                                                                                                   ";
 
-    for (uint i = 0; i < buff2->size; i++){
-        uint fill = buff2->buff[i]*100/255;
+    for (uint i = 0; i < size; i++){
+        uint fill = (buffer[i]+1)/2*100;
         space1[fill] = 0x0;
         space2[100 - fill] = 0x0;
-        std::fprintf(dumpFile, "%3d | %4d | %s*%s|\n", buff2->buff[i], buff2->buff[i]-127, space1, space2);
+        std::fprintf(dumpFile, "%+1.7f |%s*%s|\n", buffer[i], space1, space2);
         space1[fill] = ' ';
         space2[100 - fill] = ' ';
     }
@@ -167,9 +167,9 @@ void AudioPipelineSubstitute::pipelineThreadFunction(){
 
 
         synth->generateSample(pipelineBuffer, keyboardState);
+        printLastBuffer(pipelineBuffer->bufferL, pipelineBuffer->size);
         bufferConverter->toPCM(pipelineBuffer, buffer);
         statisticsService->loopWorkEnd();
-        // printLastBuffer(buffer);
         audioOutput->playBuffer(buffer);
         if (recording){
             audioRecorder.saveBuffer(buffer);

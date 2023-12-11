@@ -15,7 +15,7 @@ int main(int argc, char** argv){
     const ushort keyCount = 127;
 
     audioFormatInfo audioInfo;
-    audioInfo.bitDepth = 24;
+    audioInfo.bitDepth = 16;
     audioInfo.channels = 1;
     audioInfo.sampleRate = 48000;
     audioInfo.sampleSize = 512;

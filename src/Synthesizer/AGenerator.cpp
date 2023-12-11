@@ -16,13 +16,15 @@ void synthesizer::AGenerator::generate(noteBuffer& noteBuffer, const uchar* keyS
 
         } else if (noteBuffer.releaseSamplesPassed < settings.release.duration){
             noteBuffer.phaze++;
-            noteBuffer.releaseSamplesPassed++;
 
             float dynamicsMultiplier = settings.dynamicsDuration > noteBuffer.pressSamplessPassedCopy ? dynamicsProfile[noteBuffer.pressSamplessPassedCopy] : settings.fadeTo;
 
-
+            dynamicsMultiplier *= releaseProfile[noteBuffer.releaseSamplesPassed];
             noteBuffer.pressSamplessPassed = (settings.attack.duration - 1) * dynamicsMultiplier;
-            noteBuffer.buffer[i] = soundFunction(noteBuffer) * settings.volume * noteBuffer.velocity * releaseProfile[noteBuffer.releaseSamplesPassed] * dynamicsMultiplier;//BUG: this line crashes if I increase release time while playing any sound
+
+            noteBuffer.buffer[i] = soundFunction(noteBuffer) * settings.volume * noteBuffer.velocity * dynamicsMultiplier;//BUG: this line crashes if I increase release time while playing any sound
+
+            noteBuffer.releaseSamplesPassed++;
 
         } else {
             noteBuffer.phaze = 0;
