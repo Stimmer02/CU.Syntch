@@ -9,8 +9,9 @@ MidiFileReader::MidiFileReader(std::string path, uint sampleSize, uint sampleRat
     }
 
     file = new std::ifstream(path, std::ifstream::in | std::ifstream::binary);
-    if (file->is_open()){
+    if (file->is_open() == false){
         fileReady = false;
+        std::fprintf(stderr, "ERR: MidiFileReader::MidiFileReader: COULD NOT OPEN FILE %s\n", path.c_str());
         return;
     }
 
