@@ -18,6 +18,9 @@ public:
     void clearInactiveBuffer();
     long getActivationTimestamp();
 
+    ushort getKeyCount();
+    uint getSampleSize();
+
 private:
     const ushort keyCount;
     const uint sampleSize;

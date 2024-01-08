@@ -42,7 +42,7 @@ int main(int argc, char** argv){
 
         keyboardInput = new KeyboardRecorder_DevSnd(keyCount);
     } else {
-        std::printf("Reading MIDI file: %s...\n", argv[1]);
+        std::printf("Reading MIDI file: %s\n", argv[1]);
 
         MIDI::MidiFileReader midiReader(argv[1] ,audioInfo.sampleSize, audioInfo.sampleRate);
         AudioPipelineSubstitute audioPipeline(audioInfo, keyCount, nullptr);

@@ -7,6 +7,9 @@
 #include "AudioPipelineSubstitute.h"
 #include "UserInput/TerminalInputDiscard.h"
 
+#include <iostream>
+#include <map>
+
 
 class SynthUserInterface{
 public:
@@ -18,28 +21,6 @@ public:
 private:
     void parseInput();
 
-    void drawSyntchSettings();
-    void drawStatistics();
-    void drawRecordingMenu();
-    void drawFormatSettings();
-    bool recordingIndicatorBlink;
-
-    void drawXTimes(uint x);
-    void waitUntilKeyReleased(ushort key);
-    // void syntchSettingsChange(const ushort& id, const synthesizer::settings_name& settingsName, const float& value, const uint& keyID);
-
-    void parseMenuSynthSetting();
-    void parseMenuStatistics();
-    void parseFormatSettings();
-    void parseRecordingMenu();
-
-    typedef void (SynthUserInterface::*methodPtr)();
-    methodPtr renderMethod;
-    methodPtr parseInputMethod;
-
-    int xPosition;
-    int yPosition;
-
 
     IKeyboardInput* userInput;
     AKeyboardRecorder* keyboardInput;
@@ -47,13 +28,34 @@ private:
     TerminalInputDiscard terminalDiscard;
 
     bool running;
-    bool toUpdate;
-    bool fromatSettingsApplied;
-    audioFormatInfo audioInfo;
-    audioFormatInfo unappliedAudioInfo;
+    uint loopDelay;
     ushort keyCount;
 
-    uint loopDelay;
+    void drawXTimes(uint x);
+    void waitUntilKeyReleased(ushort key);
+
+
+    bool terminalInput;
+
+    std::string inputLine;
+    const ushort inputTokenMax = 64;
+    const char** inputTokens;
+    ushort inputTokenCount;
+
+    struct cmp_str{
+        bool operator()(const char* a, const char* b) const{
+            return std::strcmp(a, b) < 0;
+        }
+    };
+
+    typedef void (SynthUserInterface::*methodPtr)();
+    std::map<const char*, methodPtr, cmp_str>* commandMap;
+
+    void initializeCommandMap();
+
+    void commandExit();
+    void commandDisable();
+
 };
 
 #endif

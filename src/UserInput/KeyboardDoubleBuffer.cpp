@@ -47,3 +47,11 @@ void KeyboardDoubleBuffer::clearInactiveBuffer(){
         std::memset(buffer[!activeBuffer][i], 0, sampleSize);
     }
 }
+
+ushort KeyboardDoubleBuffer::getKeyCount(){
+    return keyCount;
+}
+
+uint KeyboardDoubleBuffer::getSampleSize(){
+    return sampleSize;
+}

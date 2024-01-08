@@ -8,9 +8,10 @@ MidiFileReader::MidiFileReader(std::string path, uint sampleSize, uint sampleRat
         tempNoteBuffer[i] = new uchar[sampleSize];
     }
 
-    file = new std::ifstream(path, std::ifstream::in | std::ifstream::binary);
-    if (file->is_open()){
+    file = new std::ifstream(path, std::ios::in | std::ios::binary);
+    if (file->is_open() == false){
         fileReady = false;
+        std::fprintf(stderr, "ERR: MidiFileReader::MidiFileReader: COULD NOT OPEN FILE %s\n", path.c_str());
         return;
     }
 
