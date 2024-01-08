@@ -88,6 +88,15 @@ void Output::play(pipelineAudioBuffer* pipelineBuffer){//TODO: consider moving t
     }
 }
 
+void Output::onlyRecord(pipelineAudioBuffer* pipelineBuffer){//TODO: consider moving this exception higher
+    try {
+        bufferConverter->toPCM(pipelineBuffer, buffer);
+        audioRecorder.saveBuffer(buffer);
+    } catch (std::exception& e){
+        std::fprintf(stderr, "ERR pipeline::Output::play: %s\n", e.what());
+    }
+}
+
 char Output::startRecording(){
     if (recording) {
         return 1;

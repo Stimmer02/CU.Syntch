@@ -32,8 +32,10 @@
 *.app
 
 # Audio files
+*.WAV
 *.wav
 *.MID
+*.mid
 
 # Folder contents
 config/*

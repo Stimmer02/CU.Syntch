@@ -1,6 +1,7 @@
 #ifndef AUDIOPIPELINEMANAGER_H
 #define AUDIOPIPELINEMANAGER_H
 
+#include "Pipeline/IDManager.h"
 #include "Pipeline/Input.h"
 #include "Pipeline/Output.h"
 #include "Pipeline/Statistics/PipelineStatisticsService.h"
@@ -18,17 +19,19 @@ namespace pipeline{
 
         char start();
         void stop();
+        bool isRuning();
 
         const statistics::pipelineStatistics* getStatistics();
         const audioFormatInfo* getAudioInfo();
 
-        void recordUntilStreamEmpty(MIDI::MidiFileReader& midi, std::string filename = "");
+        char recordUntilStreamEmpty(MIDI::MidiFileReader& midi, short synthID, std::string filename = "");//TODO: rethink this function
+        bool IDValid(pipeline::ID_type type, short ID);
 
 
         //OUTPUT CONTROL
-        void startRecording();
-        void startRecording(std::string outPath);
-        void stopRecording();
+        char startRecording();
+        char startRecording(std::string outPath);
+        char stopRecording();
         bool isRecording();
 
 
@@ -36,7 +39,7 @@ namespace pipeline{
         void pauseInput();
         void reausumeInput();
 
-        short addInput(AKeyboardRecorder* input);
+        short addInput(AKeyboardRecorder*& input);
         char removeInput(short ID);
         short getInputCount();
 
@@ -46,13 +49,13 @@ namespace pipeline{
 
         char connectInputToSynth(short inputID, short synthID);
 
-        const synthesizer::settings* getSynthSettings(const ushort& id);
-        synthesizer::generator_type getSynthType(const ushort& id);
-        void setSynthSettings(const ushort& id, const synthesizer::settings_name& settingsName, const float& value);
-        void setSynthSettings(const ushort& id, const synthesizer::generator_type& type);
+        const synthesizer::settings* getSynthSettings(const ushort& ID);
+        synthesizer::generator_type getSynthType(const ushort& ID);
+        void setSynthSettings(const ushort& ID, const synthesizer::settings_name& settingsName, const float& value);
+        void setSynthSettings(const ushort& ID, const synthesizer::generator_type& type);
 
-        char saveSynthConfig(std::string path, ushort id);
-        char loadSynthConfig(std::string path, ushort id);
+        char saveSynthConfig(std::string path, ushort ID);
+        char loadSynthConfig(std::string path, ushort ID);
 
     private:
         void pipelineThreadFunction();

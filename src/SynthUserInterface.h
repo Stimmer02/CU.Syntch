@@ -4,35 +4,32 @@
 #include "AudioOutput/audioFormatInfo.h"
 #include "UserInput/AKeyboardRecorder.h"
 #include "UserInput/IKeyboardInput.h"
-#include "AudioPipelineSubstitute.h"
+#include "AudioPipelineManager.h"
 #include "UserInput/TerminalInputDiscard.h"
 
+#include <linux/input-event-codes.h>
 #include <iostream>
 #include <map>
 
 
 class SynthUserInterface{
 public:
-    SynthUserInterface(audioFormatInfo audioInfo, AKeyboardRecorder* keyboardInput, IKeyboardInput* userInput, ushort keyCount);
+    SynthUserInterface(audioFormatInfo audioInfo, AKeyboardRecorder*& keyboardInput, IKeyboardInput*& userInput, ushort keyCount);
     ~SynthUserInterface();
 
     char start();
 
 private:
     void parseInput();
-
+    void waitUntilKeyReleased(ushort key);
 
     IKeyboardInput* userInput;
-    AKeyboardRecorder* keyboardInput;
-    AudioPipelineSubstitute* audioPipeline;
+    AudioPipelineManager* audioPipeline;
     TerminalInputDiscard terminalDiscard;
 
     bool running;
     uint loopDelay;
     ushort keyCount;
-
-    void drawXTimes(uint x);
-    void waitUntilKeyReleased(ushort key);
 
 
     bool terminalInput;
@@ -54,8 +51,11 @@ private:
     void initializeCommandMap();
 
     void commandExit();
-    void commandDisable();
-
+    void commandToggle();
+    void commandHelp();
+    void commandPipelineStart();
+    void commandPipelineStop();
+    void commandMidiRecord();
 };
 
 #endif

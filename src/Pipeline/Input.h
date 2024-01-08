@@ -2,8 +2,9 @@
 #define PIPELINEINPUT_H
 
 #include "../Synthesizer.h"
-#include "IDManager.h"
 #include "KeyboardManager.h"
+#include "KeyboardManager.cpp"
+#include "pipelineAudioBuffer.h"
 
 namespace pipeline{
     /*
@@ -37,8 +38,10 @@ namespace pipeline{
         short addInput(AKeyboardRecorder* input);
         char removeInput(short ID);
         short getInputCount();
-        void swapActiveBuffers();
         long getActivationTimestamp();
+
+        void swapActiveBuffers();
+        void cycleBuffers();
 
         short addSynthesizer();
         char removeSynthesizer(short ID);
@@ -48,12 +51,15 @@ namespace pipeline{
 
         char connectInputToSynth(short inputID, short synthID);
 
-        void generateSamples();//TODO
+        void generateSamples(pipelineAudioBuffer* temporaryBuffer);//TODO
+        void generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keyboardTransferBuffer* keyboardState);
 
         char saveSynthConfig(std::string path, short ID);
         char loadSynthConfig(std::string path, short ID);
 
         void reorganizeIDs();//gives every object an ID in the same order they are being stored
+        bool synthIDValid(short ID);
+        bool inputIDValid(short ID);
         void removeAll();
 
     private:
@@ -72,6 +78,8 @@ namespace pipeline{
 
         KeyboardManager<short> midiInput;
         IDManager<synthWithConnection, short> synths;
+
+        bool running;
     };
 }
 

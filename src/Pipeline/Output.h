@@ -26,6 +26,7 @@ namespace pipeline{
         bool isReady();
 
         void play(pipelineAudioBuffer* pipelineBuffer);
+        void onlyRecord(pipelineAudioBuffer* pipelineBuffer);
 
         char startRecording();
         char startRecording(std::string outPath);

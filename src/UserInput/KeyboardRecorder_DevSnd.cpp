@@ -150,7 +150,7 @@ void KeyboardRecorder_DevSnd::scannerThreadFunction(){
             } else {
                 if (event.message[1] < keyCount){
                     interpreter.executeMidiEvent(event, buffer->getActiveBuffer(), sampleSize-1);
-                    std::printf("WARNING: KeyboardRecorder_DevSnd::scannerThreadFunction BUFFER WAS NOT SWAPPED FAST ENOUGH\n");
+                    // std::printf("WARNING: KeyboardRecorder_DevSnd::scannerThreadFunction BUFFER WAS NOT SWAPPED FAST ENOUGH\n");
                 }
             }
         }

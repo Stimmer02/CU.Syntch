@@ -13,7 +13,7 @@ namespace pipeline{
     class KeyboardManager: public IDManager<AKeyboardRecorder, CAPACITY>{
     public:
         KeyboardManager(CAPACITY defaultIncrement = 8);
-        ~KeyboardManager() override;
+        ~KeyboardManager() /*override*/;
 
         CAPACITY add(AKeyboardRecorder*& newSynth) override;
         char remove(CAPACITY ID) override;

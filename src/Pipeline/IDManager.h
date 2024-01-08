@@ -8,7 +8,7 @@ namespace pipeline{
     class IDManager{
     public:
         IDManager(CAPACITY defaultIncrement = 8);
-        virtual ~IDManager();
+        /*virtual */~IDManager();
 
         virtual CAPACITY add(TYPE*& newElement);
         virtual char remove(CAPACITY ID);
@@ -25,9 +25,8 @@ namespace pipeline{
 
     protected:
         TYPE** elements;
-
+        CAPACITY* elementsID;
         CAPACITY elementsUsed;
-        CAPACITY elementsID;
         CAPACITY elementsTotal;
 
         CAPACITY* IDMap;

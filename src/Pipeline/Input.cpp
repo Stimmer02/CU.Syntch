@@ -4,11 +4,20 @@ using namespace pipeline;
 
 Input::Input(){
     keyCount = 0; //indicates if object was inicialized
+    running = false;
 }
 
-Input::~Input(){}
+Input::~Input(){
+    if (running){
+        stopAllInputs();
+    }
+}
 
 void Input::cleanup(){
+    if (running){
+        stopAllInputs();
+    }
+
     synths.removeAll();
     midiInput.removeAll();
 }
@@ -17,12 +26,19 @@ char Input::startAllInputs(){
     if (keyCount == 0){
         return -1;
     }
+
+    if (running){
+        return -2;
+    }
+
     AKeyboardRecorder** allInputs = midiInput.getAll();
-    for (uint i = 0; i < midiInput.getElementCount(); i++){
+    for (int i = 0; i < midiInput.getElementCount(); i++){
         if (allInputs[i]->start()){
-           return -2;
+            stopAllInputs();
+            return -3;
         }
     }
+    running = true;
     return 0;
 }
 
@@ -30,17 +46,27 @@ char Input::stopAllInputs(){
     if (keyCount == 0){
         return -1;
     }
+
+    if (running == false){
+        return -2;
+    }
+
     char output = 0;
     AKeyboardRecorder** allInputs = midiInput.getAll();
-    for (uint i = 0; i < midiInput.getElementCount(); i++){
+    for (int i = 0; i < midiInput.getElementCount(); i++){
         if (allInputs[i]->stop()){
-           output = -2;
+           output = -3;
         }
     }
+    running = false;
     return output;
 }
 
 char Input::init(audioFormatInfo audioInfo, ushort keyCount){
+    if (running){
+        return -1;
+    }
+
     this->audioInfo = audioInfo;
     this->keyCount = keyCount;
     if (midiInput.getElementCount() > 0 || synths.getElementCount() > 0){
@@ -52,25 +78,31 @@ char Input::init(audioFormatInfo audioInfo, ushort keyCount){
 }
 
 short Input::addInput(AKeyboardRecorder* input){
-    return midiInput.add(input);
+    short ID = midiInput.add(input);
+    if (running){
+        midiInput.getElement(ID)->start();
+    }
+    return ID;
 }
 
 char Input::removeInput(short ID){
-    return midiInput.remove(ID);
+    if (running){
+        AKeyboardRecorder* input = midiInput.getElement(ID);
+        input->stop();
+        while (input->isRunning());
+    }
+    char returnCode = midiInput.remove(ID);
     synthWithConnection** allSynths = synths.getAll();
-    for (uint i = 0 ; i < synths.getElementCount(); i++){
+    for (int i = 0 ; i < synths.getElementCount(); i++){
         if (allSynths[i]->midiInputID == ID){
             allSynths[i]->midiInputID = -1;
         }
     }
+    return returnCode;
 }
 
 short Input::getInputCount(){
     return midiInput.getElementCount();
-}
-
-void Input::swapActiveBuffers(){
-    midiInput.swapActiveBuffers();
 }
 
 short Input::addSynthesizer(){
@@ -107,17 +139,44 @@ char Input::connectInputToSynth(short inputID, short synthID){
     return 0;
 }
 
-void Input::generateSamples(){
-
+void Input::swapActiveBuffers(){
+    midiInput.swapActiveBuffers();
 }
 
-char Input::saveSynthConfig(std::string path, short id){
+void Input::cycleBuffers(){
+    static AKeyboardRecorder** allInputs = midiInput.getAll();
+    static keyboardTransferBuffer** allBuffers = midiInput.getAllBuffers();
 
-    return 0;
+    for (int i = 0; i < midiInput.getElementCount(); i++){
+        allInputs[i]->buffer->swapActiveBuffer();
+        allBuffers[i]->convertBuffer(allInputs[i]->buffer);
+        allInputs[i]->buffer->clearInactiveBuffer();
+    }
 }
 
-char Input::loadSynthConfig(std::string path, short id){
-    return 0;
+void Input::generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keyboardTransferBuffer* keyboardState){
+    synths.getElement(synthID)->synth.generateSample(buffer, keyboardState);
+}
+
+
+void Input::generateSamples(pipelineAudioBuffer* temporaryBuffer){
+    synths.getElement(0)->synth.generateSample(temporaryBuffer, midiInput.getBuffer(0));
+}
+
+char Input::saveSynthConfig(std::string path, short ID){
+    return synths.getElement(ID)->synth.saveConfig(path);
+}
+
+char Input::loadSynthConfig(std::string path, short ID){
+    return synths.getElement(ID)->synth.loadConfig(path);
+}
+
+bool Input::synthIDValid(short ID){
+    return synths.IDValid(ID);
+}
+
+bool Input::inputIDValid(short ID){
+    return midiInput.IDValid(ID);
 }
 
 void Input::reorganizeIDs(){

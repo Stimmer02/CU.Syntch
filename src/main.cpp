@@ -1,9 +1,10 @@
 #include "AudioOutput/audioFormatInfo.h"
-#include "AudioPipelineSubstitute.h"
+#include "AudioPipelineManager.h"
 #include "SynthUserInterface.h"
 #include "UserInput/InputMap.h"
 #include "UserInput/KeyboardInput_DevInput.h"
 #include "UserInput/KeyboardRecorder_DevSnd.h"
+#include "UserInput/KeyboardRecorder_DevInput.h"
 #include "UserInput/MIDI/MidiFileReader.h"
 #include "UserInput/TerminalInputDiscard.h"
 
@@ -45,11 +46,10 @@ int main(int argc, char** argv){
         std::printf("Reading MIDI file: %s\n", argv[1]);
 
         MIDI::MidiFileReader midiReader(argv[1] ,audioInfo.sampleSize, audioInfo.sampleRate);
-        AudioPipelineSubstitute audioPipeline(audioInfo, keyCount, nullptr);
-        audioPipeline.loadSynthConfig("./config/synth.config", 0);
-        audioPipeline.recordUntilStreamEmpty(midiReader, argv[2]);
-
-        return 0;
+        AudioPipelineManager audioPipeline(audioInfo, keyCount);
+        short synthID = audioPipeline.addSynthesizer();
+        audioPipeline.loadSynthConfig("./config/synth.config", synthID);
+        return audioPipeline.recordUntilStreamEmpty(midiReader, synthID, argv[2]);
     }
 
     std::string GUIStreamLocation = "/dev/input/event";
@@ -71,8 +71,6 @@ int main(int argc, char** argv){
 
     userInterface.start();
 
-    delete keyboardInput;
-    delete userInput;
     if (keyboardMap != nullptr){
         delete keyboardMap;
     }

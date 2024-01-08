@@ -10,21 +10,21 @@ KeyboardManager<CAPACITY>::KeyboardManager(CAPACITY defaultIncrement): IDManager
 template <typename CAPACITY>
 KeyboardManager<CAPACITY>::~KeyboardManager(){
     for (CAPACITY i = 0; i < elementsUsed; i++){
-        delete elements[i];
+        // delete elements[i];
         delete keyboardsState[i];
     }
 
     delete[] keyboardsState;
-    delete[] elements;
-    delete[] elementsID;
-    delete[] IDMap;
+    // delete[] elements;
+    // delete[] elementsID;
+    // delete[] IDMap;
 }
 
 template <typename CAPACITY>
 void KeyboardManager<CAPACITY>::resizeElements(CAPACITY increment){
     elementsTotal += increment;
     AKeyboardRecorder** newElements = new AKeyboardRecorder*[elementsTotal];
-    CAPACITY newElementsID = new CAPACITY[elementsTotal];
+    CAPACITY* newElementsID = new CAPACITY[elementsTotal];
     keyboardTransferBuffer** newKeyboardsState = new keyboardTransferBuffer*[elementsTotal];
 
     std::memcpy(newElements, elements, elementsUsed * sizeof(AKeyboardRecorder*));

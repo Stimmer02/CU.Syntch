@@ -30,7 +30,7 @@ template <class TYPE, typename CAPACITY>
 void IDManager<TYPE, CAPACITY>::resizeElements(CAPACITY increment){
     elementsTotal += increment;
     TYPE** newElements = new TYPE*[elementsTotal];
-    CAPACITY newElementsID = new CAPACITY[elementsTotal];
+    CAPACITY* newElementsID = new CAPACITY[elementsTotal];
 
     std::memcpy(newElements, elements, elementsUsed * sizeof(TYPE*));
     std::memcpy(newElementsID, elementsID, elementsUsed * sizeof(CAPACITY));
