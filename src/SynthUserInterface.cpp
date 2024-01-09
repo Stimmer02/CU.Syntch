@@ -99,12 +99,13 @@ void SynthUserInterface::waitUntilKeyReleased(ushort key){
 
 void SynthUserInterface::initializeCommandMap(){
     commandMap = new std::map<const char*, methodPtr, SynthUserInterface::cmp_str>{
-        {"exit",   &SynthUserInterface::commandExit},
-        {"toggle", &SynthUserInterface::commandToggle},
-        {"help",   &SynthUserInterface::commandHelp},
-        {"pStart", &SynthUserInterface::commandPipelineStart},
-        {"pStop",  &SynthUserInterface::commandPipelineStop},
-        {"midiRec",&SynthUserInterface::commandMidiRecord},
+        {"exit",     &SynthUserInterface::commandExit},
+        {"toggle",   &SynthUserInterface::commandToggle},
+        {"help",     &SynthUserInterface::commandHelp},
+        {"pStart",   &SynthUserInterface::commandPipelineStart},
+        {"pStop",    &SynthUserInterface::commandPipelineStop},
+        {"midiRec",  &SynthUserInterface::commandMidiRecord},
+        {"synthSave",&SynthUserInterface::commandSynthSave},
     };
 }
 
@@ -144,6 +145,7 @@ void SynthUserInterface::commandHelp(){
     "pStart  - starts audio pipeline\n"
     "pStop   - stops audio pipeline\n"
     "midiRec <midi file path> <output name> <synth ID> - reads MIDI file and records it to specified .WAV file using specific synthesizer\n"
+    "synthSave <load/save> <save file path> <synth ID> - loads or saves synthesizer configuration\n"
     "\n";
     std::printf("%s\n", help.c_str());
 }
@@ -183,9 +185,41 @@ void SynthUserInterface::commandMidiRecord(){
     std::printf("Reading MIDI file: %s\n", inputTokens[1]);
     MIDI::MidiFileReader midiReader(inputTokens[1] , audioPipeline->getAudioInfo()->sampleSize, audioPipeline->getAudioInfo()->sampleRate);
 
-    if(audioPipeline->recordUntilStreamEmpty(midiReader, synthID, inputTokens[2])){
+    auto start = std::chrono::high_resolution_clock::now();
+    if (audioPipeline->recordUntilStreamEmpty(midiReader, synthID, inputTokens[2])){
         std::printf("Something went wrong!\n");
         return;
     }
+    auto end = std::chrono::high_resolution_clock::now();
+
     std::printf("File successfully saved as: %s\n", inputTokens[2]);
+    std::printf("Time elapsed: %f s\n", std::chrono::duration<double>(end-start).count());
+}
+
+void SynthUserInterface::commandSynthSave(){
+    if (inputTokenCount < 4){
+        std::printf("Usage: synthSave <load/save> <save file path> <synth ID>\n");
+        return;
+    }
+    short synthID = std::stoi(inputTokens[3]);
+    if (audioPipeline->IDValid(pipeline::SYNTH, synthID) == false){
+        std::printf("Given synthesizer ID (%i) is not valid\n", synthID);
+        return;
+    }
+
+    if (std::strcmp("load", inputTokens[1]) == 0){
+        if (audioPipeline->loadSynthConfig(inputTokens[2], synthID)){
+            std::printf("Something went wrong!\n");
+            return;
+        }
+        std::printf("Configuration loaded\n");
+    } else if (std::strcmp("save", inputTokens[1]) == 0){
+        if (audioPipeline->saveSynthConfig(inputTokens[2], synthID)){
+            std::printf("Something went wrong!\n");
+            return;
+        }
+        std::printf("Configuration saved\n");
+    } else {
+        std::printf("Unknown option: %s\n", inputTokens[1]);
+    }
 }

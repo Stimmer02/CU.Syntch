@@ -56,6 +56,7 @@ private:
     void commandPipelineStart();
     void commandPipelineStop();
     void commandMidiRecord();
+    void commandSynthSave();
 };
 
 #endif

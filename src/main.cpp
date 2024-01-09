@@ -49,7 +49,15 @@ int main(int argc, char** argv){
         AudioPipelineManager audioPipeline(audioInfo, keyCount);
         short synthID = audioPipeline.addSynthesizer();
         audioPipeline.loadSynthConfig("./config/synth.config", synthID);
-        return audioPipeline.recordUntilStreamEmpty(midiReader, synthID, argv[2]);
+
+        auto start = std::chrono::high_resolution_clock::now();
+        if (audioPipeline.recordUntilStreamEmpty(midiReader, synthID, argv[2])){
+            return 4;
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+
+        std::printf("File successfully saved as: %s\n", argv[2]);
+        std::printf("Time elapsed: %f s\n", std::chrono::duration<double>(end-start).count());
     }
 
     std::string GUIStreamLocation = "/dev/input/event";
