@@ -34,6 +34,7 @@ namespace pipeline{
 
         char startAllInputs();
         char stopAllInputs();
+        void clearBuffers();
 
         short addInput(AKeyboardRecorder* input);
         char removeInput(short ID);
@@ -43,15 +44,16 @@ namespace pipeline{
         void swapActiveBuffers();
         void cycleBuffers();
 
-        short addSynthesizer();
+        short addSynthesizer(pipelineAudioBuffer* buffer);
         char removeSynthesizer(short ID);
         short getSynthesizerCount();
         void setSynthetiserSetting(short ID, synthesizer::settings_name settingsName, float value);
         const synthesizer::settings* getSynthetiserSettins(short ID);
 
         char connectInputToSynth(short inputID, short synthID);
+        char disconnectSynth(short synthID);
 
-        void generateSamples(pipelineAudioBuffer* temporaryBuffer);//TODO
+        void generateSamples();
         void generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keyboardTransferBuffer* keyboardState);
 
         char saveSynthConfig(std::string path, short ID);
@@ -64,11 +66,13 @@ namespace pipeline{
 
     private:
         struct synthWithConnection{
-            synthWithConnection(audioFormatInfo audioInfo, ushort keyCount):synth(audioInfo, keyCount){
+            synthWithConnection(pipelineAudioBuffer* buffer, audioFormatInfo audioInfo, ushort keyCount):synth(audioInfo, keyCount){
                 midiInputID = -2;
+                this->buffer = buffer;
             };
             synthesizer::Synthesizer synth;
             short midiInputID;
+            pipelineAudioBuffer* buffer;
         };
 
         void cleanup();

@@ -1,11 +1,13 @@
 #include "AudioPipelineManager.h"
+#include "Pipeline/AudioBufferQueue.h"
+#include "Pipeline/IDManager.h"
 #include "Pipeline/pipelineAudioBuffer.h"
 #include "Synthesizer.h"
 #include "UserInput/keyboardTransferBuffer.h"
 
 using namespace pipeline;
 
-AudioPipelineManager::AudioPipelineManager(audioFormatInfo audioInfo, ushort keyCount): audioInfo(audioInfo), keyCount(keyCount){
+AudioPipelineManager::AudioPipelineManager(audioFormatInfo audioInfo, ushort keyCount): audioInfo(audioInfo), keyCount(keyCount),  component(&audioInfo){
     running = false;
     pipelineThread = nullptr;
     statisticsService = new statistics::PipelineStatisticsService(audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate, 64, audioInfo, 0);
@@ -13,19 +15,29 @@ AudioPipelineManager::AudioPipelineManager(audioFormatInfo audioInfo, ushort key
     input.init(audioInfo, keyCount);
     output.init(audioInfo);
 
-    temporaryBuffer = new pipelineAudioBuffer(audioInfo.sampleSize);
+    outputQueue = nullptr;
 }
 
 AudioPipelineManager::~AudioPipelineManager(){
     delete statisticsService;
-    delete temporaryBuffer;
+    for (uint i = 0; i < queue.size(); i++){
+        delete queue.at(i);
+    }
 }
 
 char AudioPipelineManager::start(){
-    if (running) return -1;
+    if (running){
+        std::fprintf(stderr, "ERR: AudioPipelineManager::start PIPELINE ALREADY RUNNING\n");
+        return -1;
+    }
+    if (outputQueue == nullptr){
+        std::fprintf(stderr, "ERR: AudioPipelineManager::start OUTPUT BUFFER IS NOT SET\n");
+        return -2;
+    }
     if (input.startAllInputs()){
         input.stopAllInputs();
-        return -2;
+        std::fprintf(stderr, "ERR: AudioPipelineManager::start COULD NOT START ALL INPUTS\n");
+        return -3;
     }
 
     if (pipelineThread != nullptr){
@@ -83,7 +95,13 @@ void AudioPipelineManager::pipelineThreadFunction(){
         input.cycleBuffers();
 
         //synth->generateSample(pipelineBuffer, keyboardState);
-        input.generateSamples(temporaryBuffer);
+        input.generateSamples();
+        // if (component.applyEffects(queue, queue.size())){//TODO: find better way to store queues
+        //     std::fprintf(stderr, "ERROR: AudioPipelineManager::pipelineThreadFunction CRITICAL ERROR APPLYING EFFECTS\n");
+        //     stop();
+        //     return;
+        // }
+
 
         // printLastBuffer(pipelineBuffer->bufferL, pipelineBuffer->size);
 
@@ -94,7 +112,7 @@ void AudioPipelineManager::pipelineThreadFunction(){
         // if (recording){
         //     audioRecorder.saveBuffer(buffer);
         // }
-        output.play(temporaryBuffer);
+        output.play(&outputQueue->buffer);
     }
 }
 
@@ -180,15 +198,42 @@ char AudioPipelineManager::loadSynthConfig(std::string path, ushort ID){
 }
 
 short AudioPipelineManager::addSynthesizer(){
-    return input.addSynthesizer();
+    AudioBufferQueue* newQueue = new AudioBufferQueue(pipeline::SYNTH, audioInfo.sampleSize);
+    short newSynthID = input.addSynthesizer(&newQueue->buffer);
+    newQueue->parentID = newSynthID;
+    queue.push_back(newQueue);
+    return newSynthID;
 }
 
 char AudioPipelineManager::removeSynthesizer(short ID){
+    for (uint i = 0; i < queue.size(); i++){
+        if (queue.at(i)->parentID == ID){
+            if (outputQueue->parentID == ID && outputQueue->parentType == pipeline::SYNTH){
+                std::printf("WARNING: REMOVING OUTPUT BUFFER\n");
+                if (running){
+                    stop();
+                    std::printf("WARNING: SYSTEM STOPPED\n");
+                }
+                outputQueue = nullptr;
+            }
+            delete queue.at(i);
+            queue.erase(queue.begin() + i);
+            break;
+        }
+    }
     return input.removeSynthesizer(ID);
 }
 
 short AudioPipelineManager::getSynthesizerCount(){
     return input.getSynthesizerCount();
+}
+
+char AudioPipelineManager::connectInputToSynth(short inputID, short synthID){
+    return input.connectInputToSynth(inputID, synthID);
+}
+
+char AudioPipelineManager::disconnectSynth(short synthID){
+    return input.disconnectSynth(synthID);
 }
 
 
@@ -205,10 +250,37 @@ short AudioPipelineManager::getInputCount(){
 }
 
 
-void AudioPipelineManager::pauseInput(){
-    input.stopAllInputs();
+char AudioPipelineManager::pauseInput(){
+    return input.stopAllInputs();
 }
 
-void AudioPipelineManager::reausumeInput(){
-    input.startAllInputs();
+char AudioPipelineManager::reausumeInput(){
+    return input.startAllInputs();
+}
+
+void AudioPipelineManager::clearInputBuffers(){
+    input.clearBuffers();
+}
+
+
+//EFFECT CONTROLL
+
+char AudioPipelineManager::setOutputBuffer(short ID, ID_type IDType){
+    if (IDValid(IDType, ID) == false){
+        return -1;
+    }
+
+    if (IDType != SYNTH && IDType != COMP){
+       return -2;
+    }
+
+    for (uint i = 0; i < queue.size(); i++){
+        AudioBufferQueue& queueIterator = *queue.at(i);
+        if (queueIterator.parentID == ID && queueIterator.parentType == IDType){
+            outputQueue = &queueIterator;
+            return 0;
+        }
+    }
+
+    return -3;
 }

@@ -6,6 +6,8 @@
 #include "UserInput/IKeyboardInput.h"
 #include "AudioPipelineManager.h"
 #include "UserInput/TerminalInputDiscard.h"
+// #include "TerminalHistory.h" //TODO
+// #include "ScriptExecutor.h" //TODO
 
 #include <linux/input-event-codes.h>
 #include <iostream>
@@ -45,6 +47,7 @@ private:
         }
     };
 
+
     typedef void (SynthUserInterface::*methodPtr)();
     std::map<const char*, methodPtr, cmp_str>* commandMap;
 
@@ -56,7 +59,27 @@ private:
     void commandPipelineStart();
     void commandPipelineStop();
     void commandMidiRecord();
+    void commandExecuteScript();//TODO IMPORTANT
+    void commandSetOutputBuffer();//TODO
+
     void commandSynthSave();
+    void commandSynthAdd();
+    void commandSynthRemove();
+    void commandSynthCount();
+    void commandSynthModify();//TODO
+    void commandSynthSettings();//TODO
+    void commandSynthList();//TODO
+
+    void commandInputAdd();
+    void commandInputRemove();
+    void commandInputCount();
+    void commandInputList();//TODO
+
+    void commandSynthConnect();
+    void commandSynthDisconnect();
+    void commandReinitializeID();//TODO
+
+
 };
 
 #endif

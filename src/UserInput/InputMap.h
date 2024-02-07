@@ -14,6 +14,7 @@ public:
     ushort map(const ushort& key)const;
     void replace(ushort& key)const;
     ushort getMaxValue()const;
+    ushort getKeyCount()const;
 
 private:
     ushort keyCount;

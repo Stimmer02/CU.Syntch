@@ -1,6 +1,7 @@
 #ifndef AUDIOPIPELINEMANAGER_H
 #define AUDIOPIPELINEMANAGER_H
 
+#include "Pipeline/ComponentManager.h"
 #include "Pipeline/IDManager.h"
 #include "Pipeline/Input.h"
 #include "Pipeline/Output.h"
@@ -9,6 +10,7 @@
 
 #include "Pipeline/pipelineAudioBuffer.h"
 #include "UserInput/MIDI/MidiFileReader.h"
+#include <vector>
 
 
 namespace pipeline{
@@ -36,8 +38,9 @@ namespace pipeline{
 
 
         //INPUT CONTROL
-        void pauseInput();
-        void reausumeInput();
+        char pauseInput();
+        char reausumeInput();
+        void clearInputBuffers();
 
         short addInput(AKeyboardRecorder*& input);
         char removeInput(short ID);
@@ -48,6 +51,7 @@ namespace pipeline{
         short getSynthesizerCount();
 
         char connectInputToSynth(short inputID, short synthID);
+        char disconnectSynth(short synthID);
 
         const synthesizer::settings* getSynthSettings(const ushort& ID);
         synthesizer::generator_type getSynthType(const ushort& ID);
@@ -56,6 +60,11 @@ namespace pipeline{
 
         char saveSynthConfig(std::string path, ushort ID);
         char loadSynthConfig(std::string path, ushort ID);
+
+        //EFFECT CONTROL
+
+        char setOutputBuffer(short ID, ID_type IDType);
+
 
     private:
         void pipelineThreadFunction();
@@ -66,7 +75,9 @@ namespace pipeline{
         Input input;
         Output output;
 
-        pipelineAudioBuffer* temporaryBuffer; //TODO:remove this
+        ComponentManager component;
+        std::vector<AudioBufferQueue*> queue;
+        AudioBufferQueue* outputQueue;
 
         statistics::PipelineStatisticsService* statisticsService;
 

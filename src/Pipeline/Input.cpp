@@ -62,6 +62,15 @@ char Input::stopAllInputs(){
     return output;
 }
 
+void Input::clearBuffers(){
+    AKeyboardRecorder** allInputs = midiInput.getAll();
+    for (int i = 0; i < midiInput.getElementCount(); i++){
+       allInputs[i]->buffer->clearInactiveBuffer();
+       allInputs[i]->buffer->swapActiveBuffer();
+       allInputs[i]->buffer->clearInactiveBuffer();
+    }
+}
+
 char Input::init(audioFormatInfo audioInfo, ushort keyCount){
     if (running){
         return -1;
@@ -105,8 +114,8 @@ short Input::getInputCount(){
     return midiInput.getElementCount();
 }
 
-short Input::addSynthesizer(){
-    synthWithConnection* newSynth = new synthWithConnection(audioInfo, keyCount);
+short Input::addSynthesizer(pipelineAudioBuffer* buffer){
+    synthWithConnection* newSynth = new synthWithConnection(buffer, audioInfo, keyCount);
     return synths.add(newSynth);
 }
 
@@ -139,6 +148,15 @@ char Input::connectInputToSynth(short inputID, short synthID){
     return 0;
 }
 
+char Input::disconnectSynth(short synthID){
+    if (synths.IDValid(synthID) == false){
+        return -1;
+    }
+
+    synths.getElement(synthID)->midiInputID = -2;//TODO: check if it works?
+    return 0;
+}
+
 void Input::swapActiveBuffers(){
     midiInput.swapActiveBuffers();
 }
@@ -159,8 +177,13 @@ void Input::generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keybo
 }
 
 
-void Input::generateSamples(pipelineAudioBuffer* temporaryBuffer){
-    synths.getElement(0)->synth.generateSample(temporaryBuffer, midiInput.getBuffer(0));
+void Input::generateSamples(){
+    for (ushort i = 0; i < synths.getElementCount(); i++){
+        synthWithConnection& synthIter = *synths.getElement(i);
+        if (synthIter.midiInputID >= 0){
+            synthIter.synth.generateSample(synthIter.buffer, midiInput.getBuffer(synthIter.midiInputID));
+        }
+    }
 }
 
 char Input::saveSynthConfig(std::string path, short ID){

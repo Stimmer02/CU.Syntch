@@ -1,5 +1,9 @@
 #include "SynthUserInterface.h"
 #include "Pipeline/IDManager.h"
+#include "UserInput/AKeyboardRecorder.h"
+#include "UserInput/InputMap.h"
+#include "UserInput/KeyboardRecorder_DevInput.h"
+#include "UserInput/KeyboardRecorder_DevSnd.h"
 #include <string>
 
 
@@ -19,6 +23,8 @@ SynthUserInterface::SynthUserInterface(audioFormatInfo audioInfo, AKeyboardRecor
         std::fprintf(stderr, "COULD NOT START\n");
         return;
     }
+    audioPipeline->connectInputToSynth(0, 0);
+    audioPipeline->setOutputBuffer(0, pipeline::SYNTH);
 
     if (userInput->start()){
         delete userInput;
@@ -49,7 +55,7 @@ char SynthUserInterface::start(){
 
     audioPipeline->pauseInput();
     while (this->running){
-        std::printf("\n> ");
+        std::printf("\n\e[97m⮞ ");
         parseInput();
     }
 
@@ -63,6 +69,7 @@ void SynthUserInterface::parseInput(){
     bool nextElementIsToken = false;
 
     std::getline(std::cin, inputLine);
+    std::printf("\e[0m");
 
     inputTokenCount = 1;
     inputTokens[0] = inputLine.c_str();
@@ -105,7 +112,18 @@ void SynthUserInterface::initializeCommandMap(){
         {"pStart",   &SynthUserInterface::commandPipelineStart},
         {"pStop",    &SynthUserInterface::commandPipelineStop},
         {"midiRec",  &SynthUserInterface::commandMidiRecord},
+
         {"synthSave",&SynthUserInterface::commandSynthSave},
+        {"synthAdd",&SynthUserInterface::commandSynthAdd},
+        {"synthRemove",&SynthUserInterface::commandSynthRemove},
+        {"synthCount",&SynthUserInterface::commandSynthCount},
+        {"synthConnect",&SynthUserInterface::commandSynthConnect},
+        {"synthDisconnect",&SynthUserInterface::commandSynthDisconnect},
+
+        {"inputAdd",&SynthUserInterface::commandInputAdd},
+        {"inputRemove",&SynthUserInterface::commandInputRemove},
+        {"inputCount",&SynthUserInterface::commandInputCount},
+
     };
 }
 
@@ -132,7 +150,7 @@ void SynthUserInterface::commandToggle(){
     std::printf("Terminal input enabled\n");
 }
 
-void SynthUserInterface::commandHelp(){
+void SynthUserInterface::commandHelp(){//TODO
     static const std::string help =
     "HELP PROMPT:\n"
     "Usage: command <arguments>\n"
@@ -145,7 +163,18 @@ void SynthUserInterface::commandHelp(){
     "pStart  - starts audio pipeline\n"
     "pStop   - stops audio pipeline\n"
     "midiRec <midi file path> <output name> <synth ID> - reads MIDI file and records it to specified .WAV file using specific synthesizer\n"
+    "\n"
     "synthSave <load/save> <save file path> <synth ID> - loads or saves synthesizer configuration\n"
+    "synthAdd - adds new synthesizer and returns its ID\n"
+    "synthRemove <synth ID> - removes synthesizer by its ID\n"
+    "synthCount - returns the total count of the synthesizers\n"
+    "synthConnect <synth ID> <inputID> - connects specified synthesizer with specified input so the synth will receive keyboard state from that input\n"
+    "synthDisconnect <synth ID> - removes the connection so the synthesizer wont't be used until new data stream is connected\n"
+    "\n"
+    "inputAdd <type> <stream path> <key count> <optional: key map file path> - adds new input and returns its ID, where the type is 'keyboard' or 'midi', stream path describes stream location, key count tells how many notes it should use, key map file path (if type is keybard) describes map file location that will provide keyboard layout interpretation\n"
+    "inputRemove <input ID> - removes input by its I\n"
+    "inputCount - returns the total count of the inputs\n"
+    "\n"
     "\n";
     std::printf("%s\n", help.c_str());
 }
@@ -223,3 +252,123 @@ void SynthUserInterface::commandSynthSave(){
         std::printf("Unknown option: %s\n", inputTokens[1]);
     }
 }
+
+void SynthUserInterface::commandSynthAdd(){
+    short synthID = audioPipeline->addSynthesizer();
+    std::printf("Synth created with ID: %d\n", synthID);
+}
+
+void SynthUserInterface::commandSynthRemove(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: synthRemove <synth ID>\n");
+        return;
+    }
+    short synthID = std::stoi(inputTokens[1]);
+    if (audioPipeline->removeSynthesizer(synthID)){
+        std::printf("Something went wrong!\n");
+        return;
+    }
+    std::printf("Synth (%d) removed\n", synthID);
+}
+
+void SynthUserInterface::commandSynthCount(){
+    short count = audioPipeline->getSynthesizerCount();
+    std::printf("Synth count: %d\n", count);
+}
+
+void SynthUserInterface::commandInputAdd(){
+    if (inputTokenCount < 4){
+        std::printf("Usage: inputAdd <type> <stream path> <key count>\n");
+        return;
+    }
+
+    AKeyboardRecorder* newInput;
+    if (std::strcmp(inputTokens[2], "keyboard") == 0){
+        if (inputTokenCount < 5){
+            std::printf("Usage: inputAdd keyboard <stream path> <key count> <key map file path>\n");
+            return;
+        }
+        std::printf("Interpreting as keyboard input\n");
+        InputMap map(inputTokens[5]);
+        ushort mapKeyCount = map.getKeyCount();
+        ushort userKeyCount = std::stoi(inputTokens[4]);
+        ushort inputKeyCount = userKeyCount;
+
+        if (keyCount < inputKeyCount){
+            std::printf("System configuration does not support specified key count: %d\n system will use: %d\n", userKeyCount, keyCount);
+            inputKeyCount = keyCount;
+        }
+
+        if (mapKeyCount < inputKeyCount){
+            std::printf("Provided key map does not support specified key count: %d\n system will use: %d\n", userKeyCount, mapKeyCount);
+            inputKeyCount = mapKeyCount;
+        }
+        newInput = new KeyboardRecorder_DevInput(inputKeyCount, &map);
+
+    } else if (std::strcmp(inputTokens[2], "midi") == 0){
+        std::printf("Interpreting as midi input\n");
+        ushort userKeyCount = std::stoi(inputTokens[4]);
+        ushort inputKeyCount = userKeyCount;
+
+        if (keyCount < inputKeyCount){
+            std::printf("System configuration does not support specified key count: %d\n system will use: %d\n", userKeyCount, keyCount);
+            inputKeyCount = keyCount;
+        }
+        newInput = new KeyboardRecorder_DevSnd(inputKeyCount);
+
+    } else {
+        std::printf("Not known device type: %s\n", inputTokens[2]);
+        return;
+    }
+
+    newInput->init(inputTokens[3], audioPipeline->getAudioInfo()->sampleSize, audioPipeline->getAudioInfo()->sampleRate);
+
+    short inputID = audioPipeline->addInput(newInput);
+    std::printf("Input created with ID: %d\n", inputID);
+}
+
+void SynthUserInterface::commandInputRemove(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: inputRemove <synth ID>\n");
+        return;
+    }
+    short inputID = std::stoi(inputTokens[1]);
+    if (audioPipeline->removeInput(inputID)){
+        std::printf("Something went wrong!\n");
+        return;
+    }
+    std::printf("Input (%d) removed\n", inputID);
+}
+
+void SynthUserInterface::commandInputCount(){
+    short count = audioPipeline->getInputCount();
+    std::printf("Input count: %d\n", count);
+}
+
+void SynthUserInterface::commandSynthConnect(){
+    if (inputTokenCount < 3){
+        std::printf("Usage: synthConnect <synth ID> <inputID>\n");
+        return;
+    }
+    short synthID = std::stoi(inputTokens[1]);
+    short inputID = std::stoi(inputTokens[2]);
+    if (audioPipeline->connectInputToSynth(inputID, synthID)){
+        std::printf("Something went wrong!\n");
+        return;
+    }
+    std::printf("Connected synth (%d) <- input (%d)\n", synthID, inputID);
+}
+
+void SynthUserInterface::commandSynthDisconnect(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: synthConnect <synth ID>\n");
+        return;
+    }
+    short synthID = std::stoi(inputTokens[1]);
+    if (audioPipeline->disconnectSynth(synthID)){
+        std::printf("Something went wrong!\n");
+        return;
+    }
+    std::printf("Disconnected synth (%d)\n", synthID);
+}
+

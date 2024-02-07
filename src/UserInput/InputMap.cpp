@@ -44,3 +44,7 @@ ushort InputMap::getMaxValue()const{
     }
     return max;
 }
+
+ushort InputMap::getKeyCount()const{
+    return keyCount;
+}
