@@ -36,7 +36,7 @@ int main(int argc, char** argv){
     if (std::memcmp(argv[2], "input", 5) == 0){
         std::printf("Using keyboard as MIDI device: %s\n", argv[2]);
 
-        keyboardMap = new InputMap("./incrementalKeyboardMap.txt");
+        keyboardMap = new InputMap("./config/kMaps/incrementalKeyboardMap.txt");
         keyboardInput = new KeyboardRecorder_DevInput(keyCount, keyboardMap);
     } else if (std::memcmp(argv[2], "snd", 3) == 0){
         std::printf("Using MIDI device: %s\n", argv[2]);
@@ -75,7 +75,7 @@ int main(int argc, char** argv){
         return 3;
     }
 
-    SynthUserInterface userInterface(audioInfo, keyboardInput, userInput, keyCount);
+    SynthUserInterface userInterface("./config/histSave.txt", audioInfo, keyboardInput, userInput, keyCount);
 
     userInterface.start();
 

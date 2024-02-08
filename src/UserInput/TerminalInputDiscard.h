@@ -9,7 +9,7 @@
 class TerminalInputDiscard {
 public:
     void disableInput();
-    void enableInput();
+    void enableInput(bool silent = false);
 
 private:
     void turnEchoOff();
@@ -18,7 +18,7 @@ private:
     void turnCanonOff();
     void turnCanonOn();
 
-    void discardInputBuffer();
+    void discardInputBuffer(bool silent);
     void discardInputLine();
     void setTermiosBit(const int& fd, const tcflag_t& bit, const int& onElseOff);
 

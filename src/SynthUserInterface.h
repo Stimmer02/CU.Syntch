@@ -6,7 +6,10 @@
 #include "UserInput/IKeyboardInput.h"
 #include "AudioPipelineManager.h"
 #include "UserInput/TerminalInputDiscard.h"
-// #include "TerminalHistory.h" //TODO
+#include "UserInput/TerminalHistory.h"
+#include "UserInput/InputMap.h"
+#include "UserInput/KeyboardRecorder_DevInput.h"
+#include "UserInput/KeyboardRecorder_DevSnd.h"
 // #include "ScriptExecutor.h" //TODO
 
 #include <linux/input-event-codes.h>
@@ -16,18 +19,20 @@
 
 class SynthUserInterface{
 public:
-    SynthUserInterface(audioFormatInfo audioInfo, AKeyboardRecorder*& keyboardInput, IKeyboardInput*& userInput, ushort keyCount);
+    SynthUserInterface(std::string terminalHistoryPath, audioFormatInfo audioInfo, AKeyboardRecorder*& keyboardInput, IKeyboardInput*& userInput, ushort keyCount);
     ~SynthUserInterface();
 
     char start();
 
 private:
     void parseInput();
+    void readInput();
     void waitUntilKeyReleased(ushort key);
 
     IKeyboardInput* userInput;
     AudioPipelineManager* audioPipeline;
     TerminalInputDiscard terminalDiscard;
+    TerminalHistory history;
 
     bool running;
     uint loopDelay;
@@ -40,6 +45,11 @@ private:
     const ushort inputTokenMax = 64;
     const char** inputTokens;
     ushort inputTokenCount;
+
+    std::thread* specialInputThread;
+    void specialInputThreadFunction();
+    void stopSpecialInput();
+    bool specialInputThreadRunning;
 
     struct cmp_str{
         bool operator()(const char* a, const char* b) const{
@@ -61,6 +71,7 @@ private:
     void commandMidiRecord();
     void commandExecuteScript();//TODO IMPORTANT
     void commandSetOutputBuffer();//TODO
+    void commandClear();
 
     void commandSynthSave();
     void commandSynthAdd();

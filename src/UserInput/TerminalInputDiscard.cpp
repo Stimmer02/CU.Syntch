@@ -5,8 +5,8 @@ void TerminalInputDiscard::disableInput(){
     turnCanonOff();
 }
 
-void TerminalInputDiscard::enableInput(){
-    discardInputBuffer();
+void TerminalInputDiscard::enableInput(bool silent){
+    discardInputBuffer(silent);
     turnCanonOn();
     turnEchoOn();
 }
@@ -40,7 +40,7 @@ void TerminalInputDiscard::setTermiosBit(const int& fd, const tcflag_t& bit, con
     tcsetattr(fd,TCSANOW,&g_terminalSettings);
 }
 
-void TerminalInputDiscard::discardInputBuffer(){
+void TerminalInputDiscard::discardInputBuffer(bool silent){
     struct timeval tv;
     fd_set rfds;
     while (1) {
@@ -54,7 +54,9 @@ void TerminalInputDiscard::discardInputBuffer(){
         char buf[500];
         ssize_t numRead = read(0,buf,500);
         if (numRead == -1) { fprintf(stderr, "[error] read() failed: %s", strerror(errno) ); exit(1); }
-        printf("[debug] cleared %zd chars\n",numRead);
+        if (silent == false){
+            printf("[debug] cleared %zd chars\n",numRead);
+        }
     }
 }
 

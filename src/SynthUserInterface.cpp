@@ -1,14 +1,11 @@
 #include "SynthUserInterface.h"
-#include "Pipeline/IDManager.h"
-#include "UserInput/AKeyboardRecorder.h"
-#include "UserInput/InputMap.h"
-#include "UserInput/KeyboardRecorder_DevInput.h"
-#include "UserInput/KeyboardRecorder_DevSnd.h"
-#include <string>
+#include <cstdio>
+#include <linux/input-event-codes.h>
+#include <sstream>
 
 
 
-SynthUserInterface::SynthUserInterface(audioFormatInfo audioInfo, AKeyboardRecorder*& keyboardInput, IKeyboardInput*& userInput, ushort keyCount){
+SynthUserInterface::SynthUserInterface(std::string terminalHistoryPath, audioFormatInfo audioInfo, AKeyboardRecorder*& keyboardInput, IKeyboardInput*& userInput, ushort keyCount): history(terminalHistoryPath){
     this->userInput = userInput;
     this->keyCount = keyCount;
 
@@ -29,7 +26,10 @@ SynthUserInterface::SynthUserInterface(audioFormatInfo audioInfo, AKeyboardRecor
     if (userInput->start()){
         delete userInput;
         userInput = nullptr;
+        terminalInput = false;
     }
+    terminalInput = true;
+    specialInputThreadRunning = false;
 
     running = false;
     loopDelay = 1000/30;
@@ -47,33 +47,169 @@ char SynthUserInterface::start(){
         return 1;
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    // std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     audioPipeline->start();
+    uint waitCounter = 0;
+    while(audioPipeline->isRuning() == false){
+        if (waitCounter > 50){
+            std::fprintf(stderr, "ERR: SynthUserInterface::start COULD NOT START AUDIO PIPELINE ON TIME\n");
+            return 2;
+        }
+        waitCounter++;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    specialInputThread = new std::thread(&SynthUserInterface::specialInputThreadFunction, this);
     std::printf("ALL RUNNING\n");
     running = true;
 
     audioPipeline->pauseInput();
+
     while (this->running){
-        std::printf("\n\e[97m⮞ ");
-        parseInput();
+        readInput();
+        if (terminalInput){
+            parseInput();
+        }
     }
 
+    stopSpecialInput();
     audioPipeline->stop();
     userInput->stop();
     std::printf("ALL STOPPED\n");
     return 0;
 }
 
-void SynthUserInterface::parseInput(){
-    bool nextElementIsToken = false;
+void SynthUserInterface::stopSpecialInput(){
+    specialInputThreadRunning = false;
+    if (specialInputThread->joinable()){
+        specialInputThread->join();//TODO: delete?
+    }
+}
 
+// void processWithSimulatedInput(const std::string& simulatedInput) {
+//     // Save the original cin buffer and cout buffer
+//     std::streambuf* originalCin = std::cin.rdbuf();
+//     std::streambuf* originalCout = std::cout.rdbuf();
+//
+//     // Create a stringstream with the simulated input
+//     std::istringstream inputBuffer(simulatedInput);
+//
+//     // Redirect std::cin to use the stringstream buffer
+//     std::cin.rdbuf(inputBuffer.rdbuf());
+//
+//     // You can also redirect std::cout if needed
+//     // std::cout.rdbuf(originalCout);
+//
+//
+//     // Restore the original cin and cout buffers
+//     std::cin.rdbuf(originalCin);
+//     std::cout.rdbuf(originalCout);
+// }
+
+void SynthUserInterface::specialInputThreadFunction(){
+    specialInputThreadRunning = true;
+    while (specialInputThreadRunning){
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));//TODO: use mutex here
+        uint specialKeys = userInput->getKeyState(KEY_UP) | userInput->getKeyState(KEY_DOWN) << 1;
+        if (specialKeys && terminalInput){
+            terminalInput = false;
+            terminalDiscard.disableInput();
+            std::printf("\e[2K\e[G\e[30m\e[107m⮞ ");
+            std::string entry;
+            if (specialKeys & 0b1){
+                entry = history.getPreviousEntry();
+                std::printf("%s", entry.c_str());
+                waitUntilKeyReleased(KEY_UP);
+            } else {
+                entry = history.getNextEntry();
+                std::printf("%s", entry.c_str());
+                waitUntilKeyReleased(KEY_DOWN);
+            }
+            fflush(stdout);
+
+            bool specialSequence = true;
+            while (specialSequence){
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+                if (userInput->getKeyState(KEY_UP)){
+                    entry = history.getPreviousEntry();
+                    std::printf("\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
+                    fflush(stdout);
+                    waitUntilKeyReleased(KEY_UP);
+                } else if (userInput->getKeyState(KEY_DOWN)){
+                    entry = history.getNextEntry();
+                    std::printf("\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
+                    fflush(stdout);
+                    waitUntilKeyReleased(KEY_DOWN);
+                } else if (userInput->getKeyState(KEY_ENTER)){
+                    std::printf("\n");
+                    inputLine = entry;
+                    parseInput();
+                    waitUntilKeyReleased(KEY_ENTER);
+                    specialSequence = false;
+                } else if (userInput->getKeyState(KEY_DELETE)){
+                    std::printf("\e[2K\e[G");
+                    fflush(stdout);
+                    waitUntilKeyReleased(KEY_DELETE);
+                    specialSequence = false;
+                }
+
+            }
+            // processWithSimulatedInput("\n\n\n");
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cin.clear();
+
+            std::printf("\n\e[32m⮞ ");
+            fflush(stdout);
+
+            terminalDiscard.enableInput(true);
+            terminalInput = true;
+            history.resetIndex();
+        }
+    }
+}
+
+void SynthUserInterface::readInput(){
+    std::printf("\n\e[97m⮞ ");
     std::getline(std::cin, inputLine);
     std::printf("\e[0m");
+}
+
+void SynthUserInterface::parseInput(){
+    bool nextElementIsToken = false;
+    methodPtr toExecute;
+
+    if (inputLine[0] == '\n'){
+        return;
+    }
 
     inputTokenCount = 1;
     inputTokens[0] = inputLine.c_str();
-    for (uint i = 0; i < inputLine.length(); i++){
+
+    uint i = 0;
+    for (; i < inputLine.length(); i++){
+        if (inputLine[i] == ' '){
+            inputLine[i] = '\0';
+            nextElementIsToken = true;
+            break;
+        }
+    }
+
+    if (inputLine[0] == '\0'){
+        return;
+    }
+
+    try {
+        toExecute = commandMap->at(inputTokens[0]);
+    } catch (std::out_of_range const&){
+        std::printf("Command \"%s\" does not exist\n", inputTokens[0]);
+        inputLine.clear();
+        return;
+    }
+    inputLine[i] = ' ';
+    history.addEntry(inputLine);
+    inputLine[i] = '\0';
+
+    for (; i < inputLine.length(); i++){
         if (inputLine[i] == ' '){
             inputLine[i] = '\0';
             nextElementIsToken = true;
@@ -87,15 +223,11 @@ void SynthUserInterface::parseInput(){
         }
     }
 
-    methodPtr toExecute;
-    try {
-        toExecute = commandMap->at(inputTokens[0]);
-    } catch (std::out_of_range const&){
-        std::printf("Command \"%s\" does not exist\n", inputTokens[0]);
-        return;
-    }
+
+
 
     (*this.*toExecute)();
+    inputLine.clear();
 }
 
 void SynthUserInterface::waitUntilKeyReleased(ushort key){
@@ -112,6 +244,7 @@ void SynthUserInterface::initializeCommandMap(){
         {"pStart",   &SynthUserInterface::commandPipelineStart},
         {"pStop",    &SynthUserInterface::commandPipelineStop},
         {"midiRec",  &SynthUserInterface::commandMidiRecord},
+        {"clear",  &SynthUserInterface::commandClear},
 
         {"synthSave",&SynthUserInterface::commandSynthSave},
         {"synthAdd",&SynthUserInterface::commandSynthAdd},
@@ -223,6 +356,10 @@ void SynthUserInterface::commandMidiRecord(){
 
     std::printf("File successfully saved as: %s\n", inputTokens[2]);
     std::printf("Time elapsed: %f s\n", std::chrono::duration<double>(end-start).count());
+}
+
+void SynthUserInterface::commandClear(){
+    system("clear");
 }
 
 void SynthUserInterface::commandSynthSave(){
