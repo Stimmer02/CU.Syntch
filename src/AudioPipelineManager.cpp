@@ -45,7 +45,6 @@ char AudioPipelineManager::start(){
     }
     pipelineThread = new std::thread(&AudioPipelineManager::pipelineThreadFunction, this);
 
-    running = true;
     return 0;
 }
 
@@ -65,6 +64,7 @@ bool AudioPipelineManager::isRuning(){
     return running;
 }
 
+
 const statistics::pipelineStatistics* AudioPipelineManager::getStatistics(){
     return statisticsService->getStatistics();
 }
@@ -74,6 +74,7 @@ const audioFormatInfo* AudioPipelineManager::getAudioInfo(){
 }
 
 void AudioPipelineManager::pipelineThreadFunction(){
+    running = true;
     ulong sampleTimeLength = audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate;
 
     // midiInput->buffer->swapActiveBuffer();

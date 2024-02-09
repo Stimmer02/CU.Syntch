@@ -37,7 +37,16 @@ char Input::startAllInputs(){
             stopAllInputs();
             return -3;
         }
+//         for (uint timeout = 0; allInputs[i]->isRunning(); timeout++){
+//             if (timeout >= 64){
+//                 stopAllInputs();
+//
+//                 return -4;
+//             }
+//             std::this_thread::sleep_for(std::chrono::milliseconds(20));
+//         }
     }
+
     running = true;
     return 0;
 }

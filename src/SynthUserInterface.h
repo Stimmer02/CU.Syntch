@@ -46,10 +46,7 @@ private:
     const char** inputTokens;
     ushort inputTokenCount;
 
-    std::thread* specialInputThread;
-    void specialInputThreadFunction();
-    void stopSpecialInput();
-    bool specialInputThreadRunning;
+    void specialInput();
 
     struct cmp_str{
         bool operator()(const char* a, const char* b) const{

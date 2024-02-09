@@ -28,7 +28,6 @@ SynthUserInterface::SynthUserInterface(std::string terminalHistoryPath, audioFor
         terminalInput = false;
     }
     terminalInput = true;
-    specialInputThreadRunning = false;
 
     running = false;
     loopDelay = 1000/30;
@@ -50,7 +49,7 @@ char SynthUserInterface::start(){
 
     audioPipeline->start();
     uint waitCounter = 0;
-    while(audioPipeline->isRuning() == false){
+    while (audioPipeline->isRuning() == false){
         if (waitCounter > 50){
             std::fprintf(stderr, "ERR: SynthUserInterface::start COULD NOT START AUDIO PIPELINE ON TIME\n");
             return 2;
@@ -58,99 +57,70 @@ char SynthUserInterface::start(){
         waitCounter++;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    specialInputThread = new std::thread(&SynthUserInterface::specialInputThreadFunction, this);
-    std::printf("ALL RUNNING\n");
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     running = true;
+
+
+    std::printf("ALL RUNNING\n");
 
     audioPipeline->pauseInput();
 
     while (this->running){
         readInput();
-        if (terminalInput){
-            parseInput();
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
+        parseInput();
     }
 
-    stopSpecialInput();
     audioPipeline->stop();
     userInput->stop();
     std::printf("ALL STOPPED\n");
     return 0;
 }
 
-void SynthUserInterface::stopSpecialInput(){
-    specialInputThreadRunning = false;
-    if (specialInputThread->joinable()){
-        specialInputThread->join();//TODO: delete?
-    }
-}
 
 
-void SynthUserInterface::specialInputThreadFunction(){
-    specialInputThreadRunning = true;
-    while (specialInputThreadRunning){
-        std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));//TODO: use mutex here
-        uint specialKeys = userInput->getKeyState(KEY_UP) | userInput->getKeyState(KEY_DOWN) << 1;
-        if (specialKeys && terminalInput){
-            terminalInput = false;
-            terminalDiscard.turnStdinOff();
-            terminalDiscard.disableInput();
-            std::printf("\e[2K\e[G\e[30m\e[107m⮞ ");
-            std::string entry;
-            if (specialKeys & 0b1){
-                entry = history.getPreviousEntry();
-                std::printf("%s", entry.c_str());
-                waitUntilKeyReleased(KEY_UP);
-            } else {
-                entry = history.getNextEntry();
-                std::printf("%s", entry.c_str());
-                waitUntilKeyReleased(KEY_DOWN);
-            }
+void SynthUserInterface::specialInput(){
+    terminalDiscard.disableInput();
+    std::printf("\e[A\e[2K\e[G\e[30m\e[107m⮞ ");
+    std::string entry = history.getPreviousEntry();
+    std::printf("%s", entry.c_str());
+    fflush(stdout);
+    waitUntilKeyReleased(KEY_ENTER);
+
+    bool specialSequence = true;
+    while (specialSequence){
+        std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
+        if (userInput->getKeyState(KEY_UP)){
+            entry = history.getPreviousEntry();
+            std::printf("\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
             fflush(stdout);
-
-            bool specialSequence = true;
-            while (specialSequence){
-                std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
-                if (userInput->getKeyState(KEY_UP)){
-                    entry = history.getPreviousEntry();
-                    std::printf("\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
-                    fflush(stdout);
-                    waitUntilKeyReleased(KEY_UP);
-                } else if (userInput->getKeyState(KEY_DOWN)){
-                    entry = history.getNextEntry();
-                    std::printf("\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
-                    fflush(stdout);
-                    waitUntilKeyReleased(KEY_DOWN);
-                } else if (userInput->getKeyState(KEY_ENTER)){
-                    std::printf("\n");
-                    inputLine = entry;
-                    parseInput();
-                    waitUntilKeyReleased(KEY_ENTER);
-                    specialSequence = false;
-                } else if (userInput->getKeyState(KEY_DELETE)){
-                    std::printf("\e[2K\e[G");
-                    fflush(stdout);
-                    waitUntilKeyReleased(KEY_DELETE);
-                    specialSequence = false;
-                }
-
-            }
-            terminalDiscard.turnStdinOn();
-            terminalDiscard.enableInput(false);
-            terminalDiscard.discardInputBuffer(false);
-
-            std::printf("\n\e[32m⮞ ");
+            waitUntilKeyReleased(KEY_UP);
+        } else if (userInput->getKeyState(KEY_DOWN)){
+            entry = history.getNextEntry();
+            std::printf("\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
             fflush(stdout);
-
-            terminalInput = true;
-            history.resetIndex();
+            waitUntilKeyReleased(KEY_DOWN);
+        } else if (userInput->getKeyState(KEY_ENTER)){
+            std::printf("\n");
+            inputLine = entry;
+            parseInput();
+            waitUntilKeyReleased(KEY_ENTER);
+            specialSequence = false;
+        } else if (userInput->getKeyState(KEY_DELETE)){
+            std::printf("\e[2K\e[G");
+            fflush(stdout);
+            waitUntilKeyReleased(KEY_DELETE);
+            specialSequence = false;
         }
     }
+    terminalDiscard.enableInput(false);
+
+    history.resetIndex();
+
 }
 
 void SynthUserInterface::readInput(){
     std::printf("\n\e[97m⮞ ");
+    fflush(stdout);
     std::getline(std::cin, inputLine);
     std::printf("\e[0m");
 }
@@ -186,9 +156,13 @@ void SynthUserInterface::parseInput(){
         inputLine.clear();
         return;
     }
-    inputLine[i] = ' ';
-    history.addEntry(inputLine);
-    inputLine[i] = '\0';
+
+    if (inputLine[0] != '\e'){
+       inputLine[i] = ' ';
+        history.addEntry(inputLine);
+        inputLine[i] = '\0';
+    }
+
 
     for (; i < inputLine.length(); i++){
         if (inputLine[i] == ' '){
@@ -226,6 +200,8 @@ void SynthUserInterface::initializeCommandMap(){
         {"pStop",    &SynthUserInterface::commandPipelineStop},
         {"midiRec",  &SynthUserInterface::commandMidiRecord},
         {"clear",  &SynthUserInterface::commandClear},
+
+        {"\e[A", &SynthUserInterface::specialInput},
 
         {"synthSave",&SynthUserInterface::commandSynthSave},
         {"synthAdd",&SynthUserInterface::commandSynthAdd},

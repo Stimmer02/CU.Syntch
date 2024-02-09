@@ -16,7 +16,6 @@ public:
 
     void disableInput();
     void enableInput(bool silent = false);
-    void discardInputBuffer(bool silent);
 
     void turnStdinOff();
     void turnStdinOn();
@@ -28,7 +27,7 @@ private:
     void turnCanonOn();
 
 
-    void discardInputBuffer2(bool silent);
+    void discardInputBuffer(bool silent);
     void setTermiosBit(const int& fd, const tcflag_t& bit, const int& onElseOff);
 
 

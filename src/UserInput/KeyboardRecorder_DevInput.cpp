@@ -128,6 +128,7 @@ bool KeyboardRecorder_DevInput::isRunning(){
 
 
 void KeyboardRecorder_DevInput::scannerThreadFunction(){
+    running = true;
     static const uchar eventValueMap[3] = {255, 127, 127};
     input_event event;
     ulong samplePosition;
@@ -135,7 +136,6 @@ void KeyboardRecorder_DevInput::scannerThreadFunction(){
     buffer->clearInactiveBuffer();
     buffer->swapActiveBuffer();
     buffer->clearInactiveBuffer();
-    running = true;
     while (running){
         inputStream->read(reinterpret_cast<char*>(&event), sizeof(input_event));
         if (event.type == EV_KEY){

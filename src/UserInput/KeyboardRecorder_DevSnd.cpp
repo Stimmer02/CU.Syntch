@@ -129,13 +129,13 @@ bool KeyboardRecorder_DevSnd::isRunning(){
 
 
 void KeyboardRecorder_DevSnd::scannerThreadFunction(){
+    running = true;
     MIDI::midiEvent event;
     ulong samplePosition;
     ulong sampleLength = 1000000/sampleRate;
     buffer->clearInactiveBuffer();
     buffer->swapActiveBuffer();
     buffer->clearInactiveBuffer();
-    running = true;
     while (running){
         interpreter.getEvent(inputStream, event);
         // std::printf("event 0x%02x\n",event.message[0]);
