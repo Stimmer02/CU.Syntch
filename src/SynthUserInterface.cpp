@@ -1,7 +1,6 @@
 #include "SynthUserInterface.h"
-#include <cstdio>
-#include <linux/input-event-codes.h>
-#include <sstream>
+#include <ostream>
+
 
 
 
@@ -70,6 +69,7 @@ char SynthUserInterface::start(){
         if (terminalInput){
             parseInput();
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
     }
 
     stopSpecialInput();
@@ -86,33 +86,15 @@ void SynthUserInterface::stopSpecialInput(){
     }
 }
 
-// void processWithSimulatedInput(const std::string& simulatedInput) {
-//     // Save the original cin buffer and cout buffer
-//     std::streambuf* originalCin = std::cin.rdbuf();
-//     std::streambuf* originalCout = std::cout.rdbuf();
-//
-//     // Create a stringstream with the simulated input
-//     std::istringstream inputBuffer(simulatedInput);
-//
-//     // Redirect std::cin to use the stringstream buffer
-//     std::cin.rdbuf(inputBuffer.rdbuf());
-//
-//     // You can also redirect std::cout if needed
-//     // std::cout.rdbuf(originalCout);
-//
-//
-//     // Restore the original cin and cout buffers
-//     std::cin.rdbuf(originalCin);
-//     std::cout.rdbuf(originalCout);
-// }
 
 void SynthUserInterface::specialInputThreadFunction(){
     specialInputThreadRunning = true;
     while (specialInputThreadRunning){
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));//TODO: use mutex here
+        std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));//TODO: use mutex here
         uint specialKeys = userInput->getKeyState(KEY_UP) | userInput->getKeyState(KEY_DOWN) << 1;
         if (specialKeys && terminalInput){
             terminalInput = false;
+            terminalDiscard.turnStdinOff();
             terminalDiscard.disableInput();
             std::printf("\e[2K\e[G\e[30m\e[107m⮞ ");
             std::string entry;
@@ -129,7 +111,7 @@ void SynthUserInterface::specialInputThreadFunction(){
 
             bool specialSequence = true;
             while (specialSequence){
-                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+                std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
                 if (userInput->getKeyState(KEY_UP)){
                     entry = history.getPreviousEntry();
                     std::printf("\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
@@ -154,14 +136,13 @@ void SynthUserInterface::specialInputThreadFunction(){
                 }
 
             }
-            // processWithSimulatedInput("\n\n\n");
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cin.clear();
+            terminalDiscard.turnStdinOn();
+            terminalDiscard.enableInput(false);
+            terminalDiscard.discardInputBuffer(false);
 
             std::printf("\n\e[32m⮞ ");
             fflush(stdout);
 
-            terminalDiscard.enableInput(true);
             terminalInput = true;
             history.resetIndex();
         }

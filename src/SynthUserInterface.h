@@ -57,7 +57,6 @@ private:
         }
     };
 
-
     typedef void (SynthUserInterface::*methodPtr)();
     std::map<const char*, methodPtr, cmp_str>* commandMap;
 
