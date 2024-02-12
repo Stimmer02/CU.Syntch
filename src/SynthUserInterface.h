@@ -10,6 +10,7 @@
 #include "UserInput/InputMap.h"
 #include "UserInput/KeyboardRecorder_DevInput.h"
 #include "UserInput/KeyboardRecorder_DevSnd.h"
+#include "StringToEnum.h"
 // #include "ScriptExecutor.h" //TODO
 
 #include <linux/input-event-codes.h>
@@ -40,13 +41,13 @@ private:
 
 
     bool terminalInput;
+    bool error; //TODO
 
     std::string inputLine;
     const ushort inputTokenMax = 64;
     const char** inputTokens;
     ushort inputTokenCount;
 
-    void specialInput();
 
     struct cmp_str{
         bool operator()(const char* a, const char* b) const{
@@ -59,6 +60,12 @@ private:
 
     void initializeCommandMap();
 
+    template <typename INTEGER, typename = std::enable_if_t<std::is_integral_v<INTEGER>>>
+    char numberFromToken(short tokenIndex, INTEGER& out);
+    char numberFromToken(short tokenIndex, float& out);
+
+    void browseHistory();
+
     void commandExit();
     void commandToggle();
     void commandHelp();
@@ -66,15 +73,15 @@ private:
     void commandPipelineStop();
     void commandMidiRecord();
     void commandExecuteScript();//TODO IMPORTANT
-    void commandSetOutputBuffer();//TODO
+    void commandSetOutputBuffer();
     void commandClear();
 
     void commandSynthSave();
     void commandSynthAdd();
     void commandSynthRemove();
     void commandSynthCount();
-    void commandSynthModify();//TODO
-    void commandSynthSettings();//TODO
+    void commandSynthModify();
+    void commandSynthSettings();
     void commandSynthList();//TODO
 
     void commandInputAdd();
@@ -84,7 +91,7 @@ private:
 
     void commandSynthConnect();
     void commandSynthDisconnect();
-    void commandReinitializeID();//TODO
+    void commandReinitializeID();
 
 
 };

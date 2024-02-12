@@ -9,6 +9,7 @@
 #include "Pipeline/Statistics/pipelineStatistics.h"
 
 #include "Pipeline/pipelineAudioBuffer.h"
+#include "Synthesizer.h"
 #include "UserInput/MIDI/MidiFileReader.h"
 #include <vector>
 
@@ -28,6 +29,7 @@ namespace pipeline{
 
         char recordUntilStreamEmpty(MIDI::MidiFileReader& midi, short synthID, std::string filename = "");//TODO: rethink this function
         bool IDValid(pipeline::ID_type type, short ID);
+        void reorganizeIDs();
 
 
         //OUTPUT CONTROL
@@ -55,8 +57,9 @@ namespace pipeline{
 
         const synthesizer::settings* getSynthSettings(const ushort& ID);
         synthesizer::generator_type getSynthType(const ushort& ID);
-        void setSynthSettings(const ushort& ID, const synthesizer::settings_name& settingsName, const float& value);
-        void setSynthSettings(const ushort& ID, const synthesizer::generator_type& type);
+        float getSynthSetting(const ushort& ID, synthesizer::settings_name settingName);
+        void setSynthSetting(const ushort& ID, const synthesizer::settings_name& settingsName, const float& value);
+        void setSynthSetting(const ushort& ID, const synthesizer::generator_type& type);
 
         char saveSynthConfig(std::string path, ushort ID);
         char loadSynthConfig(std::string path, ushort ID);

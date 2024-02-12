@@ -40,9 +40,10 @@ namespace pipeline{
     };
 
     enum ID_type{
+        INVALID,
         INPUT,
         SYNTH,
-        COMP,
+        COMP
     };
 }
 

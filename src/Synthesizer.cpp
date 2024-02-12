@@ -1,5 +1,4 @@
 #include "Synthesizer.h"
-#include "Synthesizer/AGenerator.h"
 
 using namespace synthesizer;
 
@@ -90,6 +89,8 @@ void Synthesizer::setSettings(const settings_name& settingsName, const float& va
             }
             dynamicsController.calculateDynamicsProfile(settings);
             break;
+        case synthesizer::INVALID:
+            return;
     }
 }
 
@@ -119,6 +120,8 @@ void Synthesizer::setGenerator(const generator_type& type){
             break;
         case NOISE1:
             soundGenerator = new Generator_Noise1();
+            break;
+        case INVALID_GEN:
             break;
         }
     calculateFrequencies();
@@ -151,6 +154,8 @@ void Synthesizer::calculateFrequencies(){
                 notes[i].frequency = 440.0 * pow(2.0, (i+settings.pitch-69)/12.0);
                 notes[i].multiplier = settings.sampleRate / notes[i].frequency;
             }
+            break;
+        case INVALID_GEN:
             break;
         }
 }
@@ -258,3 +263,6 @@ char Synthesizer::loadConfig(std::string path){
     file.close();
     return 0;
 }
+
+
+

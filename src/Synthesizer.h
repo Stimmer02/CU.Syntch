@@ -30,7 +30,8 @@ namespace synthesizer {
         FADETO,
         RELEASE,
         VOLUME,
-        STEREO
+        STEREO,
+        INVALID
     };
 
     class Synthesizer{

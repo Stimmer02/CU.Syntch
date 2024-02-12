@@ -21,6 +21,7 @@ namespace synthesizer {
         TRIANGLE = 3,
         NOISE1 = 4,
         LAST = NOISE1,
+        INVALID_GEN
     };
 }
 

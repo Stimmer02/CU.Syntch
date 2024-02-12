@@ -33,3 +33,5 @@ void synthesizer::AGenerator::generate(noteBuffer& noteBuffer, const uchar* keyS
         }
     }
 }
+
+

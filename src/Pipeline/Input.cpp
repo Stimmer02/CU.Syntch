@@ -140,15 +140,49 @@ void Input::setSynthetiserSetting(short ID, synthesizer::settings_name settingsN
     synths.getElement(ID)->synth.setSettings(settingsName, value);
 }
 
-const synthesizer::settings* Input::getSynthetiserSettins(short ID){
+void Input::setSynthetiserSetting(short ID, synthesizer::generator_type type){
+    synths.getElement(ID)->synth.setGenerator(type);
+}
+
+
+const synthesizer::settings* Input::getSynthetiserSettings(short ID){
     return synths.getElement(ID)->synth.getSettings();
+}
+
+float Input::getSynthetiserSetting(short ID, synthesizer::settings_name settingName){
+    const synthesizer::settings& settings = *synths.getElement(ID)->synth.getSettings();
+    switch (settingName) {
+        case synthesizer::PITCH:
+            return settings.pitch;
+        case synthesizer::ATTACK:
+            return settings.attack.raw;
+        case synthesizer::SUSTAIN:
+            return settings.sustain.raw;
+        case synthesizer::FADE:
+            return settings.fade.raw;
+        case synthesizer::FADETO:
+            return settings.fadeTo;
+        case synthesizer::RELEASE:
+            return settings.release.raw;
+        case synthesizer::VOLUME:
+            return settings.volume;
+        case synthesizer::STEREO:
+            return settings.stereoMix;
+        case synthesizer::INVALID:
+            return 0;
+    }
+    return 0;
+}
+
+synthesizer::generator_type Input::getSynthetiserType(const ushort& ID){
+    return synths.getElement(ID)->synth.getGeneratorType();
 }
 
 char Input::connectInputToSynth(short inputID, short synthID){
     if (synths.IDValid(synthID) == false){
         return -1;
     }
-    if (midiInput.IDValid(synthID) == false){
+    if (midiInput.IDValid(inputID) == false){
         return -2;
     }
 
@@ -189,7 +223,7 @@ void Input::generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keybo
 void Input::generateSamples(){
     for (ushort i = 0; i < synths.getElementCount(); i++){
         synthWithConnection& synthIter = *synths.getElement(i);
-        if (synthIter.midiInputID >= 0){
+        if (synthIter.midiInputID >= 0){ //TODO: fix this segfault
             synthIter.synth.generateSample(synthIter.buffer, midiInput.getBuffer(synthIter.midiInputID));
         }
     }

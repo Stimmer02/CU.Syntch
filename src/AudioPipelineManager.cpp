@@ -157,17 +157,19 @@ char AudioPipelineManager::recordUntilStreamEmpty(MIDI::MidiFileReader& midi, sh
 
 bool AudioPipelineManager::IDValid(pipeline::ID_type type, short ID){
     switch (type) {
-
-    case INPUT:
-        return input.inputIDValid(ID);
-
-    case SYNTH:
-        return input.synthIDValid(ID);
-
-    case COMP:
-        return false;
+        case INPUT:
+            return input.inputIDValid(ID);
+        case SYNTH:
+            return input.synthIDValid(ID);
+        case COMP:
+            return false;
+        default:
+            return false;
     }
-    return false;
+}
+
+void AudioPipelineManager::reorganizeIDs(){
+    input.reorganizeIDs();
 }
 
 
@@ -209,7 +211,7 @@ short AudioPipelineManager::addSynthesizer(){
 char AudioPipelineManager::removeSynthesizer(short ID){
     for (uint i = 0; i < queue.size(); i++){
         if (queue.at(i)->parentID == ID){
-            if (outputQueue->parentID == ID && outputQueue->parentType == pipeline::SYNTH){
+            if (outputQueue != nullptr && outputQueue->parentID == ID && outputQueue->parentType == pipeline::SYNTH){
                 std::printf("WARNING: REMOVING OUTPUT BUFFER\n");
                 if (running){
                     stop();
@@ -236,6 +238,27 @@ char AudioPipelineManager::connectInputToSynth(short inputID, short synthID){
 char AudioPipelineManager::disconnectSynth(short synthID){
     return input.disconnectSynth(synthID);
 }
+
+const synthesizer::settings* AudioPipelineManager::getSynthSettings(const ushort& ID){
+    return input.getSynthetiserSettings(ID);
+}
+
+float AudioPipelineManager::getSynthSetting(const ushort& ID, synthesizer::settings_name settingName){
+    return input.getSynthetiserSetting(ID, settingName);
+}
+
+synthesizer::generator_type AudioPipelineManager::getSynthType(const ushort& ID){
+    return input.getSynthetiserType(ID);
+}
+
+void AudioPipelineManager::setSynthSetting(const ushort& ID, const synthesizer::settings_name& settingsName, const float& value){
+    input.setSynthetiserSetting(ID, settingsName, value);
+}
+
+void AudioPipelineManager::setSynthSetting(const ushort& ID, const synthesizer::generator_type& type){
+    input.setSynthetiserSetting(ID, type);
+}
+
 
 
 short AudioPipelineManager::addInput(AKeyboardRecorder*& newInput){

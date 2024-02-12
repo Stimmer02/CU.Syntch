@@ -9,7 +9,7 @@
 namespace pipeline{
     /*
     ID explanation:
-        1. there are two pools of ID's:
+        1. there are three pools of ID's:
             -input (midiInput, keyboardsState)
             -synthesizers (synths)
             -components (not here)
@@ -48,7 +48,10 @@ namespace pipeline{
         char removeSynthesizer(short ID);
         short getSynthesizerCount();
         void setSynthetiserSetting(short ID, synthesizer::settings_name settingsName, float value);
-        const synthesizer::settings* getSynthetiserSettins(short ID);
+        void setSynthetiserSetting(short ID, synthesizer::generator_type type);
+        const synthesizer::settings* getSynthetiserSettings(short ID);
+        synthesizer::generator_type getSynthetiserType(const ushort& ID);
+        float getSynthetiserSetting(short ID, synthesizer::settings_name settingName);
 
         char connectInputToSynth(short inputID, short synthID);
         char disconnectSynth(short synthID);

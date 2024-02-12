@@ -1,6 +1,9 @@
 #include "SynthUserInterface.h"
-#include <ostream>
-
+#include "Pipeline/IDManager.h"
+#include "StringToEnum.h"
+#include "Synthesizer.h"
+#include "Synthesizer/AGenerator.h"
+#include <cstdio>
 
 
 
@@ -30,6 +33,7 @@ SynthUserInterface::SynthUserInterface(std::string terminalHistoryPath, audioFor
     terminalInput = true;
 
     running = false;
+    error = false;
     loopDelay = 1000/30;
 }
 
@@ -50,14 +54,13 @@ char SynthUserInterface::start(){
     audioPipeline->start();
     uint waitCounter = 0;
     while (audioPipeline->isRuning() == false){
-        if (waitCounter > 50){
+        if (waitCounter > 64){
             std::fprintf(stderr, "ERR: SynthUserInterface::start COULD NOT START AUDIO PIPELINE ON TIME\n");
             return 2;
         }
         waitCounter++;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     running = true;
 
 
@@ -78,7 +81,7 @@ char SynthUserInterface::start(){
 
 
 
-void SynthUserInterface::specialInput(){
+void SynthUserInterface::browseHistory(){
     terminalDiscard.disableInput();
     std::printf("\e[A\e[2K\e[G\e[30m\e[107m⮞ ");
     std::string entry = history.getPreviousEntry();
@@ -91,28 +94,30 @@ void SynthUserInterface::specialInput(){
         std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
         if (userInput->getKeyState(KEY_UP)){
             entry = history.getPreviousEntry();
-            std::printf("\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
+            std::printf("e[0m\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
             fflush(stdout);
             waitUntilKeyReleased(KEY_UP);
         } else if (userInput->getKeyState(KEY_DOWN)){
             entry = history.getNextEntry();
-            std::printf("\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
+            std::printf("e[0m\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
             fflush(stdout);
             waitUntilKeyReleased(KEY_DOWN);
         } else if (userInput->getKeyState(KEY_ENTER)){
             std::printf("\n");
             inputLine = entry;
             parseInput();
+            std::printf("\n\e[30m\e[107m⮞ %s", entry.c_str());
+            fflush(stdout);
+            // specialSequence = false;
             waitUntilKeyReleased(KEY_ENTER);
-            specialSequence = false;
         } else if (userInput->getKeyState(KEY_DELETE)){
             std::printf("\e[2K\e[G");
             fflush(stdout);
-            waitUntilKeyReleased(KEY_DELETE);
             specialSequence = false;
+            waitUntilKeyReleased(KEY_DELETE);
         }
     }
-    terminalDiscard.enableInput(false);
+    terminalDiscard.enableInput(true);
 
     history.resetIndex();
 
@@ -133,6 +138,10 @@ void SynthUserInterface::parseInput(){
         return;
     }
 
+    if (inputLine[0] == ' '){
+        return;
+    }
+
     inputTokenCount = 1;
     inputTokens[0] = inputLine.c_str();
 
@@ -144,10 +153,7 @@ void SynthUserInterface::parseInput(){
             break;
         }
     }
-
-    if (inputLine[0] == '\0'){
-        return;
-    }
+    std::printf("\n");
 
     try {
         toExecute = commandMap->at(inputTokens[0]);
@@ -158,13 +164,15 @@ void SynthUserInterface::parseInput(){
     }
 
     if (inputLine[0] != '\e'){
-       inputLine[i] = ' ';
+        inputLine[i] = ' ';
         history.addEntry(inputLine);
         inputLine[i] = '\0';
     }
 
+    i++;
 
     for (; i < inputLine.length(); i++){
+
         if (inputLine[i] == ' '){
             inputLine[i] = '\0';
             nextElementIsToken = true;
@@ -177,9 +185,7 @@ void SynthUserInterface::parseInput(){
             }
         }
     }
-
-
-
+    std::printf("\n");
 
     (*this.*toExecute)();
     inputLine.clear();
@@ -191,6 +197,33 @@ void SynthUserInterface::waitUntilKeyReleased(ushort key){
     }
 }
 
+template <typename INTEGER, typename>
+char SynthUserInterface::numberFromToken(short tokenIndex, INTEGER& out){
+    try {
+        out = std::stoi(inputTokens[tokenIndex]);
+    } catch (const std::invalid_argument&){
+        std::printf("Could not parse %s, as inteager\n", inputTokens[tokenIndex]);
+        return -1;
+    } catch (const std::out_of_range&){
+        std::printf("Could not parse %s, as inteager\n", inputTokens[tokenIndex]);
+        return -2;
+    }
+    return 0;
+}
+
+char SynthUserInterface::numberFromToken(short tokenIndex, float& out){
+    try {
+        out = std::stof(inputTokens[tokenIndex]);
+    } catch (const std::invalid_argument&){
+        std::printf("Could not parse %s, as floating point number\n", inputTokens[tokenIndex]);
+        return -1;
+    } catch (const std::out_of_range&){
+        std::printf("Could not parse %s, as floating point number\n", inputTokens[tokenIndex]);
+        return -2;
+    }
+    return 0;
+}
+
 void SynthUserInterface::initializeCommandMap(){
     commandMap = new std::map<const char*, methodPtr, SynthUserInterface::cmp_str>{
         {"exit",     &SynthUserInterface::commandExit},
@@ -200,8 +233,10 @@ void SynthUserInterface::initializeCommandMap(){
         {"pStop",    &SynthUserInterface::commandPipelineStop},
         {"midiRec",  &SynthUserInterface::commandMidiRecord},
         {"clear",  &SynthUserInterface::commandClear},
+        {"setOut",&SynthUserInterface::commandSetOutputBuffer},
+        {"idReinit",&SynthUserInterface::commandReinitializeID},
 
-        {"\e[A", &SynthUserInterface::specialInput},
+        {"\e[A", &SynthUserInterface::browseHistory},
 
         {"synthSave",&SynthUserInterface::commandSynthSave},
         {"synthAdd",&SynthUserInterface::commandSynthAdd},
@@ -209,14 +244,14 @@ void SynthUserInterface::initializeCommandMap(){
         {"synthCount",&SynthUserInterface::commandSynthCount},
         {"synthConnect",&SynthUserInterface::commandSynthConnect},
         {"synthDisconnect",&SynthUserInterface::commandSynthDisconnect},
+        {"synthGet",&SynthUserInterface::commandSynthSettings},
+        {"synthSet",&SynthUserInterface::commandSynthModify},
 
         {"inputAdd",&SynthUserInterface::commandInputAdd},
         {"inputRemove",&SynthUserInterface::commandInputRemove},
         {"inputCount",&SynthUserInterface::commandInputCount},
-
     };
 }
-
 
 void SynthUserInterface::commandExit(){
     running = false;
@@ -247,23 +282,23 @@ void SynthUserInterface::commandHelp(){//TODO
     "\n"
     "command list:\n"
     "\n"
-    "help    - shows this message\n"
-    "toggle  - toggles input between synthesizer and console, after switching to synthesizer press Ctrl+Q to switch back\n"
-    "exit    - exits the program (if program does not turn off: press any key on every connected device to end keyboard input reading threads)\n"
-    "pStart  - starts audio pipeline\n"
-    "pStop   - stops audio pipeline\n"
-    "midiRec <midi file path> <output name> <synth ID> - reads MIDI file and records it to specified .WAV file using specific synthesizer\n"
+    "help    - shows this message\n\n"
+    "toggle  - toggles input between synthesizer and console, after switching to synthesizer press Ctrl+Q to switch back\n\n"
+    "exit    - exits the program (if program does not turn off: press any key on every connected device to end keyboard input reading threads)\n\n"
+    "pStart  - starts audio pipeline\n\n"
+    "pStop   - stops audio pipeline\n\n"
+    "midiRec <midi file path> <output name> <synth ID> - reads MIDI file and records it to specified .WAV file using specific synthesizer\n\n"
     "\n"
-    "synthSave <load/save> <save file path> <synth ID> - loads or saves synthesizer configuration\n"
-    "synthAdd - adds new synthesizer and returns its ID\n"
-    "synthRemove <synth ID> - removes synthesizer by its ID\n"
-    "synthCount - returns the total count of the synthesizers\n"
-    "synthConnect <synth ID> <inputID> - connects specified synthesizer with specified input so the synth will receive keyboard state from that input\n"
-    "synthDisconnect <synth ID> - removes the connection so the synthesizer wont't be used until new data stream is connected\n"
-    "\n"
-    "inputAdd <type> <stream path> <key count> <optional: key map file path> - adds new input and returns its ID, where the type is 'keyboard' or 'midi', stream path describes stream location, key count tells how many notes it should use, key map file path (if type is keybard) describes map file location that will provide keyboard layout interpretation\n"
-    "inputRemove <input ID> - removes input by its I\n"
-    "inputCount - returns the total count of the inputs\n"
+    "synthSave <load/save> <save file path> <synth ID> - loads or saves synthesizer configuration\n\n"
+    "synthAdd - adds new synthesizer and returns its ID\n\n"
+    "synthRemove <synth ID> - removes synthesizer by its ID\n\n"
+    "synthCount - returns the total count of the synthesizers\n\n"
+    "synthConnect <synth ID> <inputID> - connects specified synthesizer with specified input so the synth will receive keyboard state from that input\n\n"
+    "synthDisconnect <synth ID> - removes the connection so the synthesizer wont't be used until new data stream is connected\n\n"
+    "\n\n"
+    "inputAdd <type> <stream path> <key count> <optional: key map file path> - adds new input and returns its ID, where the type is 'keyboard' or 'midi', stream path describes stream location, key count tells how many notes it should use, key map file path (if type is keybard) describes map file location that will provide keyboard layout interpretation\n\n"
+    "inputRemove <input ID> - removes input by its I\n\n"
+    "inputCount - returns the total count of the inputs\n\n"
     "\n"
     "\n";
     std::printf("%s\n", help.c_str());
@@ -295,7 +330,10 @@ void SynthUserInterface::commandMidiRecord(){
         return;
     }
 
-    short synthID = std::stoi(inputTokens[3]);
+    short synthID;
+    if (numberFromToken(3, synthID)){
+        return;
+    }
     if (audioPipeline->IDValid(pipeline::SYNTH, synthID) == false){
         std::printf("Given synthesizer ID (%i) is not valid\n", synthID);
         return;
@@ -324,7 +362,10 @@ void SynthUserInterface::commandSynthSave(){
         std::printf("Usage: synthSave <load/save> <save file path> <synth ID>\n");
         return;
     }
-    short synthID = std::stoi(inputTokens[3]);
+    short synthID;
+    if (numberFromToken(3, synthID)){
+        return;
+    }
     if (audioPipeline->IDValid(pipeline::SYNTH, synthID) == false){
         std::printf("Given synthesizer ID (%i) is not valid\n", synthID);
         return;
@@ -357,7 +398,10 @@ void SynthUserInterface::commandSynthRemove(){
         std::printf("Usage: synthRemove <synth ID>\n");
         return;
     }
-    short synthID = std::stoi(inputTokens[1]);
+    short synthID;
+    if (numberFromToken(1, synthID)){
+        return;
+    }
     if (audioPipeline->removeSynthesizer(synthID)){
         std::printf("Something went wrong!\n");
         return;
@@ -385,7 +429,10 @@ void SynthUserInterface::commandInputAdd(){
         std::printf("Interpreting as keyboard input\n");
         InputMap map(inputTokens[5]);
         ushort mapKeyCount = map.getKeyCount();
-        ushort userKeyCount = std::stoi(inputTokens[4]);
+        ushort userKeyCount;
+        if (numberFromToken(4, userKeyCount)){
+            return;
+        }
         ushort inputKeyCount = userKeyCount;
 
         if (keyCount < inputKeyCount){
@@ -401,7 +448,10 @@ void SynthUserInterface::commandInputAdd(){
 
     } else if (std::strcmp(inputTokens[2], "midi") == 0){
         std::printf("Interpreting as midi input\n");
-        ushort userKeyCount = std::stoi(inputTokens[4]);
+        ushort userKeyCount;
+        if (numberFromToken(4, userKeyCount)){
+            return;
+        }
         ushort inputKeyCount = userKeyCount;
 
         if (keyCount < inputKeyCount){
@@ -426,7 +476,10 @@ void SynthUserInterface::commandInputRemove(){
         std::printf("Usage: inputRemove <synth ID>\n");
         return;
     }
-    short inputID = std::stoi(inputTokens[1]);
+    short inputID;
+    if (numberFromToken(1, inputID)){
+        return;
+    }
     if (audioPipeline->removeInput(inputID)){
         std::printf("Something went wrong!\n");
         return;
@@ -444,8 +497,14 @@ void SynthUserInterface::commandSynthConnect(){
         std::printf("Usage: synthConnect <synth ID> <inputID>\n");
         return;
     }
-    short synthID = std::stoi(inputTokens[1]);
-    short inputID = std::stoi(inputTokens[2]);
+    short synthID;
+    if (numberFromToken(1, synthID)){
+        return;
+    }
+    short inputID;
+    if (numberFromToken(2, inputID)){
+        return;
+    }
     if (audioPipeline->connectInputToSynth(inputID, synthID)){
         std::printf("Something went wrong!\n");
         return;
@@ -458,7 +517,10 @@ void SynthUserInterface::commandSynthDisconnect(){
         std::printf("Usage: synthConnect <synth ID>\n");
         return;
     }
-    short synthID = std::stoi(inputTokens[1]);
+    short synthID;
+    if (numberFromToken(1, synthID)){
+        return;
+    }
     if (audioPipeline->disconnectSynth(synthID)){
         std::printf("Something went wrong!\n");
         return;
@@ -466,3 +528,150 @@ void SynthUserInterface::commandSynthDisconnect(){
     std::printf("Disconnected synth (%d)\n", synthID);
 }
 
+void SynthUserInterface::commandSetOutputBuffer(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: setOut <ID type> <ID>\n");
+        return;
+    }
+    short ID;
+    if (numberFromToken(2, ID)){
+        return;
+    }
+    pipeline::ID_type IDType = pipeline::stringToIDType(inputTokens[1]);
+
+    if (IDType != pipeline::SYNTH && IDType != pipeline::COMP){
+        std::printf("ID type invalid: %s\n", inputTokens[1]);
+    }
+    if (audioPipeline->setOutputBuffer(ID, IDType)){
+        std::printf("Something went wrong!\n");
+        return;
+    }
+    std::printf("Output set to: %s(%d)\n", inputTokens[1], ID);
+}
+
+void SynthUserInterface::commandSynthSettings(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: synthSettings <synth ID> {optional: setting type}\n");
+        return;
+    }
+    short synthID;
+    if (numberFromToken(1, synthID)){
+        return;
+    }
+    if (audioPipeline->IDValid(pipeline::SYNTH, synthID) == false){
+        std::printf("Synth (%d) does not exist\n", synthID);
+        return;
+    }
+
+    if (inputTokenCount > 2){
+        for (uint i = 2; i < inputTokenCount; i++){
+            synthesizer::settings_name setting = synthesizer::stringToSettingName(inputTokens[i]);
+            if (setting == synthesizer::INVALID){
+                if (std::strcmp("type", inputTokens[i]) != 0 && std::strcmp("TYPE", inputTokens[i]) != 0){
+                    std::printf("Invalid setting type: %s\n", inputTokens[i]);
+                } else {
+                    synthesizer::generator_type generatorType = audioPipeline->getSynthType(synthID);
+                    switch (generatorType) {
+                        case synthesizer::SINE:
+                            std::printf("%s: SINE\n", inputTokens[i]);
+                            break;
+                        case synthesizer::SQUARE:
+                            std::printf("%s: SQUARE\n", inputTokens[i]);
+                            break;
+                        case synthesizer::SAWTOOTH:
+                            std::printf("%s: SAWTOOTH\n", inputTokens[i]);
+                            break;
+                        case synthesizer::TRIANGLE:
+                            std::printf("%s: TRIANGLE\n", inputTokens[i]);
+                            break;
+                        case synthesizer::NOISE1:
+                            std::printf("%s: NOISE1\n", inputTokens[i]);
+                            break;
+                        case synthesizer::INVALID_GEN:
+                            std::printf("%s: INVALID_GEN\n", inputTokens[i]);
+                            break;
+                    }
+                }
+            } else {
+                std::printf("%s: %f\n", inputTokens[i], audioPipeline->getSynthSetting(synthID, setting));
+            }
+        }
+
+    } else {
+        const synthesizer::settings& settings = *audioPipeline->getSynthSettings(synthID);
+        synthesizer::generator_type generatorType = audioPipeline->getSynthType(synthID);
+        switch (generatorType) {
+            case synthesizer::SINE:
+                std::printf("TYPE: SINE\n");
+                break;
+            case synthesizer::SQUARE:
+                std::printf("TYPE: SQUARE\n");
+                break;
+            case synthesizer::SAWTOOTH:
+                std::printf("TYPE: SAWTOOTH\n");
+                break;
+            case synthesizer::TRIANGLE:
+                std::printf("TYPE: TRIANGLE\n");
+                break;
+            case synthesizer::NOISE1:
+                std::printf("TYPE: NOISE1\n");
+                break;
+            case synthesizer::INVALID_GEN:
+                std::printf("TYPE: INVALID_GEN\n");
+                break;
+        }
+        std::printf(
+        "VOLUME:  %f\n"
+        "PITCH:   %d\n"
+        "STEREO:  %f\n"
+        "ATTACK:  %f\n"
+        "SUSTAIN: %f\n"
+        "FADE:    %f\n"
+        "FADE TO: %f\n"
+        "RELEASE: %f\n",
+        settings.volume, settings.pitch, settings.stereoMix, settings.attack.raw, settings.sustain.raw, settings.fade.raw, settings.fadeTo, settings.release.raw);
+    }
+}
+
+void SynthUserInterface::commandSynthModify(){
+    if (inputTokenCount < 4 || inputTokenCount%2 == 1){
+        std::printf("Usage: synthModify <synth ID> {<setting type> <value>}\n");
+        return;
+    }
+    short synthID;
+    if (numberFromToken(1, synthID)){
+        return;
+    }
+    if (audioPipeline->IDValid(pipeline::SYNTH, synthID) == false){
+        std::printf("%d is not valid SYNTH id\n", synthID);
+        return;
+    }
+
+    for (ushort i = 2; i < inputTokenCount; i+=2){
+        if (std::strcmp("type", inputTokens[i]) == 0 || std::strcmp("TYPE", inputTokens[i]) == 0){
+            synthesizer::generator_type type = synthesizer::stringToSynthType(inputTokens[i+1]);
+            if (type == synthesizer::INVALID_GEN){
+                std::printf("Invalid generator type: %s\n", inputTokens[i+1]);
+            } else {
+                audioPipeline->setSynthSetting(synthID, type);
+                std::printf("%s: %s\n", inputTokens[i], inputTokens[i+1]);
+            }
+        } else {
+            synthesizer::settings_name setting = synthesizer::stringToSettingName(inputTokens[i]);
+            if (setting == synthesizer::INVALID){
+                std::printf("Invalid setting type: %s\n", inputTokens[i]);
+            } else {
+                float value;
+                if (numberFromToken(i+1, value) == 0){
+                    audioPipeline->setSynthSetting(synthID, setting, value);
+                    std::printf("%s: %f\n", inputTokens[i], value);
+                }
+            }
+        }
+    }
+}
+
+void SynthUserInterface::commandReinitializeID(){
+    audioPipeline->reorganizeIDs();
+    std::printf("All IDs were reinitialized - some connections might be broken\n");
+}
