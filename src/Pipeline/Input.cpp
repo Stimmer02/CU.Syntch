@@ -219,11 +219,26 @@ void Input::generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keybo
     synths.getElement(synthID)->synth.generateSample(buffer, keyboardState);
 }
 
+void Input::generateSampleWith(short synthID){
+    synthWithConnection& synthIter = *synths.getElement(synthID);
+    if (synthIter.midiInputID >= 0){
+        synthIter.synth.generateSample(synthIter.buffer, midiInput.getBuffer(synthIter.midiInputID));
+    }
+}
+
+void Input::generateSamples(const std::vector<short>& synthIDs){
+    for (ushort i = 0; i < synthIDs.size(); i++){
+        synthWithConnection& synthIter = *synths.getElement(synthIDs.at(i));
+        if (synthIter.midiInputID >= 0){
+            synthIter.synth.generateSample(synthIter.buffer, midiInput.getBuffer(synthIter.midiInputID));
+        }
+    }
+}
 
 void Input::generateSamples(){
     for (ushort i = 0; i < synths.getElementCount(); i++){
-        synthWithConnection& synthIter = *synths.getElement(i);
-        if (synthIter.midiInputID >= 0){ //TODO: fix this segfault
+        synthWithConnection& synthIter = *synths.getElementByIndex(i);
+        if (synthIter.midiInputID >= 0){
             synthIter.synth.generateSample(synthIter.buffer, midiInput.getBuffer(synthIter.midiInputID));
         }
     }
@@ -248,6 +263,9 @@ bool Input::inputIDValid(short ID){
 void Input::reorganizeIDs(){
     midiInput.reorganizeIDs();
     synths.reorganizeIDs();
+    for (short i = 0; i < synths.getElementCount(); i++){
+        synths.getElement(i)->midiInputID = -2;
+    }
 }
 
 void Input::removeAll(){

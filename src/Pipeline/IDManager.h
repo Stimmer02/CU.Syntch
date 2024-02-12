@@ -20,6 +20,8 @@ namespace pipeline{
         CAPACITY getElementCount();
         bool IDValid(CAPACITY ID);
 
+        TYPE* getElementByIndex(CAPACITY index);
+
         typedef void (TYPE::*methodPtr)();
         void doForAll(methodPtr method);
 

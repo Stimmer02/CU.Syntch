@@ -14,7 +14,7 @@ namespace pipeline{
         short addComponent();
         // short addComponent();
         char removeComponent(short componentID);
-        char applyEffects(AudioBufferQueue** queues, const short& count);
+        char applyEffects(AudioBufferQueue* queue);
         void printTrace(short ID);
 
         const audioFormatInfo* audioInfo;

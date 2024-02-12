@@ -7,7 +7,7 @@
 #include "Pipeline/Output.h"
 #include "Pipeline/Statistics/PipelineStatisticsService.h"
 #include "Pipeline/Statistics/pipelineStatistics.h"
-
+#include "Pipeline/ExecutionQueue.h"
 #include "Pipeline/pipelineAudioBuffer.h"
 #include "Synthesizer.h"
 #include "UserInput/MIDI/MidiFileReader.h"
@@ -30,6 +30,7 @@ namespace pipeline{
         char recordUntilStreamEmpty(MIDI::MidiFileReader& midi, short synthID, std::string filename = "");//TODO: rethink this function
         bool IDValid(pipeline::ID_type type, short ID);
         void reorganizeIDs();
+
 
 
         //OUTPUT CONTROL
@@ -71,6 +72,7 @@ namespace pipeline{
 
     private:
         void pipelineThreadFunction();
+        void executeQueue();//TODO
 
         const audioFormatInfo audioInfo;
         const ushort keyCount;
@@ -79,8 +81,9 @@ namespace pipeline{
         Output output;
 
         ComponentManager component;
-        std::vector<AudioBufferQueue*> queue;
+        std::vector<AudioBufferQueue*> componentQueues;
         AudioBufferQueue* outputQueue;
+        ExecutionQueue executionQueue;
 
         statistics::PipelineStatisticsService* statisticsService;
 

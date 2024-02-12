@@ -151,4 +151,8 @@ void IDManager<TYPE, CAPACITY>::doForAll(methodPtr method){
     }
 }
 
+template <class TYPE, typename CAPACITY>
+TYPE* IDManager<TYPE, CAPACITY>::getElementByIndex(CAPACITY index){
+    return elements[IDMap[index]];
+}
 

@@ -31,6 +31,7 @@ namespace pipeline{
         using IDManager<AKeyboardRecorder, CAPACITY>::getElementCount;
         using IDManager<AKeyboardRecorder, CAPACITY>::getAll;
         using IDManager<AKeyboardRecorder, CAPACITY>::doForAll;
+        using IDManager<AKeyboardRecorder, CAPACITY>::getElementByIndex;
 
     private:
         void resizeElements(CAPACITY increment) override;

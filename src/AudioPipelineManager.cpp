@@ -1,9 +1,5 @@
 #include "AudioPipelineManager.h"
-#include "Pipeline/AudioBufferQueue.h"
-#include "Pipeline/IDManager.h"
-#include "Pipeline/pipelineAudioBuffer.h"
-#include "Synthesizer.h"
-#include "UserInput/keyboardTransferBuffer.h"
+
 
 using namespace pipeline;
 
@@ -20,8 +16,8 @@ AudioPipelineManager::AudioPipelineManager(audioFormatInfo audioInfo, ushort key
 
 AudioPipelineManager::~AudioPipelineManager(){
     delete statisticsService;
-    for (uint i = 0; i < queue.size(); i++){
-        delete queue.at(i);
+    for (uint i = 0; i < componentQueues.size(); i++){
+        delete componentQueues.at(i);
     }
 }
 
@@ -43,6 +39,7 @@ char AudioPipelineManager::start(){
     if (pipelineThread != nullptr){
         delete pipelineThread;
     }
+    executionQueue.build(componentQueues, outputQueue);
     pipelineThread = new std::thread(&AudioPipelineManager::pipelineThreadFunction, this);
 
     return 0;
@@ -90,30 +87,21 @@ void AudioPipelineManager::pipelineThreadFunction(){
         statisticsService->loopStart();
         nextLoop += sampleTimeLength;
 
-        //midiInput->buffer->swapActiveBuffer();
-        //keyboardState->convertBuffer(midiInput->buffer);
-        //midiInput->buffer->clearInactiveBuffer();
         input.cycleBuffers();
 
-        //synth->generateSample(pipelineBuffer, keyboardState);
-        input.generateSamples();
-        // if (component.applyEffects(queue, queue.size())){//TODO: find better way to store queues
-        //     std::fprintf(stderr, "ERROR: AudioPipelineManager::pipelineThreadFunction CRITICAL ERROR APPLYING EFFECTS\n");
-        //     stop();
-        //     return;
-        // }
-
-
-        // printLastBuffer(pipelineBuffer->bufferL, pipelineBuffer->size);
+        input.generateSamples(executionQueue.getConnectedSynthIDs());
+        executeQueue();
 
         statisticsService->loopWorkEnd();
 
-        // bufferConverter->toPCM(pipelineBuffer, buffer);
-        // audioOutput->playBuffer(buffer);
-        // if (recording){
-        //     audioRecorder.saveBuffer(buffer);
-        // }
         output.play(&outputQueue->buffer);
+    }
+}
+
+void AudioPipelineManager::executeQueue(){
+    static const std::vector<AudioBufferQueue*>& backwardsExecution = executionQueue.getQueue();
+    for (int i = backwardsExecution.size() - 1; i >= 0; i--){
+        component.applyEffects(backwardsExecution[i]);
     }
 }
 
@@ -204,13 +192,13 @@ short AudioPipelineManager::addSynthesizer(){
     AudioBufferQueue* newQueue = new AudioBufferQueue(pipeline::SYNTH, audioInfo.sampleSize);
     short newSynthID = input.addSynthesizer(&newQueue->buffer);
     newQueue->parentID = newSynthID;
-    queue.push_back(newQueue);
+    componentQueues.push_back(newQueue);
     return newSynthID;
 }
 
 char AudioPipelineManager::removeSynthesizer(short ID){
-    for (uint i = 0; i < queue.size(); i++){
-        if (queue.at(i)->parentID == ID){
+    for (uint i = 0; i < componentQueues.size(); i++){
+        if (componentQueues.at(i)->parentID == ID){
             if (outputQueue != nullptr && outputQueue->parentID == ID && outputQueue->parentType == pipeline::SYNTH){
                 std::printf("WARNING: REMOVING OUTPUT BUFFER\n");
                 if (running){
@@ -219,8 +207,8 @@ char AudioPipelineManager::removeSynthesizer(short ID){
                 }
                 outputQueue = nullptr;
             }
-            delete queue.at(i);
-            queue.erase(queue.begin() + i);
+            delete componentQueues.at(i);
+            componentQueues.erase(componentQueues.begin() + i);
             break;
         }
     }
@@ -298,8 +286,8 @@ char AudioPipelineManager::setOutputBuffer(short ID, ID_type IDType){
        return -2;
     }
 
-    for (uint i = 0; i < queue.size(); i++){
-        AudioBufferQueue& queueIterator = *queue.at(i);
+    for (uint i = 0; i < componentQueues.size(); i++){
+        AudioBufferQueue& queueIterator = *componentQueues.at(i);
         if (queueIterator.parentID == ID && queueIterator.parentType == IDType){
             outputQueue = &queueIterator;
             return 0;

@@ -63,6 +63,7 @@ private:
     template <typename INTEGER, typename = std::enable_if_t<std::is_integral_v<INTEGER>>>
     char numberFromToken(short tokenIndex, INTEGER& out);
     char numberFromToken(short tokenIndex, float& out);
+    void stopPipeline();
 
     void browseHistory();
 

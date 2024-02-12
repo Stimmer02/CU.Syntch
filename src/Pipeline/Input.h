@@ -5,6 +5,7 @@
 #include "KeyboardManager.h"
 #include "KeyboardManager.cpp"
 #include "pipelineAudioBuffer.h"
+#include <vector>
 
 namespace pipeline{
     /*
@@ -57,6 +58,8 @@ namespace pipeline{
         char disconnectSynth(short synthID);
 
         void generateSamples();
+        void generateSamples(const std::vector<short>& synthIDs);
+        void generateSampleWith(short SynthID);
         void generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keyboardTransferBuffer* keyboardState);
 
         char saveSynthConfig(std::string path, short ID);

@@ -224,6 +224,14 @@ char SynthUserInterface::numberFromToken(short tokenIndex, float& out){
     return 0;
 }
 
+void SynthUserInterface::stopPipeline(){
+    if (audioPipeline->isRuning()){
+        std::printf("Can not execute this action if pipeline is running\n");
+        audioPipeline->stop();
+        std::printf("Pipeline stopped\n");
+    }
+}
+
 void SynthUserInterface::initializeCommandMap(){
     commandMap = new std::map<const char*, methodPtr, SynthUserInterface::cmp_str>{
         {"exit",     &SynthUserInterface::commandExit},
@@ -259,6 +267,10 @@ void SynthUserInterface::commandExit(){
 }
 
 void SynthUserInterface::commandToggle(){
+    if (audioPipeline->isRuning() == false){
+        std::printf("Pipeline is not running\n");
+        return;
+    }
     terminalDiscard.disableInput();
     audioPipeline->reausumeInput();
     terminalInput = false;
@@ -309,7 +321,7 @@ void SynthUserInterface::commandPipelineStart(){
         std::printf("Couldn't start pipeline!\n");
         return;
     }
-    if (terminalInput == false){
+    if (terminalInput == true){
         audioPipeline->pauseInput();
     }
     std::printf("Pipeline running\n");
@@ -394,6 +406,7 @@ void SynthUserInterface::commandSynthAdd(){
 }
 
 void SynthUserInterface::commandSynthRemove(){
+    stopPipeline();
     if (inputTokenCount < 2){
         std::printf("Usage: synthRemove <synth ID>\n");
         return;
@@ -472,6 +485,7 @@ void SynthUserInterface::commandInputAdd(){
 }
 
 void SynthUserInterface::commandInputRemove(){
+    stopPipeline();
     if (inputTokenCount < 2){
         std::printf("Usage: inputRemove <synth ID>\n");
         return;
@@ -493,6 +507,7 @@ void SynthUserInterface::commandInputCount(){
 }
 
 void SynthUserInterface::commandSynthConnect(){
+    stopPipeline();
     if (inputTokenCount < 3){
         std::printf("Usage: synthConnect <synth ID> <inputID>\n");
         return;
@@ -513,6 +528,7 @@ void SynthUserInterface::commandSynthConnect(){
 }
 
 void SynthUserInterface::commandSynthDisconnect(){
+    stopPipeline();
     if (inputTokenCount < 2){
         std::printf("Usage: synthConnect <synth ID>\n");
         return;
@@ -529,6 +545,7 @@ void SynthUserInterface::commandSynthDisconnect(){
 }
 
 void SynthUserInterface::commandSetOutputBuffer(){
+    stopPipeline();
     if (inputTokenCount < 2){
         std::printf("Usage: setOut <ID type> <ID>\n");
         return;
@@ -672,6 +689,7 @@ void SynthUserInterface::commandSynthModify(){
 }
 
 void SynthUserInterface::commandReinitializeID(){
+    stopPipeline();
     audioPipeline->reorganizeIDs();
     std::printf("All IDs were reinitialized - some connections might be broken\n");
 }

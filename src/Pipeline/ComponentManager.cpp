@@ -22,7 +22,7 @@ char ComponentManager::removeComponent(short componentID){
     return 0;
 }
 
-char ComponentManager::applyEffects(AudioBufferQueue** queues, const short& count){
+char ComponentManager::applyEffects(AudioBufferQueue* queue){
     return 0;
 }
 
