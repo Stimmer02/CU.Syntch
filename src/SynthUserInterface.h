@@ -11,23 +11,29 @@
 #include "UserInput/KeyboardRecorder_DevInput.h"
 #include "UserInput/KeyboardRecorder_DevSnd.h"
 #include "StringToEnum.h"
-// #include "ScriptExecutor.h" //TODO
+#include "UserInput/ScriptReader.h"
+#include "UserInput/IScriptReaderClient.h"
 
 #include <linux/input-event-codes.h>
 #include <iostream>
 #include <map>
 
 
-class SynthUserInterface{
+class SynthUserInterface : private IScriptReaderClient{
 public:
     SynthUserInterface(std::string terminalHistoryPath, audioFormatInfo audioInfo, AKeyboardRecorder*& keyboardInput, IKeyboardInput*& userInput, ushort keyCount);
     ~SynthUserInterface();
 
     char start();
+    bool getErrorFlag() override;
+    void clearErrorFlag() override;
+
+    ScriptReader scriptReader;
 
 private:
     void parseInput();
     void readInput();
+    void executeCommand(std::string& command) override;
     void waitUntilKeyReleased(ushort key);
 
     IKeyboardInput* userInput;
@@ -41,7 +47,7 @@ private:
 
 
     bool terminalInput;
-    bool error; //TODO
+    bool error;
 
     std::string inputLine;
     const ushort inputTokenMax = 64;
@@ -73,7 +79,7 @@ private:
     void commandPipelineStart();
     void commandPipelineStop();
     void commandMidiRecord();
-    void commandExecuteScript();//TODO IMPORTANT
+    void commandExecuteScript();
     void commandSetOutputBuffer();
     void commandClear();
 
@@ -93,8 +99,6 @@ private:
     void commandSynthConnect();
     void commandSynthDisconnect();
     void commandReinitializeID();
-
-
 };
 
 #endif
