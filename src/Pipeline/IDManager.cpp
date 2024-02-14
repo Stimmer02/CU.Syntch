@@ -138,7 +138,7 @@ TYPE* IDManager<TYPE, CAPACITY>::getElement(CAPACITY ID){
 
 template <class TYPE, typename CAPACITY>
 bool IDManager<TYPE, CAPACITY>::IDValid(CAPACITY ID){
-    if (ID > IDMapUsed){
+    if (ID >= IDMapUsed){
         return false;
     }
     return IDMap[ID] >= 0;

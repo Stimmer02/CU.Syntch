@@ -11,10 +11,11 @@ AudioPipelineManager::AudioPipelineManager(audioFormatInfo audioInfo, ushort key
     input.init(audioInfo, keyCount);
     output.init(audioInfo);
 
-    outputQueue = nullptr;
+    outputBuffer = nullptr;
 }
 
 AudioPipelineManager::~AudioPipelineManager(){
+    stop();
     delete statisticsService;
     for (uint i = 0; i < componentQueues.size(); i++){
         delete componentQueues.at(i);
@@ -26,7 +27,7 @@ char AudioPipelineManager::start(){
         std::fprintf(stderr, "ERR: AudioPipelineManager::start PIPELINE ALREADY RUNNING\n");
         return -1;
     }
-    if (outputQueue == nullptr){
+    if (outputBuffer == nullptr){
         std::fprintf(stderr, "ERR: AudioPipelineManager::start OUTPUT BUFFER IS NOT SET\n");
         return -2;
     }
@@ -39,7 +40,7 @@ char AudioPipelineManager::start(){
     if (pipelineThread != nullptr){
         delete pipelineThread;
     }
-    executionQueue.build(componentQueues, outputQueue);
+    executionQueue.build(componentQueues, outputBuffer);
     pipelineThread = new std::thread(&AudioPipelineManager::pipelineThreadFunction, this);
 
     return 0;
@@ -94,7 +95,7 @@ void AudioPipelineManager::pipelineThreadFunction(){
 
         statisticsService->loopWorkEnd();
 
-        output.play(&outputQueue->buffer);
+        output.play(&outputBuffer->buffer);
     }
 }
 
@@ -199,13 +200,13 @@ short AudioPipelineManager::addSynthesizer(){
 char AudioPipelineManager::removeSynthesizer(short ID){
     for (uint i = 0; i < componentQueues.size(); i++){
         if (componentQueues.at(i)->parentID == ID){
-            if (outputQueue != nullptr && outputQueue->parentID == ID && outputQueue->parentType == pipeline::SYNTH){
+            if (outputBuffer != nullptr && outputBuffer->parentID == ID && outputBuffer->parentType == pipeline::SYNTH){
                 std::printf("WARNING: REMOVING OUTPUT BUFFER\n");
                 if (running){
                     stop();
                     std::printf("WARNING: SYSTEM STOPPED\n");
                 }
-                outputQueue = nullptr;
+                outputBuffer = nullptr;
             }
             delete componentQueues.at(i);
             componentQueues.erase(componentQueues.begin() + i);
@@ -289,7 +290,7 @@ char AudioPipelineManager::setOutputBuffer(short ID, ID_type IDType){
     for (uint i = 0; i < componentQueues.size(); i++){
         AudioBufferQueue& queueIterator = *componentQueues.at(i);
         if (queueIterator.parentID == ID && queueIterator.parentType == IDType){
-            outputQueue = &queueIterator;
+            outputBuffer = &queueIterator;
             return 0;
         }
     }

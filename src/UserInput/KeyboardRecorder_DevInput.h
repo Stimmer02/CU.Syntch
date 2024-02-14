@@ -13,7 +13,7 @@
 
 class KeyboardRecorder_DevInput :public AKeyboardRecorder {
     public:
-    KeyboardRecorder_DevInput(const ushort& keyCount, const InputMap* keyboardMap);
+    KeyboardRecorder_DevInput(const ushort& keyCount, InputMap*& keyboardMap);
     ~KeyboardRecorder_DevInput();
     char init(const std::string path, const uint& sampleSize, const uint& sampleFrequency);
     char reInit(const uint& sampleSize, const uint& sampleFrequency);

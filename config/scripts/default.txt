@@ -1,0 +1,7 @@
+setUserInput /dev/input/event19
+inputAdd keyboard /dev/input/event19 55 ./config/kMaps/incrementalKeyboardMap.txt
+synthAdd
+synthSave load ./config/synthSave/default.bin 0
+synthConnect 0 0
+setOut SYNTH 0
+pStart

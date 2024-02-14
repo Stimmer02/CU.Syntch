@@ -13,6 +13,8 @@
 #include "StringToEnum.h"
 #include "UserInput/ScriptReader.h"
 #include "UserInput/IScriptReaderClient.h"
+#include "UserInput/KeyboardInput_DevInput.h"
+
 
 #include <linux/input-event-codes.h>
 #include <iostream>
@@ -21,8 +23,10 @@
 
 class SynthUserInterface : private IScriptReaderClient{
 public:
-    SynthUserInterface(std::string terminalHistoryPath, audioFormatInfo audioInfo, AKeyboardRecorder*& keyboardInput, IKeyboardInput*& userInput, ushort keyCount);
+    SynthUserInterface(std::string terminalHistoryPath, audioFormatInfo audioInfo, ushort keyCount);
     ~SynthUserInterface();
+
+    char setUserInput(IKeyboardInput*& userInput);
 
     char start();
     bool getErrorFlag() override;
@@ -73,6 +77,9 @@ private:
 
     void browseHistory();
 
+    void commandSystem();
+    void commandSetUserInput();
+
     void commandExit();
     void commandToggle();
     void commandHelp();
@@ -82,6 +89,7 @@ private:
     void commandExecuteScript();
     void commandSetOutputBuffer();
     void commandClear();
+
 
     void commandSynthSave();
     void commandSynthAdd();

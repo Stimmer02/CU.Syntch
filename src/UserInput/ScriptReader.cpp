@@ -21,7 +21,7 @@ char ScriptReader::executeScript(std::string scriptPath, bool verbose){
     std::string command;
     for (uint i = 1; std::getline(script, command); i++){
         if (verbose){
-            std::printf("\e[97m%d: %s\e[0m\n", i, command.c_str());
+            std::printf("\n\e[97m%d: %s\e[0m", i, command.c_str());
         }
         client->executeCommand(command);
         if (client->getErrorFlag()){

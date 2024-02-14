@@ -8,7 +8,7 @@ class ScriptReader{
 public:
     ScriptReader(IScriptReaderClient* client);
 
-    char executeScript(std::string scriptPath, bool verbose = false);
+    char executeScript(std::string scriptPath, bool verbose);
     std::string getLastError();
 
 private:

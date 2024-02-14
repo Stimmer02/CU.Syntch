@@ -1,86 +1,68 @@
 #include "SynthUserInterface.h"
-#include "Pipeline/IDManager.h"
-#include "StringToEnum.h"
-#include "Synthesizer.h"
-#include "Synthesizer/AGenerator.h"
-#include "UserInput/ScriptReader.h"
-#include <cstdio>
+#include "UserInput/InputMap.h"
 
 
-
-SynthUserInterface::SynthUserInterface(std::string terminalHistoryPath, audioFormatInfo audioInfo, AKeyboardRecorder*& keyboardInput, IKeyboardInput*& userInput, ushort keyCount): scriptReader(this), history(terminalHistoryPath){
-    this->userInput = userInput;
+SynthUserInterface::SynthUserInterface(std::string terminalHistoryPath, audioFormatInfo audioInfo, ushort keyCount): scriptReader(this), history(terminalHistoryPath){
+    userInput = nullptr;
     this->keyCount = keyCount;
 
     inputTokens = new const char*[inputTokenMax];
     initializeCommandMap();
 
     audioPipeline = new AudioPipelineManager(audioInfo, keyCount);
-    audioPipeline->addSynthesizer();
-    audioPipeline->loadSynthConfig("./config/synth.config", 0);
 
-    if (audioPipeline->addInput(keyboardInput) < 0){
-        std::fprintf(stderr, "COULD NOT START\n");
-        return;
-    }
-    audioPipeline->connectInputToSynth(0, 0);
-    audioPipeline->setOutputBuffer(0, pipeline::SYNTH);
-
-    if (userInput->start()){
-        delete userInput;
-        userInput = nullptr;
-        terminalInput = false;
-    }
     terminalInput = true;
-
     running = false;
     error = false;
-    loopDelay = 1000/30;
+    loopDelay = 1000/30;;
 }
+
 
 SynthUserInterface::~SynthUserInterface(){
-    delete[] inputTokens;
     delete audioPipeline;
+    delete[] inputTokens;
     delete commandMap;
-    delete userInput;
+    if (userInput != nullptr){
+        delete userInput;
+    }
 }
 
-char SynthUserInterface::start(){
-    if (userInput == nullptr){
+char SynthUserInterface::setUserInput(IKeyboardInput*& userInput){
+    this->userInput = userInput;
+    userInput = nullptr;
+
+    if (this->userInput->start()){
+        delete this->userInput;
+        this->userInput = nullptr;
+        terminalInput = false;
         return 1;
     }
 
-    // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-    audioPipeline->start();
-    uint waitCounter = 0;
-    while (audioPipeline->isRuning() == false){
-        if (waitCounter > 64){
-            std::fprintf(stderr, "ERR: SynthUserInterface::start COULD NOT START AUDIO PIPELINE ON TIME\n");
-            return 2;
-        }
-        waitCounter++;
-        std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
-    }
-    running = true;
+    return 0;
+}
 
 
-    std::printf("ALL RUNNING\n");
-
-    audioPipeline->pauseInput();
-
+char SynthUserInterface::start(){
+    running  = true;
     while (this->running){
         readInput();
         parseInput();
     }
 
     audioPipeline->stop();
-    userInput->stop();
+    if (userInput != nullptr){
+        userInput->stop();
+    }
     std::printf("ALL STOPPED\n");
     return 0;
 }
 
 void SynthUserInterface::browseHistory(){
+    if (userInput == nullptr){
+        printf("User input is not set, run setUserInput\n");
+        error = true;
+        return;
+    }
     terminalDiscard.disableInput();
     std::printf("\e[A\e[2K\e[G\e[30m\e[107m⮞ ");
     std::string entry = history.getPreviousEntry();
@@ -133,7 +115,7 @@ void SynthUserInterface::parseInput(){
     bool nextElementIsToken = false;
     methodPtr toExecute;
 
-    if (inputLine[0] == '\n'){
+    if (inputLine.length() == 0){
         return;
     }
 
@@ -249,31 +231,33 @@ void SynthUserInterface::stopPipeline(){
 
 void SynthUserInterface::initializeCommandMap(){
     commandMap = new std::map<const char*, methodPtr, SynthUserInterface::cmp_str>{
+        {"system",   &SynthUserInterface::commandSystem},
         {"exit",     &SynthUserInterface::commandExit},
         {"toggle",   &SynthUserInterface::commandToggle},
         {"help",     &SynthUserInterface::commandHelp},
         {"pStart",   &SynthUserInterface::commandPipelineStart},
         {"pStop",    &SynthUserInterface::commandPipelineStop},
         {"midiRec",  &SynthUserInterface::commandMidiRecord},
-        {"clear",  &SynthUserInterface::commandClear},
-        {"setOut",&SynthUserInterface::commandSetOutputBuffer},
-        {"idReinit",&SynthUserInterface::commandReinitializeID},
-        {"execute",&SynthUserInterface::commandExecuteScript},
+        {"clear",    &SynthUserInterface::commandClear},
+        {"setOut",   &SynthUserInterface::commandSetOutputBuffer},
+        {"idReinit", &SynthUserInterface::commandReinitializeID},
+        {"execute",  &SynthUserInterface::commandExecuteScript},
 
-        {"\e[A", &SynthUserInterface::browseHistory},
+        {"setUserInput", &SynthUserInterface::commandSetUserInput},
+        {"\e[A",         &SynthUserInterface::browseHistory},
 
-        {"synthSave",&SynthUserInterface::commandSynthSave},
-        {"synthAdd",&SynthUserInterface::commandSynthAdd},
-        {"synthRemove",&SynthUserInterface::commandSynthRemove},
-        {"synthCount",&SynthUserInterface::commandSynthCount},
-        {"synthConnect",&SynthUserInterface::commandSynthConnect},
-        {"synthDisconnect",&SynthUserInterface::commandSynthDisconnect},
-        {"synthGet",&SynthUserInterface::commandSynthSettings},
-        {"synthSet",&SynthUserInterface::commandSynthModify},
+        {"synthSave",       &SynthUserInterface::commandSynthSave},
+        {"synthAdd",        &SynthUserInterface::commandSynthAdd},
+        {"synthRemove",     &SynthUserInterface::commandSynthRemove},
+        {"synthCount",      &SynthUserInterface::commandSynthCount},
+        {"synthConnect",    &SynthUserInterface::commandSynthConnect},
+        {"synthDisconnect", &SynthUserInterface::commandSynthDisconnect},
+        {"synthGet",        &SynthUserInterface::commandSynthSettings},
+        {"synthSet",        &SynthUserInterface::commandSynthModify},
 
-        {"inputAdd",&SynthUserInterface::commandInputAdd},
-        {"inputRemove",&SynthUserInterface::commandInputRemove},
-        {"inputCount",&SynthUserInterface::commandInputCount},
+        {"inputAdd",    &SynthUserInterface::commandInputAdd},
+        {"inputRemove", &SynthUserInterface::commandInputRemove},
+        {"inputCount",  &SynthUserInterface::commandInputCount},
     };
 }
 
@@ -283,6 +267,11 @@ void SynthUserInterface::commandExit(){
 }
 
 void SynthUserInterface::commandToggle(){
+    if (userInput == nullptr){
+        printf("User input is not set, run setUserInput\n");
+        error = true;
+        return;
+    }
     if (audioPipeline->isRuning() == false){
         std::printf("Pipeline is not running\n");
         error = true;
@@ -334,10 +323,21 @@ void SynthUserInterface::commandHelp(){//TODO
 }
 
 void SynthUserInterface::commandPipelineStart(){
-    if(audioPipeline->start()){
+    if (audioPipeline->start()){
         std::printf("Couldn't start pipeline!\n");
         error = true;
         return;
+    }
+    uint waitCounter = 0;
+    while (audioPipeline->isRuning() == false){
+        if (waitCounter > 1000/loopDelay + 1){;
+            audioPipeline->stop();
+            std::printf("Couldn't start pipeline on time!\n");
+            error = true;
+            return;
+        }
+        waitCounter++;
+        std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
     }
     if (terminalInput == true){
         audioPipeline->pauseInput();
@@ -465,55 +465,55 @@ void SynthUserInterface::commandInputAdd(){
     }
 
     AKeyboardRecorder* newInput;
-    if (std::strcmp(inputTokens[2], "keyboard") == 0){
+    if (std::strcmp(inputTokens[1], "keyboard") == 0){
         if (inputTokenCount < 5){
             std::printf("Usage: inputAdd keyboard <stream path> <key count> <key map file path>\n");
             error = true;
             return;
         }
         std::printf("Interpreting as keyboard input\n");
-        InputMap map(inputTokens[5]);
-        ushort mapKeyCount = map.getKeyCount();
-        ushort userKeyCount;
-        if (numberFromToken(4, userKeyCount)){
-            error = true;
-            return;
-        }
-        ushort inputKeyCount = userKeyCount;
+        InputMap* map =  new InputMap(inputTokens[4]);
+        // ushort inputKeyCount;
+        // if (numberFromToken(3, inputKeyCount)){
+        //     error = true;
+        //     return;
+        // }
+        // ushort mapKeyCount = map.getKeyCount();
+        // if (keyCount < inputKeyCount){
+        //     std::printf("System configuration does not support specified key count: %d\n system will use: %d\n", userKeyCount, keyCount);
+        //     inputKeyCount = keyCount;
+        // }
+        //
+        // if (mapKeyCount < inputKeyCount){
+        //     std::printf("Provided key map does not support specified key count: %d\n system will use: %d\n", userKeyCount, mapKeyCount);
+        //     inputKeyCount = mapKeyCount;
+        // }
+        newInput = new KeyboardRecorder_DevInput(keyCount, map);
 
-        if (keyCount < inputKeyCount){
-            std::printf("System configuration does not support specified key count: %d\n system will use: %d\n", userKeyCount, keyCount);
-            inputKeyCount = keyCount;
-        }
-
-        if (mapKeyCount < inputKeyCount){
-            std::printf("Provided key map does not support specified key count: %d\n system will use: %d\n", userKeyCount, mapKeyCount);
-            inputKeyCount = mapKeyCount;
-        }
-        newInput = new KeyboardRecorder_DevInput(inputKeyCount, &map);
-
-    } else if (std::strcmp(inputTokens[2], "midi") == 0){
+    } else if (std::strcmp(inputTokens[1], "midi") == 0){
         std::printf("Interpreting as midi input\n");
-        ushort userKeyCount;
-        if (numberFromToken(4, userKeyCount)){
-            error = true;
-            return;
-        }
-        ushort inputKeyCount = userKeyCount;
-
-        if (keyCount < inputKeyCount){
-            std::printf("System configuration does not support specified key count: %d\n system will use: %d\n", userKeyCount, keyCount);
-            inputKeyCount = keyCount;
-        }
-        newInput = new KeyboardRecorder_DevSnd(inputKeyCount);
+        // ushort inputKeyCount;
+        // if (numberFromToken(3, inputKeyCount)){
+        //     error = true;
+        //     return;
+        // }
+        // if (keyCount < inputKeyCount){
+        //     std::printf("System configuration does not support specified key count: %d\n system will use: %d\n", userKeyCount, keyCount);
+        //     inputKeyCount = keyCount;
+        // }
+        newInput = new KeyboardRecorder_DevSnd(keyCount);
 
     } else {
-        std::printf("Not known device type: %s\n", inputTokens[2]);
+        std::printf("Not known device type: %s\n", inputTokens[1]);
         error = true;
         return;
     }
 
-    newInput->init(inputTokens[3], audioPipeline->getAudioInfo()->sampleSize, audioPipeline->getAudioInfo()->sampleRate);
+    if (newInput->init(inputTokens[2], audioPipeline->getAudioInfo()->sampleSize, audioPipeline->getAudioInfo()->sampleRate)){
+        std::printf("Could not initialize new input from stream: %s\n", inputTokens[2]);
+        error = true;
+        return;
+    }
 
     short inputID = audioPipeline->addInput(newInput);
     std::printf("Input created with ID: %d\n", inputID);
@@ -765,4 +765,41 @@ void SynthUserInterface::commandExecuteScript(){
         return;
     }
     std::printf("Execution succesfull\n");
+}
+
+void SynthUserInterface::commandSystem(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: system {system command and its arguments}\n");
+        error = true;
+        return;
+    }
+    std::string systemCommand = history.getPreviousEntry();
+    history.resetIndex();
+    systemCommand.erase(0, 7);
+    std::system(systemCommand.c_str());
+}
+
+void SynthUserInterface::commandSetUserInput(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: setUserInput <keyboard system stream>\n");
+        error = true;
+        return;
+    }
+    if (this->userInput != nullptr){
+        std::printf("User input was already set, removing old one\n");
+        this->userInput->stop();
+        delete this->userInput;
+    }
+    IKeyboardInput* userInput = new KeyboardInput_DevInput();
+    if (userInput->init(inputTokens[1])){
+        std::printf("Could not initialize user input from stream: %s\n", inputTokens[1]);
+        error = true;
+        return;
+    }
+    if (setUserInput(userInput)){
+        std::printf("Could not start new user input\n");
+        error = true;
+        return;
+    }
+    std::printf("New user input set and running\n");
 }

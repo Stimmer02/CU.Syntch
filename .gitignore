@@ -38,4 +38,8 @@
 *.mid
 
 # Folder contents
-config/*
+config/synthSave/*
+!config/synthSave/default.bin
+
+# Files
+config/histSave.txt

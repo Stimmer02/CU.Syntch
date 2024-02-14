@@ -10,14 +10,9 @@ KeyboardManager<CAPACITY>::KeyboardManager(CAPACITY defaultIncrement): IDManager
 template <typename CAPACITY>
 KeyboardManager<CAPACITY>::~KeyboardManager(){
     for (CAPACITY i = 0; i < elementsUsed; i++){
-        // delete elements[i];//TODO maybe delete?
         delete keyboardsState[i];
     }
-
     delete[] keyboardsState;
-    // delete[] elements;
-    // delete[] elementsID;
-    // delete[] IDMap;
 }
 
 template <typename CAPACITY>

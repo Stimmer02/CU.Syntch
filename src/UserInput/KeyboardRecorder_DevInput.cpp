@@ -1,7 +1,8 @@
 #include "KeyboardRecorder_DevInput.h"
 
 
-KeyboardRecorder_DevInput::KeyboardRecorder_DevInput(const ushort& keyCount, const InputMap* keyboardMap) : keyCount(keyCount), keyboardMap(keyboardMap){
+KeyboardRecorder_DevInput::KeyboardRecorder_DevInput(const ushort& keyCount, InputMap*& keyboardMap) : keyCount(keyCount), keyboardMap(keyboardMap){
+    keyboardMap = nullptr;
     buffer = nullptr;
     inputStream = nullptr;
     scannerThread = nullptr;
@@ -27,6 +28,7 @@ KeyboardRecorder_DevInput::~KeyboardRecorder_DevInput(){
     if (buffer != nullptr){
         delete buffer;
     }
+    delete keyboardMap;
 }
 
 char KeyboardRecorder_DevInput::init(const std::string path, const uint& sampleSize, const uint& sampleRate){

@@ -25,23 +25,27 @@ int main(int argc, char** argv){
     audioInfo.blockAlign = audioInfo.channels * audioInfo.bitDepth/8;
 
 
-    if (argc < 3){
-        std::printf("USAGE: %s <GUI input event ID> <MIDI input stream>\nor\nUSAGE: %s <MIDI file path> <WAV file out>\n", argv[0], argv[0]);
-        return 1;
-    }
-
-
-    AKeyboardRecorder* keyboardInput;
-    InputMap* keyboardMap = nullptr;
-    if (std::memcmp(argv[2], "input", 5) == 0){
-        std::printf("Using keyboard as MIDI device: %s\n", argv[2]);
-
-        keyboardMap = new InputMap("./config/kMaps/incrementalKeyboardMap.txt");
-        keyboardInput = new KeyboardRecorder_DevInput(keyCount, keyboardMap);
-    } else if (std::memcmp(argv[2], "snd", 3) == 0){
-        std::printf("Using MIDI device: %s\n", argv[2]);
-
-        keyboardInput = new KeyboardRecorder_DevSnd(keyCount);
+    if (argc == 2 && (std::strcmp("help", argv[1]) || std::strcmp("--help", argv[1]))){
+        std::printf(
+        "USAGE: \n"
+        "%s (no arguments)\n"
+        "%s <script path>\n"
+        "%s <MIDI file path> <WAV file out>\n",
+        argv[0], argv[0], argv[0]);
+    } else if (argc == 1){
+        SynthUserInterface userInterface("./config/histSave.txt", audioInfo, keyCount);
+        if (userInterface.scriptReader.executeScript("./config/scripts/default.txt", true)){
+            std::fprintf(stderr, "%s", userInterface.scriptReader.getLastError().c_str());
+            return 1;
+        }
+        userInterface.start();
+    } else if (argc == 2){
+        SynthUserInterface userInterface("./config/histSave.txt", audioInfo, keyCount);
+        std::printf("Executing script: %s\n", argv[1]);
+        if (userInterface.scriptReader.executeScript(argv[1], true)){
+            std::fprintf(stderr, "%s", userInterface.scriptReader.getLastError().c_str());
+            return 1;
+        }
     } else {
         std::printf("Reading MIDI file: %s\n", argv[1]);
 
@@ -52,7 +56,7 @@ int main(int argc, char** argv){
 
         auto start = std::chrono::high_resolution_clock::now();
         if (audioPipeline.recordUntilStreamEmpty(midiReader, synthID, argv[2])){
-            return 4;
+            return 2;
         }
         auto end = std::chrono::high_resolution_clock::now();
 
@@ -60,30 +64,5 @@ int main(int argc, char** argv){
         std::printf("Time elapsed: %f s\n", std::chrono::duration<double>(end-start).count());
     }
 
-    std::string GUIStreamLocation = "/dev/input/event";
-    GUIStreamLocation += argv[1];
-    std::string MIDIStreamLocation = "/dev/";
-    MIDIStreamLocation += argv[2];
-
-    IKeyboardInput* userInput = new KeyboardInput_DevInput();
-
-    if (keyboardInput->init(MIDIStreamLocation, audioInfo.sampleSize, audioInfo.sampleRate)){
-        return 2;
-    }
-
-    if (userInput->init(GUIStreamLocation)){
-        return 3;
-    }
-
-    SynthUserInterface userInterface("./config/histSave.txt", audioInfo, keyboardInput, userInput, keyCount);
-
-    userInterface.start();
-
-    if (keyboardMap != nullptr){
-        delete keyboardMap;
-    }
-
     return 0;
 }
-
-

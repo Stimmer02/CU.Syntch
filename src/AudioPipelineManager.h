@@ -82,7 +82,7 @@ namespace pipeline{
 
         ComponentManager component;
         std::vector<AudioBufferQueue*> componentQueues;
-        AudioBufferQueue* outputQueue;
+        AudioBufferQueue* outputBuffer;
         ExecutionQueue executionQueue;
 
         statistics::PipelineStatisticsService* statisticsService;
