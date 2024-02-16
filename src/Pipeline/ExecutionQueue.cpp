@@ -2,7 +2,7 @@
 
 using namespace pipeline;
 
-char ExecutionQueue::build(std::vector<AudioBufferQueue*>& componentQueues, AudioBufferQueue*& outputQueue){
+char ExecutionQueue::build(std::vector<audioBufferQueue*>& componentQueues, audioBufferQueue*& outputQueue){
     operations.clear();
     connectedSynthIDs.clear();
 
@@ -24,7 +24,7 @@ bool ExecutionQueue::valid(){
     return true;
 }
 
-const std::vector<AudioBufferQueue*>& ExecutionQueue::getQueue(){
+const std::vector<audioBufferQueue*>& ExecutionQueue::getQueue(){
     return operations;
 }
 

@@ -1,6 +1,8 @@
 #include "SynthUserInterface.h"
-#include "UserInput/InputMap.h"
+#include "Pipeline/ComponentManager.h"
+#include "Pipeline/IDManager.h"
 
+using namespace pipeline;
 
 SynthUserInterface::SynthUserInterface(std::string terminalHistoryPath, audioFormatInfo audioInfo, ushort keyCount): scriptReader(this), history(terminalHistoryPath){
     userInput = nullptr;
@@ -14,7 +16,7 @@ SynthUserInterface::SynthUserInterface(std::string terminalHistoryPath, audioFor
     terminalInput = true;
     running = false;
     error = false;
-    loopDelay = 1000/30;;
+    loopDelay = 1000/30;
 }
 
 
@@ -258,8 +260,21 @@ void SynthUserInterface::initializeCommandMap(){
         {"inputAdd",    &SynthUserInterface::commandInputAdd},
         {"inputRemove", &SynthUserInterface::commandInputRemove},
         {"inputCount",  &SynthUserInterface::commandInputCount},
+
+        {"compAdd",  &SynthUserInterface::commandComponentAdd},
+        {"compRemove",  &SynthUserInterface::commandComponentRemove},
+        {"compCount",  &SynthUserInterface::commandComponentCount},
+        {"compConnect",  &SynthUserInterface::commandComponentConnect},
+        {"compDisconnect",  &SynthUserInterface::commandComponentDisconnect},
+        {"compConnection",  &SynthUserInterface::commandComponentGetConnection},
+        {"compSet",  &SynthUserInterface::commandComponentModify},
+        {"compGet",  &SynthUserInterface::commandComponentSettings},
+        {"compTypes",  &SynthUserInterface::commandComponentTypes},
+
     };
 }
+
+
 
 void SynthUserInterface::commandExit(){
     running = false;
@@ -473,35 +488,35 @@ void SynthUserInterface::commandInputAdd(){
         }
         std::printf("Interpreting as keyboard input\n");
         InputMap* map =  new InputMap(inputTokens[4]);
-        // ushort inputKeyCount;
-        // if (numberFromToken(3, inputKeyCount)){
-        //     error = true;
-        //     return;
-        // }
-        // ushort mapKeyCount = map.getKeyCount();
-        // if (keyCount < inputKeyCount){
-        //     std::printf("System configuration does not support specified key count: %d\n system will use: %d\n", userKeyCount, keyCount);
-        //     inputKeyCount = keyCount;
-        // }
+        ushort inputKeyCount;
+        if (numberFromToken(3, inputKeyCount)){
+            error = true;
+            return;
+        }
+        if (keyCount < inputKeyCount){
+            std::printf("System configuration does not support specified key count: %d\n system will use: %d\n", inputKeyCount, keyCount);
+            inputKeyCount = keyCount;
+        }
         //
+        // ushort mapKeyCount = map->getKeyCount();
         // if (mapKeyCount < inputKeyCount){
         //     std::printf("Provided key map does not support specified key count: %d\n system will use: %d\n", userKeyCount, mapKeyCount);
         //     inputKeyCount = mapKeyCount;
         // }
-        newInput = new KeyboardRecorder_DevInput(keyCount, map);
+        newInput = new KeyboardRecorder_DevInput(inputKeyCount, map);
 
     } else if (std::strcmp(inputTokens[1], "midi") == 0){
         std::printf("Interpreting as midi input\n");
-        // ushort inputKeyCount;
-        // if (numberFromToken(3, inputKeyCount)){
-        //     error = true;
-        //     return;
-        // }
-        // if (keyCount < inputKeyCount){
-        //     std::printf("System configuration does not support specified key count: %d\n system will use: %d\n", userKeyCount, keyCount);
-        //     inputKeyCount = keyCount;
-        // }
-        newInput = new KeyboardRecorder_DevSnd(keyCount);
+        ushort inputKeyCount;
+        if (numberFromToken(3, inputKeyCount)){
+            error = true;
+            return;
+        }
+        if (keyCount < inputKeyCount){
+            std::printf("System configuration does not support specified key count: %d\n system will use: %d\n", inputKeyCount, keyCount);
+            inputKeyCount = keyCount;
+        }
+        newInput = new KeyboardRecorder_DevSnd(inputKeyCount);
 
     } else {
         std::printf("Not known device type: %s\n", inputTokens[1]);
@@ -774,7 +789,7 @@ void SynthUserInterface::commandSystem(){
         return;
     }
     std::string systemCommand = history.getPreviousEntry();
-    history.resetIndex();
+    history.getNextEntry();
     systemCommand.erase(0, 7);
     std::system(systemCommand.c_str());
 }
@@ -803,3 +818,227 @@ void SynthUserInterface::commandSetUserInput(){
     }
     std::printf("New user input set and running\n");
 }
+
+void SynthUserInterface::commandComponentAdd(){//TODO
+    if (inputTokenCount < 2){
+        std::printf("Usage: compAdd <component type>\n");
+        error = true;
+        return;
+    }
+
+    pipeline::component_type compType = pipeline::stringTocomponentType(inputTokens[1]);
+    if (compType == pipeline::COMP_INVALID){
+        std::printf("Component type does not exist: %s\n", inputTokens[1]);
+        error = true;
+        return;
+    }
+
+    short newComponentID = audioPipeline->addComponent(compType);
+    std::printf("Component created with ID: %d\n", newComponentID);
+}
+
+void SynthUserInterface::commandComponentRemove(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: compRemove <component ID>\n");
+        error = true;
+        return;
+    }
+    short componentID;
+    if (numberFromToken(1, componentID)){
+        error = true;
+        return;
+    }
+    // ID_type IDType;
+    // short parentID;
+    // audioPipeline->getComponentConnection(componentID, IDType, parentID);
+    // if (IDType != pipeline::INVALID){
+    //     stopPipeline();
+    // }
+
+    if (audioPipeline->removeComponent(componentID)){
+        std::printf("Something went wrong!\n");
+        error = true;
+        return;
+    }
+    std::printf("Component(%d) removed\n", componentID);
+}
+
+void SynthUserInterface::commandComponentCount(){
+    short count = audioPipeline->getComponentCout();
+    std::printf("Component count: %d\n", count);
+}
+
+void SynthUserInterface::commandComponentConnect(){
+    if (inputTokenCount < 4){
+        std::printf("Usage: compConnect <ID type> <parentType> <ID>\n");
+        error = true;
+        return;
+    }
+    short componentID;
+    if (numberFromToken(1, componentID)){
+        error = true;
+        return;
+    }
+    pipeline::ID_type IDType = pipeline::stringToIDType(inputTokens[2]);
+    if (IDType != pipeline::SYNTH && IDType != pipeline::COMP){
+        std::printf("ID type invalid: %s\n", inputTokens[2]);
+    }
+    short parentID;
+    if (numberFromToken(3, parentID)){
+        error = true;
+        return;
+    }
+
+    if (audioPipeline->connectComponent(componentID, IDType, parentID)){
+        std::printf("Something went wrong!\n");
+        error = true;
+        return;
+    }
+
+    std::printf("Component connected: COMP(%d) <- %s(%d)\n", componentID, inputTokens[2], parentID);
+}
+
+void SynthUserInterface::commandComponentDisconnect(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: compDisconnect <component ID>\n");
+        error = true;
+        return;
+    }
+    short componentID;
+    if (numberFromToken(1, componentID)){
+        error = true;
+        return;
+    }
+
+    if (audioPipeline->disconnectCommponent(componentID)){
+        std::printf("Something went wrong!\n");
+        error = true;
+        return;
+    }
+
+    std::printf("Component(%d) disconnected\n", componentID);
+}
+
+void SynthUserInterface::commandComponentGetConnection(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: compConnection <component ID>\n");
+        error = true;
+        return;
+    }
+    short componentID;
+    if (numberFromToken(1, componentID)){
+        error = true;
+        return;
+    }
+
+    ID_type IDType;
+    short parentID;
+
+    if (audioPipeline->getComponentConnection(componentID, IDType, parentID)){
+        std::printf("Something went wrong!\n");
+        error = true;
+        return;
+    }
+
+    if (IDType == pipeline::INVALID){
+        std::printf("Component(%d) is not connected\n", componentID);
+    } else {
+        std::string IDTypeString = pipeline::IDTypeToString(IDType);
+        std::printf("Component(%d) connected to: %s(%d)\n", componentID, IDTypeString.c_str(), parentID);
+    }
+}
+
+void SynthUserInterface::commandComponentModify(){
+    if (inputTokenCount < 4 || (inputTokenCount & 1)){
+        std::printf("Usage: compSet <component ID> {<setting name> <value>}\n");
+        error = true;
+        return;
+    }
+    short componentID;
+    if (numberFromToken(1, componentID)){
+        error = true;
+        return;
+    }
+
+    const componentSettings* settings = audioPipeline->getComopnentSettings(componentID);
+    if (settings == nullptr){
+        std::printf("Something went wrong!\n");
+        error = true;
+        return;
+    }
+    for (uint i = 2; i < inputTokenCount; i+=2){
+        bool settingFound = false;
+        uint j;
+        for (j = 0; j < settings->count; j++){
+            if (std::strcmp(inputTokens[i], settings->names[j].c_str()) == 0){
+                settingFound = true;
+                break;
+            }
+        }
+        if (settingFound){
+            float settingValue;
+            if (numberFromToken(i + 1, settingValue)){
+                error = true;
+                return;
+            }
+            if (audioPipeline->setComponentSetting(componentID, j, settingValue)){
+                std::printf("Could not set setting %s: %f\n", inputTokens[i], settingValue);
+            } else {
+                std::printf("%s: %f\n", inputTokens[i], settingValue);
+            }
+        } else {
+            std::printf("Component(%d) does not have setting type: %s\n", componentID, inputTokens[i]);
+        }
+    }
+}
+
+void SynthUserInterface::commandComponentSettings(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: compGet <component ID> {optional :<setting name>}\n");
+        error = true;
+        return;
+    }
+    short componentID;
+    if (numberFromToken(1, componentID)){
+        error = true;
+        return;
+    }
+
+    const componentSettings* settings = audioPipeline->getComopnentSettings(componentID);
+    if (settings == nullptr){
+        std::printf("Something went wrong!\n");
+        error = true;
+        return;
+    }
+    if (inputTokenCount == 2){
+        for (uint i = 0; i < settings->count; i++){
+            std::printf("%s: %f\n", settings->names[i].c_str(), settings->values[i]);
+        }
+    } else {
+        for (uint i = 2; i < inputTokenCount; i++){
+            bool settingFound = false;
+            uint j;
+            for (j = 0; j < settings->count; j++){
+                if (std::strcmp(inputTokens[i], settings->names[j].c_str()) == 0){
+                    settingFound = true;
+                    break;
+                }
+            }
+            if (settingFound){
+                std::printf("%s: %f\n", inputTokens[i], settings->values[j]);
+            } else {
+                std::printf("Component(%d) does not have setting type: %s\n", componentID, inputTokens[i]);
+            }
+        }
+    }
+}
+
+void SynthUserInterface::commandComponentTypes(){
+    const char* types =
+    "VOLUME:"
+    "   volume - changes the volume of a signall\n"
+    "\n";
+
+    std::printf("%s", types);
+}
+

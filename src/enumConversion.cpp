@@ -1,4 +1,5 @@
-#include "StringToEnum.h"
+#include "enumConversion.h"
+#include "Pipeline/ComponentManager.h"
 
 pipeline::ID_type pipeline::stringToIDType(const char*& IDTypeString){
     struct cmp_str{
@@ -32,6 +33,49 @@ pipeline::ID_type pipeline::stringToIDType(const char*& IDTypeString){
 
     return pipeline::INVALID;
 }
+
+std::string pipeline::IDTypeToString(ID_type IDType){
+    switch (IDType) {
+
+    case INVALID:
+        return "INVALID";
+    case INPUT:
+        return "INPUT";
+    case SYNTH:
+        return "SYNTH";
+    case COMP:
+        return "COMP";
+    }
+    return "INVALID";
+}
+
+pipeline::component_type pipeline::stringTocomponentType(const char*& componentTypeString){
+    struct cmp_str{
+        bool operator()(const char* a, const char* b) const{
+            return std::strcmp(a, b) < 0;
+        }
+    };
+    static std::map<const char*, pipeline::component_type, cmp_str> componentTypeMap{
+        {"volume",       pipeline::COMP_VOLUME},
+        {"vol",          pipeline::COMP_VOLUME},
+        {"VOLUME",       pipeline::COMP_VOLUME},
+        {"VOL",          pipeline::COMP_VOLUME},
+        {"COMP_VOLUME",  pipeline::COMP_VOLUME},
+
+        {"invalid",      pipeline::COMP_INVALID},
+        {"INVALID",      pipeline::COMP_INVALID},
+        {"COMP_INVALID", pipeline::COMP_INVALID},
+    };
+
+    try {
+        return componentTypeMap.at(componentTypeString);
+    } catch (std::out_of_range const&){
+        return pipeline::COMP_INVALID;
+    }
+
+    return pipeline::COMP_INVALID;
+}
+
 
 synthesizer::settings_name synthesizer::stringToSettingName(const char*& settingNameString){
     struct cmp_str{

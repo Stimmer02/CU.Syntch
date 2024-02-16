@@ -3,7 +3,6 @@
 
 #include "../Synthesizer.h"
 #include "KeyboardManager.h"
-#include "KeyboardManager.cpp"
 #include "pipelineAudioBuffer.h"
 #include <vector>
 

@@ -2,6 +2,7 @@
 #define AUDIOPIPELINEMANAGER_H
 
 #include "Pipeline/ComponentManager.h"
+#include "Pipeline/Components/componentSettings.h"
 #include "Pipeline/IDManager.h"
 #include "Pipeline/Input.h"
 #include "Pipeline/Output.h"
@@ -65,25 +66,32 @@ namespace pipeline{
         char saveSynthConfig(std::string path, ushort ID);
         char loadSynthConfig(std::string path, ushort ID);
 
-        //EFFECT CONTROL
+        //COMPONENT CONTROL
 
         char setOutputBuffer(short ID, ID_type IDType);
 
+        short addComponent(component_type type);
+        char removeComponent(short ID);
+        short getComponentCout();
+        char connectComponent(short componentID, ID_type parentType, short parentID);
+        char disconnectCommponent(short componentID);
+        char getComponentConnection(short componentID, ID_type& parentType, short& parentID);
+        char setComponentSetting(short componentID, uint settingIndex, float value);
+        const componentSettings* getComopnentSettings(short componentID);
 
     private:
         void pipelineThreadFunction();
-        void executeQueue();//TODO
 
         const audioFormatInfo audioInfo;
         const ushort keyCount;
 
-        Input input;
-        Output output;
+        Input input;//synths, inputs
+        Output output;//audio output, recording
 
-        ComponentManager component;
-        std::vector<AudioBufferQueue*> componentQueues;
-        AudioBufferQueue* outputBuffer;
-        ExecutionQueue executionQueue;
+        ComponentManager component;//component collection, processing
+        std::vector<audioBufferQueue*> componentQueues;//audio buffers, processing order of any queue
+        audioBufferQueue* outputBuffer;//the last componentQueue to be executed
+        ExecutionQueue executionQueue;//processing order of componentQueues
 
         statistics::PipelineStatisticsService* statisticsService;
 

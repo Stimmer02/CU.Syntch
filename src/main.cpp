@@ -33,14 +33,14 @@ int main(int argc, char** argv){
         "%s <MIDI file path> <WAV file out>\n",
         argv[0], argv[0], argv[0]);
     } else if (argc == 1){
-        SynthUserInterface userInterface("./config/histSave.txt", audioInfo, keyCount);
+        pipeline::SynthUserInterface userInterface("./config/histSave.txt", audioInfo, keyCount);
         if (userInterface.scriptReader.executeScript("./config/scripts/default.txt", true)){
             std::fprintf(stderr, "%s", userInterface.scriptReader.getLastError().c_str());
             return 1;
         }
         userInterface.start();
     } else if (argc == 2){
-        SynthUserInterface userInterface("./config/histSave.txt", audioInfo, keyCount);
+        pipeline::SynthUserInterface userInterface("./config/histSave.txt", audioInfo, keyCount);
         std::printf("Executing script: %s\n", argv[1]);
         if (userInterface.scriptReader.executeScript(argv[1], true)){
             std::fprintf(stderr, "%s", userInterface.scriptReader.getLastError().c_str());
@@ -50,7 +50,7 @@ int main(int argc, char** argv){
         std::printf("Reading MIDI file: %s\n", argv[1]);
 
         MIDI::MidiFileReader midiReader(argv[1] ,audioInfo.sampleSize, audioInfo.sampleRate);
-        AudioPipelineManager audioPipeline(audioInfo, keyCount);
+        pipeline::AudioPipelineManager audioPipeline(audioInfo, keyCount);
         short synthID = audioPipeline.addSynthesizer();
         audioPipeline.loadSynthConfig("./config/synth.config", synthID);
 

@@ -1,27 +1,36 @@
 #ifndef COMPONENTMANAGER_H
 #define COMPONENTMANAGER_H
 
-#include "../AudioOutput/audioFormatInfo.h"
-#include "AudioBufferQueue.h"
 #include "IDManager.h"
+#include "../AudioOutput/audioFormatInfo.h"
+#include "audioBufferQueue.h"
+#include "Components/AComponent.h"
+#include "Components/Component_Volume.h"
+
+
+#include <thread>
+
 
 namespace pipeline{
+    enum component_type{
+        COMP_INVALID,
+        COMP_VOLUME,
+    };
+
     class ComponentManager{
     public:
         ComponentManager(const audioFormatInfo* audioInfo);
         ~ComponentManager();
 
-        short addComponent();
-        // short addComponent();
-        char removeComponent(short componentID);
-        char applyEffects(AudioBufferQueue* queue);
+        short addComponent(component_type type);
+        // char removeComponent(short componentID);
+        char addComonentToQueue(short componentID, short queueParentID, ID_type queueParentType);
+        char applyEffects(audioBufferQueue* queue);
         void printTrace(short ID);
 
         const audioFormatInfo* audioInfo;
 
-    private:
-        short componentCount;
-        // APipelineComponent** components;
+        IDManager<AComponent, short> components;
     };
 }
 
