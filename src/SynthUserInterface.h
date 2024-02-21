@@ -1,9 +1,6 @@
 #ifndef SYNTHUSERINTERFACE_H
 #define SYNTHUSERINTERFACE_H
 
-#include "AudioOutput/audioFormatInfo.h"
-#include "UserInput/AKeyboardRecorder.h"
-#include "UserInput/IKeyboardInput.h"
 #include "AudioPipelineManager.h"
 #include "UserInput/TerminalInputDiscard.h"
 #include "UserInput/TerminalHistory.h"
@@ -99,6 +96,7 @@ namespace pipeline{
         void commandSynthModify();
         void commandSynthSettings();
         void commandSynthList();//TODO
+        void commandSynthInfo();
 
         void commandInputAdd();
         void commandInputRemove();
@@ -118,6 +116,10 @@ namespace pipeline{
         void commandComponentModify();
         void commandComponentSettings();
         void commandComponentTypes();
+
+        void commandAdvComponentConnect();
+        void commandAdvComponentDisconnect();
+        void commandAdvComponentInfo();
 
         void commandPrintQueues();//TODO
     };

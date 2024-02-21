@@ -147,7 +147,7 @@ void KeyboardRecorder_DevInput::scannerThreadFunction(){
                 if (mappedKey < keyCount){
                     buffer->getActiveBuffer()[mappedKey][samplePosition] = eventValueMap[event.value];
                 } else {
-                    std::printf("UNMAPPED KEY:%d\n", event.code);
+                    // std::printf("UNMAPPED KEY:%d\n", event.code);
                 }
             } else {
                 if (mappedKey < keyCount){

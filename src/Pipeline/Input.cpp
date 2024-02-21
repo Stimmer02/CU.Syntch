@@ -185,7 +185,6 @@ char Input::connectInputToSynth(short inputID, short synthID){
     if (midiInput.IDValid(inputID) == false){
         return -2;
     }
-    std::printf("VALID ID\n");
 
     synths.getElement(synthID)->midiInputID = inputID;
 

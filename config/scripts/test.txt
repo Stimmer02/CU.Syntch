@@ -1,0 +1,20 @@
+setUserInput /dev/input/event19
+inputAdd keyboard /dev/input/event19 127 ./config/kMaps/incrementalKeyboardMap.txt
+synthAdd
+synthAdd
+synthAdd
+synthConnect 0 0
+synthConnect 1 0
+synthConnect 2 0
+synthSave load ./config/synthSave/default.bin 0
+synthSet 1 PITCH -24
+compAdd SUM2
+compAdd SUM2
+setOut COMP 0
+aCompConnect 0 0 SYNTH 0
+aCompConnect 0 1 COMP 1
+aCompConnect 1 0 SYNTH 1
+aCompConnect 1 1 SYNTH 2
+compAdd VOLUME
+compConnect 2 COMP 0
+pStart

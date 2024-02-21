@@ -9,10 +9,12 @@
 #include "Pipeline/Statistics/PipelineStatisticsService.h"
 #include "Pipeline/Statistics/pipelineStatistics.h"
 #include "Pipeline/ExecutionQueue.h"
+#include "Pipeline/audioBufferQueue.h"
 #include "Pipeline/pipelineAudioBuffer.h"
 #include "Synthesizer.h"
 #include "UserInput/MIDI/MidiFileReader.h"
-#include <vector>
+#include "enumConversion.h"
+
 
 
 namespace pipeline{
@@ -31,6 +33,8 @@ namespace pipeline{
         char recordUntilStreamEmpty(MIDI::MidiFileReader& midi, short synthID, std::string filename = "");//TODO: rethink this function
         bool IDValid(pipeline::ID_type type, short ID);
         void reorganizeIDs();
+
+        void emptyQueueBuffer(ID_type IDType, short ID);
 
 
 
@@ -66,20 +70,42 @@ namespace pipeline{
         char saveSynthConfig(std::string path, ushort ID);
         char loadSynthConfig(std::string path, ushort ID);
 
+        char printSynthInfo(short ID);
+
         //COMPONENT CONTROL
 
         char setOutputBuffer(short ID, ID_type IDType);
 
         short addComponent(component_type type);
+        short addComponent(advanced_component_type type);
+
         char removeComponent(short ID);
+        char removeSimpleComponent(short ID);
+        char removeAdvancedComponent(short ID);
+
+        char disconnectCommponent(short componentID);
+        void disconnectSimpleCommponent(short componentID);
+        void disconnectAdvancedCommponentFromAll(short componentID);
+        void disconnectAdvancedCommponent(short componentID, ID_type parentType, short parentID);
+        void disconnectAdvancedCommponent(short componentID, uint index);
+        char tryDisconnectAdvancedCommponent(short componentID, uint index);
+
         short getComponentCout();
         char connectComponent(short componentID, ID_type parentType, short parentID);
-        char disconnectCommponent(short componentID);
+        char setAdvancedComponentInput(short componentID, short inputIndex, ID_type IDType, short connectToID);
         char getComponentConnection(short componentID, ID_type& parentType, short& parentID);
         char setComponentSetting(short componentID, uint settingIndex, float value);
         const componentSettings* getComopnentSettings(short componentID);
 
+        bool isAdvancedComponent(short ID);
+
+        char printAdvancedComponentInfo(short ID);
+
+
     private:
+        int findAudioQueueBufferIndex(ID_type IDType, short ID);
+        audioBufferQueue* findAudioQueueBuffer(ID_type IDType, short ID);
+
         void pipelineThreadFunction();
 
         const audioFormatInfo audioInfo;
@@ -91,7 +117,7 @@ namespace pipeline{
         ComponentManager component;//component collection, processing
         std::vector<audioBufferQueue*> componentQueues;//audio buffers, processing order of any queue
         audioBufferQueue* outputBuffer;//the last componentQueue to be executed
-        ExecutionQueue executionQueue;//processing order of componentQueues
+        ExecutionQueue executionQueue;//processing order of componentQueues//TODO
 
         statistics::PipelineStatisticsService* statisticsService;
 

@@ -1,6 +1,7 @@
 #include "ComponentManager.h"
 
 
+
 using namespace pipeline;
 
 ComponentManager::ComponentManager(const audioFormatInfo* audioInfo) : audioInfo(audioInfo){}
@@ -20,6 +21,19 @@ short ComponentManager::addComponent(component_type type){
     return components.add(newComponent);
 }
 
+short ComponentManager::addComponent(advanced_component_type type, audioBufferQueue* boundBuffer){
+    AComponent* newComponent;
+    switch (type) {
+        case ACOMP_INVALID:
+            return -1;
+        case ACOMP_SUM2:
+            newComponent = new AdvancedComponent_Sum2(audioInfo, boundBuffer);
+            break;
+    }
+
+    return components.add(newComponent);
+}
+
 
 char ComponentManager::applyEffects(audioBufferQueue* queue){
     for (uint i = 0; i < queue->componentIDQueue.size(); i++){
@@ -31,3 +45,13 @@ char ComponentManager::applyEffects(audioBufferQueue* queue){
 void ComponentManager::printTrace(short ID){
 
 }
+
+AAdvancedComponent* ComponentManager::getAdvancedComponent(short componentID){
+    if (advancedIDs.find(componentID) == advancedIDs.end()){
+        return nullptr;
+    }
+
+    return reinterpret_cast<AAdvancedComponent*>(components.getElement(componentID));
+}
+
+

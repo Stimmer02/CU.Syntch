@@ -1,4 +1,10 @@
 #include "AudioPipelineManager.h"
+#include "Pipeline/Components/componentSettings.h"
+#include "Pipeline/IDManager.h"
+#include "Pipeline/audioBufferQueue.h"
+#include "enumConversion.h"
+#include <vector>
+
 
 using namespace pipeline;
 
@@ -37,10 +43,31 @@ char AudioPipelineManager::start(){
         return -3;
     }
 
+    executionQueue.build(componentQueues, outputBuffer, component.components);
+    char executionQueueError = executionQueue.error();
+    switch (executionQueueError){
+        case -1:
+            std::fprintf(stderr, "ERR: AudioPipelineManager::start PIPELINE DOES NOT HAVE ANY CONNECTED SYNTH\n");
+            return -4;
+        case -2:
+            std::fprintf(stderr, "ERR: AudioPipelineManager::start PIPELINE IS NOT VALID\n");
+            const std::vector<short>& notConnectedAdvComp = executionQueue.getInvalidAdvCompIDs();
+            for (uint i = 0; i < notConnectedAdvComp.size(); i++){
+                std::fprintf(stderr, "ERR: AudioPipelineManager::start COMP(%d) IS NOT CONNECTED PROPERLY\n", notConnectedAdvComp.at(i));
+            }
+            return -4;
+    }
+
     if (pipelineThread != nullptr){
         delete pipelineThread;
     }
-    executionQueue.build(componentQueues, outputBuffer);
+
+    static const std::vector<audioBufferQueue*>& backwardsExecution = executionQueue.getQueue();
+
+    for (int i = backwardsExecution.size() - 1; i >= 0; i--){
+        std::printf("%s(%d)\n", IDTypeToString(backwardsExecution.at(i)->parentType).c_str(), backwardsExecution.at(i)->getParentID());
+    }
+
     pipelineThread = new std::thread(&AudioPipelineManager::pipelineThreadFunction, this);
 
     return 0;
@@ -157,6 +184,14 @@ void AudioPipelineManager::reorganizeIDs(){
     input.reorganizeIDs();
 }
 
+void AudioPipelineManager::emptyQueueBuffer(ID_type IDType, short ID){
+    audioBufferQueue& toEmpty = *componentQueues.at(findAudioQueueBufferIndex(IDType, ID));
+    for (uint i = 0; i < toEmpty.componentIDQueue.size(); i++){
+        component.components.getElement(toEmpty.componentIDQueue.at(i))->includedIn = nullptr;
+    }
+    toEmpty.componentIDQueue.clear();
+}
+
 
 //OUTPUT
 char AudioPipelineManager::startRecording(){
@@ -193,25 +228,44 @@ short AudioPipelineManager::addSynthesizer(){
     return newSynthID;
 }
 
-char AudioPipelineManager::removeSynthesizer(short ID){
-    for (uint i = 0; i < componentQueues.size(); i++){
-        if (componentQueues.at(i)->parentID == ID && componentQueues.at(i)->parentType == pipeline::SYNTH){
-            if (outputBuffer != nullptr && outputBuffer->parentID == ID && outputBuffer->parentType == pipeline::SYNTH){
-                std::printf("WARNING: REMOVING OUTPUT BUFFER\n");
-                if (running){
-                    stop();
-                    std::printf("PIPELINE STOPPED\n");
-                }
-                outputBuffer = nullptr;
-            }
-            for (uint j = 0; j < componentQueues.at(i)->componentIDQueue.size(); j++){
-                component.components.getElement(componentQueues.at(i)->componentIDQueue.at(j))->includedIn = nullptr;
-            }
-            delete componentQueues.at(i);
-            componentQueues.erase(componentQueues.begin() + i);
-            break;
+int AudioPipelineManager::findAudioQueueBufferIndex(ID_type IDType, short ID){
+    for (uint i = 0; i < componentQueues.size(); i++){//REALLY INEFFICENT, but bearable
+        if (componentQueues.at(i)->parentID == ID && componentQueues.at(i)->parentType == IDType){
+            return i;
         }
     }
+    return -1;
+}
+
+audioBufferQueue* AudioPipelineManager::findAudioQueueBuffer(ID_type IDType, short ID){
+    for (uint i = 0; i < componentQueues.size(); i++){//REALLY INEFFICENT, but bearable
+        if (componentQueues.at(i)->parentID == ID && componentQueues.at(i)->parentType == IDType){
+            return componentQueues.at(i);
+        }
+    }
+    return nullptr;
+}
+
+char AudioPipelineManager::removeSynthesizer(short ID){
+    int index = findAudioQueueBufferIndex(pipeline::SYNTH, ID);
+    if (index < 0){
+        return -1;
+    }
+
+    if (outputBuffer != nullptr && outputBuffer->parentID == ID && outputBuffer->parentType == pipeline::SYNTH){
+        std::printf("WARNING: REMOVING OUTPUT BUFFER\n");
+        if (running){
+            stop();
+            std::printf("PIPELINE STOPPED\n");
+        }
+        outputBuffer = nullptr;
+    }
+    for (uint j = 0; j < componentQueues.at(index)->componentIDQueue.size(); j++){
+        component.components.getElement(componentQueues.at(index)->componentIDQueue.at(j))->includedIn = nullptr;
+    }
+    delete componentQueues.at(index);
+    componentQueues.erase(componentQueues.begin() + index);
+
     return input.removeSynthesizer(ID);
 }
 
@@ -245,6 +299,25 @@ void AudioPipelineManager::setSynthSetting(const ushort& ID, const synthesizer::
 
 void AudioPipelineManager::setSynthSetting(const ushort& ID, const synthesizer::generator_type& type){
     input.setSynthetiserSetting(ID, type);
+}
+
+char AudioPipelineManager::printSynthInfo(short synthID){
+    if (input.synthIDValid(synthID) == false){
+        return -1;
+    }
+
+    std::printf("SYNTH(%d):\n", synthID);
+
+    audioBufferQueue& queue = *findAudioQueueBuffer(pipeline::SYNTH, synthID);
+    if (queue.componentIDQueue.size() > 1){
+        for (uint i = 1; i < queue.componentIDQueue.size(); i++){
+            short subCompID = queue.componentIDQueue.at(i);
+            std::printf("   %d: %s(%d)\n", i, componentTypeToString(component.components.getElement(subCompID)->type).c_str(), subCompID);
+        }
+    } else {
+        std::printf("   (empty queue)\n");
+    }
+    return 0;
 }
 
 
@@ -301,8 +374,55 @@ short AudioPipelineManager::addComponent(component_type type){
     return component.addComponent(type);
 }
 
+short AudioPipelineManager::addComponent(advanced_component_type type){
+    audioBufferQueue* newQueue = new audioBufferQueue(pipeline::COMP, audioInfo.sampleSize);
+    short newCompID = component.addComponent(type, newQueue);
+    newQueue->parentID = newCompID;
+    componentQueues.push_back(newQueue);
+    newQueue->componentIDQueue.push_back(newCompID);
+    component.advancedIDs.insert(newCompID);
+    return newCompID;
+}
+
 char AudioPipelineManager::removeComponent(short ID){
-    disconnectCommponent(ID);
+    if (component.advancedIDs.find(ID) != component.advancedIDs.end()){
+        return removeAdvancedComponent(ID);
+    } else {
+        return removeSimpleComponent(ID);
+    }
+}
+
+char AudioPipelineManager::removeSimpleComponent(short ID){
+    disconnectSimpleCommponent(ID);
+    return component.components.remove(ID);
+}
+
+char AudioPipelineManager::removeAdvancedComponent(short ID){
+    disconnectAdvancedCommponentFromAll(ID);
+    component.advancedIDs.erase(ID);
+    emptyQueueBuffer(pipeline::COMP, ID);
+    if (outputBuffer != nullptr && outputBuffer->parentID == ID && outputBuffer->parentType == pipeline::COMP){
+        std::printf("WARNING: REMOVING OUTPUT BUFFER\n");
+        if (running){
+            stop();
+            std::printf("PIPELINE STOPPED\n");
+        }
+        outputBuffer = nullptr;
+    }
+    for (short potentialConnectionID : component.advancedIDs){//disconnecting those attached to it
+        AAdvancedComponent* potentialConnection = reinterpret_cast<AAdvancedComponent*>(component.components.getElement(potentialConnectionID));
+        for (uint i = 0; i < potentialConnection->maxConnections; i++){
+            ID_type paretType;
+            short paretID;
+            potentialConnection->getConnection(i, paretType, paretID);
+
+            if (paretID == ID && paretType == pipeline::COMP){
+                potentialConnection->disconnect(i);
+            }
+        }
+    }
+
+
     return component.components.remove(ID);
 }
 
@@ -318,17 +438,54 @@ char AudioPipelineManager::connectComponent(short componentID, ID_type parentTyp
         return -2;
     }
 
-    for (uint i = 0; i < componentQueues.size(); i++){ //REALLY INEFFICENT, but bearable
-        audioBufferQueue& queue = *componentQueues.at(i);
-        if (queue.parentID == parentID && queue.parentType == parentType){
-            AComponent& tempComponent = *component.components.getElement(componentID);
-            disconnectCommponent(componentID);
-            queue.componentIDQueue.push_back(componentID);
-            tempComponent.includedIn = &queue;
-            break;
-        }
+    audioBufferQueue* queue = findAudioQueueBuffer(parentType, parentID);
+    if (queue == nullptr){
+        return -3;
     }
 
+    AComponent& tempComponent = *component.components.getElement(componentID);
+    disconnectSimpleCommponent(componentID);
+    queue->componentIDQueue.push_back(componentID);
+    tempComponent.includedIn = queue;
+
+    return 0;
+}
+
+char AudioPipelineManager::setAdvancedComponentInput(short componentID, short inputIndex, ID_type IDType, short connectToID){
+    AAdvancedComponent* toConnect = component.getAdvancedComponent(componentID);
+    if (toConnect == nullptr){
+        return -1;
+    }
+    audioBufferQueue* toBeConnectedTo;
+    switch (IDType) {
+
+        case INVALID:
+            return -2;
+        case INPUT:
+            return -2;
+        case SYNTH:
+            if (input.synthIDValid(connectToID) == false){
+                return -3;
+            }
+            toBeConnectedTo = findAudioQueueBuffer(pipeline::SYNTH, connectToID);
+            break;
+        case COMP:
+            if (component.components.IDValid(connectToID) == false){
+                return -3;
+            }
+            AAdvancedComponent* potentialAdvComponent = component.getAdvancedComponent(connectToID);
+            if (potentialAdvComponent == nullptr){
+                return -4;
+            }
+            toBeConnectedTo = potentialAdvComponent->includedIn;
+            break;
+    }
+
+    if (IDValid(IDType, connectToID) == false){
+        return -3;
+    }
+
+    toConnect->connect(inputIndex, toBeConnectedTo);
     return 0;
 }
 
@@ -337,6 +494,16 @@ char AudioPipelineManager::disconnectCommponent(short componentID){
         return -1;
     }
 
+    if (component.advancedIDs.find(componentID) != component.advancedIDs.end()){
+        disconnectAdvancedCommponentFromAll(componentID);
+    } else {
+        disconnectSimpleCommponent(componentID);
+    }
+
+    return 0;
+}
+
+void AudioPipelineManager::disconnectSimpleCommponent(short componentID){
     AComponent& tempComponent = *component.components.getElement(componentID);
     if (tempComponent.includedIn != nullptr){
         audioBufferQueue& oldQueue = *tempComponent.includedIn;
@@ -346,10 +513,40 @@ char AudioPipelineManager::disconnectCommponent(short componentID){
                 break;
             }
         }
+        tempComponent.includedIn = nullptr;
+    }
+}
+
+void AudioPipelineManager::disconnectAdvancedCommponentFromAll(short componentID){
+    AAdvancedComponent* toBeDisconnected = component.getAdvancedComponent(componentID);
+    for (uint i = 0; i < toBeDisconnected->maxConnections; i++){
+        toBeDisconnected->disconnect(i);
+    }
+}
+
+void AudioPipelineManager::disconnectAdvancedCommponent(short componentID, ID_type parentType, short parentID){
+    AAdvancedComponent* toBeDisconnected = component.getAdvancedComponent(componentID);
+    toBeDisconnected->disconnect(parentType, parentID);
+}
+
+void AudioPipelineManager::disconnectAdvancedCommponent(short componentID, uint index){
+    AAdvancedComponent* toBeDisconnected = component.getAdvancedComponent(componentID);
+    toBeDisconnected->disconnect(index);
+}
+
+char AudioPipelineManager::tryDisconnectAdvancedCommponent(short componentID, uint index){
+    AAdvancedComponent* toBeDisconnected = component.getAdvancedComponent(componentID);
+    if (toBeDisconnected == nullptr){
+        return -1;
+    }
+    if (toBeDisconnected->maxConnections <= index){
+        return -2;
     }
 
+    toBeDisconnected->disconnect(index);
     return 0;
 }
+
 
 char AudioPipelineManager::getComponentConnection(short componentID, ID_type& parentType, short& parentID){
     if (component.components.IDValid(componentID) == false){
@@ -391,3 +588,54 @@ const componentSettings* AudioPipelineManager::getComopnentSettings(short compon
 
     return component.components.getElement(componentID)->getSettings();
 }
+
+
+char AudioPipelineManager::printAdvancedComponentInfo(short ID){
+    AAdvancedComponent* toPrint = component.getAdvancedComponent(ID);
+    if (toPrint == nullptr){
+        return -1;
+    }
+
+    std::printf("COMP(%d):\n", ID);
+
+    for (uint i = 0; i < toPrint->maxConnections; i++){
+        if (toPrint->getConnection(i) == nullptr){
+            std::printf("   in%d: not connected\n", i);
+        } else {
+            std::printf("   in%d: %s(%d)\n", i, IDTypeToString(toPrint->getConnection(i)->parentType).c_str(), toPrint->getConnection(i)->parentID);
+        }
+    }
+    std::printf("\n");
+    const componentSettings& settings = *toPrint->getSettings();
+    if (settings.count > 0){
+        for (uint i = 0; i < settings.count; i++){
+            std::printf("   %s: %f\n", settings.names[i].c_str(), settings.values[i]);
+        }
+    } else {
+        std::printf("   (no settings)\n");
+    }
+
+    std::printf("\n");
+    audioBufferQueue& queue = *toPrint->includedIn;
+    if (queue.componentIDQueue.size() > 1){
+        for (uint i = 1; i < queue.componentIDQueue.size(); i++){
+            short subCompID = queue.componentIDQueue.at(i);
+            std::printf("   %d: %s(%d)\n", i, componentTypeToString(component.components.getElement(subCompID)->type).c_str(), subCompID);
+        }
+    } else {
+        std::printf("   (empty queue)\n");
+    }
+
+    std::printf("\n");
+
+    return 0;
+}
+
+bool AudioPipelineManager::isAdvancedComponent(short ID){
+    AAdvancedComponent* toCheck = component.getAdvancedComponent(ID);
+    if (toCheck == nullptr){
+        return false;
+    }
+    return true;
+}
+

@@ -2,7 +2,7 @@
 
 using namespace pipeline;
 
-AComponent::AComponent(const audioFormatInfo* audioInfo, uint settingCount, const std::string* settingNames): settings(settingCount, settingNames), audioInfo(audioInfo){
+AComponent::AComponent(const audioFormatInfo* audioInfo, uint settingCount, const std::string* settingNames, component_type type): type(type), settings(settingCount, settingNames), audioInfo(audioInfo){
     includedIn = nullptr;
 }
 

@@ -49,7 +49,7 @@ std::string pipeline::IDTypeToString(ID_type IDType){
     return "INVALID";
 }
 
-pipeline::component_type pipeline::stringTocomponentType(const char*& componentTypeString){
+pipeline::component_type pipeline::stringToComponentType(const char*& componentTypeString){
     struct cmp_str{
         bool operator()(const char* a, const char* b) const{
             return std::strcmp(a, b) < 0;
@@ -74,6 +74,52 @@ pipeline::component_type pipeline::stringTocomponentType(const char*& componentT
     }
 
     return pipeline::COMP_INVALID;
+}
+
+std::string pipeline::componentTypeToString(component_type compType){
+    switch (compType){
+        case COMP_INVALID:
+            return "COMP_INVALID";
+        case COMP_VOLUME:
+            return "COMP_VOLUME";
+    }
+    return "INVALID";
+}
+
+pipeline::advanced_component_type pipeline::stringToAdvComponentType(const char*& componentTypeString){
+    struct cmp_str{
+        bool operator()(const char* a, const char* b) const{
+            return std::strcmp(a, b) < 0;
+        }
+    };
+    static std::map<const char*, pipeline::advanced_component_type, cmp_str> advComponentTypeMap{
+        {"sum",  pipeline::ACOMP_SUM2},
+        {"SUM",  pipeline::ACOMP_SUM2},
+        {"sum2", pipeline::ACOMP_SUM2},
+        {"SUM2", pipeline::ACOMP_SUM2},
+
+        {"invalid",       pipeline::ACOMP_INVALID},
+        {"INVALID",       pipeline::ACOMP_INVALID},
+        {"ACOMP_INVALID", pipeline::ACOMP_INVALID},
+    };
+
+    try {
+        return advComponentTypeMap.at(componentTypeString);
+    } catch (std::out_of_range const&){
+        return pipeline::ACOMP_INVALID;
+    }
+
+    return pipeline::ACOMP_INVALID;
+}
+
+std::string pipeline::advComponentTypeToString(advanced_component_type compType){
+    switch (compType){
+        case ACOMP_INVALID:
+            return "ACOMP_INVALID";
+        case ACOMP_SUM2:
+            return "ACOMP_SUM2";
+    }
+    return "INVALID";
 }
 
 

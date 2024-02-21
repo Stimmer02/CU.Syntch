@@ -10,9 +10,14 @@
 #include <vector>
 
 namespace pipeline{
+    enum component_type{
+        COMP_INVALID,
+        COMP_VOLUME,
+    };
+
     class AComponent{
     public:
-        AComponent(const audioFormatInfo* audioInfo, uint settingCount, const std::string* settingNames);
+        AComponent(const audioFormatInfo* audioInfo, uint settingCount, const std::string* settingNames, component_type type);
         virtual ~AComponent() = default;
 
         virtual void apply(pipelineAudioBuffer* buffer) = 0;
@@ -23,6 +28,8 @@ namespace pipeline{
         const componentSettings* getSettings();
 
         audioBufferQueue* includedIn;
+
+        const component_type type;
 
     protected:
         componentSettings settings;

@@ -13,6 +13,7 @@ namespace pipeline{
         void clear() override;
         void defaultSettings() override;
 
+
     private:
         static const std::string privateNames[];
     };

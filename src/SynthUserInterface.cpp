@@ -1,6 +1,8 @@
 #include "SynthUserInterface.h"
 #include "Pipeline/ComponentManager.h"
 #include "Pipeline/IDManager.h"
+#include "enumConversion.h"
+
 
 using namespace pipeline;
 
@@ -256,25 +258,28 @@ void SynthUserInterface::initializeCommandMap(){
         {"synthDisconnect", &SynthUserInterface::commandSynthDisconnect},
         {"synthGet",        &SynthUserInterface::commandSynthSettings},
         {"synthSet",        &SynthUserInterface::commandSynthModify},
+        {"synthInfo",        &SynthUserInterface::commandSynthInfo},
 
         {"inputAdd",    &SynthUserInterface::commandInputAdd},
         {"inputRemove", &SynthUserInterface::commandInputRemove},
         {"inputCount",  &SynthUserInterface::commandInputCount},
 
-        {"compAdd",  &SynthUserInterface::commandComponentAdd},
-        {"compRemove",  &SynthUserInterface::commandComponentRemove},
-        {"compCount",  &SynthUserInterface::commandComponentCount},
-        {"compConnect",  &SynthUserInterface::commandComponentConnect},
-        {"compDisconnect",  &SynthUserInterface::commandComponentDisconnect},
-        {"compConnection",  &SynthUserInterface::commandComponentGetConnection},
-        {"compSet",  &SynthUserInterface::commandComponentModify},
-        {"compGet",  &SynthUserInterface::commandComponentSettings},
-        {"compTypes",  &SynthUserInterface::commandComponentTypes},
+        {"compAdd",        &SynthUserInterface::commandComponentAdd},
+        {"compRemove",     &SynthUserInterface::commandComponentRemove},
+        {"compCount",      &SynthUserInterface::commandComponentCount},
+        {"compConnect",    &SynthUserInterface::commandComponentConnect},
+        {"compDisconnect", &SynthUserInterface::commandComponentDisconnect},
+        {"compConnection", &SynthUserInterface::commandComponentGetConnection},
+        {"compSet",        &SynthUserInterface::commandComponentModify},
+        {"compGet",        &SynthUserInterface::commandComponentSettings},
+        {"compTypes",      &SynthUserInterface::commandComponentTypes},
+
+        {"aCompConnect",    &SynthUserInterface::commandAdvComponentConnect},
+        {"aCompDisconnect", &SynthUserInterface::commandAdvComponentDisconnect},
+        {"aCompInfo",       &SynthUserInterface::commandAdvComponentInfo},
 
     };
 }
-
-
 
 void SynthUserInterface::commandExit(){
     running = false;
@@ -757,6 +762,24 @@ void SynthUserInterface::commandSynthModify(){
     }
 }
 
+void SynthUserInterface::commandSynthInfo(){
+     if (inputTokenCount < 2){
+        std::printf("Usage: synthInfo <synth ID>\n");
+        error = true;
+        return;
+    }
+    short synthID;
+    if (numberFromToken(1, synthID)){
+        error = true;
+        return;
+    }
+    if (audioPipeline->printSynthInfo(synthID)){
+        std::printf("SYNTH(%d) does not exist\n", synthID);
+        error = true;
+        return;
+    }
+}
+
 void SynthUserInterface::commandReinitializeID(){
     stopPipeline();
     audioPipeline->reorganizeIDs();
@@ -819,21 +842,30 @@ void SynthUserInterface::commandSetUserInput(){
     std::printf("New user input set and running\n");
 }
 
-void SynthUserInterface::commandComponentAdd(){//TODO
+void SynthUserInterface::commandComponentAdd(){
     if (inputTokenCount < 2){
         std::printf("Usage: compAdd <component type>\n");
         error = true;
         return;
     }
 
-    pipeline::component_type compType = pipeline::stringTocomponentType(inputTokens[1]);
+    short newComponentID;
+
+    pipeline::component_type compType = pipeline::stringToComponentType(inputTokens[1]);
     if (compType == pipeline::COMP_INVALID){
-        std::printf("Component type does not exist: %s\n", inputTokens[1]);
-        error = true;
-        return;
+        pipeline::advanced_component_type advCompType = pipeline::stringToAdvComponentType(inputTokens[1]);
+        if (advCompType == pipeline::ACOMP_INVALID){
+            std::printf("Component type does not exist: %s\n", inputTokens[1]);
+            error = true;
+            return;
+        } else {
+            newComponentID = audioPipeline->addComponent(advCompType);
+        }
+    } else {
+        newComponentID = audioPipeline->addComponent(compType);
     }
 
-    short newComponentID = audioPipeline->addComponent(compType);
+
     std::printf("Component created with ID: %d\n", newComponentID);
 }
 
@@ -854,6 +886,10 @@ void SynthUserInterface::commandComponentRemove(){
     // if (IDType != pipeline::INVALID){
     //     stopPipeline();
     // }
+
+    if (audioPipeline->isAdvancedComponent(componentID)){
+        stopPipeline();
+    }
 
     if (audioPipeline->removeComponent(componentID)){
         std::printf("Something went wrong!\n");
@@ -919,7 +955,7 @@ void SynthUserInterface::commandComponentDisconnect(){
     std::printf("Component(%d) disconnected\n", componentID);
 }
 
-void SynthUserInterface::commandComponentGetConnection(){
+void SynthUserInterface::commandComponentGetConnection(){//TODO update
     if (inputTokenCount < 2){
         std::printf("Usage: compConnection <component ID>\n");
         error = true;
@@ -1035,10 +1071,97 @@ void SynthUserInterface::commandComponentSettings(){
 
 void SynthUserInterface::commandComponentTypes(){
     const char* types =
-    "VOLUME:"
+    "VOLUME:\n"
     "   volume - changes the volume of a signall\n"
+    "\n"
+    "ADVANCED:\n"
+    "SUM2:\n"
+    "   volume1 - changes the volume of a firts input signall\n"
+    "   volume2 - changes the volume of a second input signall\n"
+    "\n"
+    "   in0 - first signall to concatenate\n"
+    "   in1 - second signall to concatenate\n"
     "\n";
 
     std::printf("%s", types);
+}
+
+void SynthUserInterface::commandAdvComponentConnect(){
+    stopPipeline();
+    if (inputTokenCount < 5){
+        std::printf("Usage: aCompConnect <componentID> <input index> <ID type> <ID>\n");
+        error = true;
+        return;
+    }
+    short componentID;
+    if (numberFromToken(1, componentID)){
+        error = true;
+        return;
+    }
+    int index;
+    if (numberFromToken(2, index)){
+        error = true;
+        return;
+    }
+    ID_type IDType = pipeline::stringToIDType(inputTokens[3]);
+    if (IDType != pipeline::SYNTH && IDType != pipeline::COMP){
+        std::printf("ID type invalid: %s\n", inputTokens[3]);
+    }
+    short ID;
+    if (numberFromToken(4, ID)){
+        error = true;
+        return;
+    }
+
+    if (audioPipeline->setAdvancedComponentInput(componentID, index, IDType, ID)){
+        std::printf("Something went wrong!\n");
+        error = true;
+        return;
+    }
+    std::printf("Advanced component connected: COMP(%d)[%d] <- %s(%d)\n", componentID, index, inputTokens[3], ID);
+}
+
+void SynthUserInterface::commandAdvComponentDisconnect(){
+    stopPipeline();
+    if (inputTokenCount < 3){
+        std::printf("Usage: aCompDisconnect <componentID> <input index>\n");
+        error = true;
+        return;
+    }
+    short componentID;
+    if (numberFromToken(1, componentID)){
+        error = true;
+        return;
+    }
+    int index;
+    if (numberFromToken(2, index)){
+        error = true;
+        return;
+    }
+
+    if (audioPipeline->tryDisconnectAdvancedCommponent(componentID, index)){
+        std::printf("Something went wrong!\n");
+        error = true;
+        return;
+    }
+    std::printf("Advanced component: COMP(%d)[%d] is set to empty\n", componentID, index);
+}
+
+void SynthUserInterface::commandAdvComponentInfo(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: aCompInfo <componentID>\n");
+        error = true;
+        return;
+    }
+    short componentID;
+    if (numberFromToken(1, componentID)){
+        error = true;
+        return;
+    }
+    if (audioPipeline->printAdvancedComponentInfo(componentID)){
+        std::printf("(%d) is not an advanced component\n", componentID);
+        error = true;
+        return;
+    }
 }
 

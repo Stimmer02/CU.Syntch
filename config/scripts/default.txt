@@ -7,4 +7,3 @@ setOut SYNTH 0
 compAdd VOLUME
 compConnect 0 SYNTH 0
 pStart
-compRemove 0

@@ -3,7 +3,7 @@
 using namespace pipeline;
 const std::string Component_Volume::privateNames[1] = {"volume"};
 
-Component_Volume::Component_Volume(const audioFormatInfo* audioInfo):AComponent(audioInfo, 1, this->privateNames){
+Component_Volume::Component_Volume(const audioFormatInfo* audioInfo):AComponent(audioInfo, 1, this->privateNames, COMP_VOLUME){
     defaultSettings();
 }
 
