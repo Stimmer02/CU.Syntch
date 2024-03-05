@@ -13,6 +13,9 @@ namespace pipeline{
     enum component_type{
         COMP_INVALID,
         COMP_VOLUME,
+        COMP_PAN,
+        COMP_ECHO,
+        COMP_DISTORION,
     };
 
     class AComponent{

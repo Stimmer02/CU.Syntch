@@ -1,5 +1,6 @@
 #include "enumConversion.h"
 #include "Pipeline/ComponentManager.h"
+#include "Pipeline/Components/AComponent.h"
 
 pipeline::ID_type pipeline::stringToIDType(const char*& IDTypeString){
     struct cmp_str{
@@ -62,6 +63,20 @@ pipeline::component_type pipeline::stringToComponentType(const char*& componentT
         {"VOL",          pipeline::COMP_VOLUME},
         {"COMP_VOLUME",  pipeline::COMP_VOLUME},
 
+        {"pan",          pipeline::COMP_PAN},
+        {"PAN",          pipeline::COMP_PAN},
+        {"COMP_PAN",     pipeline::COMP_PAN},
+
+        {"echo",      pipeline::COMP_ECHO},
+        {"ECHO",      pipeline::COMP_ECHO},
+        {"COMP_ECHO", pipeline::COMP_ECHO},
+
+        {"distiortion",    pipeline::COMP_DISTORION},
+        {"dist",           pipeline::COMP_DISTORION},
+        {"DISTORTION",     pipeline::COMP_DISTORION},
+        {"DIST",           pipeline::COMP_DISTORION},
+        {"COMP_DISTORION", pipeline::COMP_DISTORION},
+
         {"invalid",      pipeline::COMP_INVALID},
         {"INVALID",      pipeline::COMP_INVALID},
         {"COMP_INVALID", pipeline::COMP_INVALID},
@@ -82,7 +97,13 @@ std::string pipeline::componentTypeToString(component_type compType){
             return "COMP_INVALID";
         case COMP_VOLUME:
             return "COMP_VOLUME";
-    }
+        case COMP_PAN:
+            return "COMP_PAN";
+        case COMP_ECHO:
+            return "COMP_ECHO";
+        case COMP_DISTORION:
+            return "COMP_DISTORION";
+        }
     return "INVALID";
 }
 

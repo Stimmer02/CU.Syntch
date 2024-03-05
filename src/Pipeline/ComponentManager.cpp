@@ -16,7 +16,16 @@ short ComponentManager::addComponent(component_type type){
         case COMP_VOLUME:
             newComponent = new Component_Volume(audioInfo);
             break;
-    }
+        case COMP_PAN:
+            newComponent = new Component_Pan(audioInfo);
+            break;
+        case COMP_ECHO:
+            newComponent = new Component_Echo(audioInfo);
+            break;
+        case COMP_DISTORION:
+            newComponent = new Component_Pan(audioInfo);
+            break;
+        }
 
     return components.add(newComponent);
 }

@@ -7,6 +7,8 @@
 
 #include "Components/AComponent.h"
 #include "Components/Component_Volume.h"
+#include "Components/Component_Pan.h"
+#include "Components/Component_Echo.h"
 
 #include "Components/AAdvancedComponent.h"
 #include "Components/AdvancedComponent_Sum2.h"
