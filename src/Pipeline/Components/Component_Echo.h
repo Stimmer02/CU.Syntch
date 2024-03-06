@@ -24,6 +24,12 @@ namespace pipeline{
         int sampleCount;
 
         const uint maxDelayTime;
+
+        float& lvol = settings.values[0];
+        float& rvol = settings.values[1];
+        float& delay = settings.values[2];
+        float& fade = settings.values[3];
+        float& repeats = settings.values[4];
     };
 }
 

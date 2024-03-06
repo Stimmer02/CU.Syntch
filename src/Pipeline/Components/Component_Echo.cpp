@@ -36,7 +36,7 @@ void Component_Echo::apply(pipelineAudioBuffer* buffer){
         lMemory[currentSample][i] = buffer->bufferL[i];
     }
 
-    uint allSamplesShift = audioInfo->sampleRate * settings.values[2];
+    uint allSamplesShift = audioInfo->sampleRate * delay;
     int sampleIndex = currentSample - allSamplesShift / audioInfo->sampleSize - 1;
     if (sampleIndex < 0){
         sampleIndex = sampleCount + sampleIndex;
@@ -44,8 +44,8 @@ void Component_Echo::apply(pipelineAudioBuffer* buffer){
     uint singleSampleShift = allSamplesShift % audioInfo->sampleSize;
     uint indexShift = audioInfo->sampleSize - singleSampleShift;
 
-    float rVolume = settings.values[1];
-    float lVolume = settings.values[0];
+    float rVolume = rvol;
+    float lVolume = lvol;
 
     uint i = 0;
     for (; i < singleSampleShift; i++){
@@ -63,8 +63,8 @@ void Component_Echo::apply(pipelineAudioBuffer* buffer){
         buffer->bufferL[i] = buffer->bufferL[i] + lMemory[sampleIndex][i-singleSampleShift] * lVolume;
     }
 
-    for (uint repeat = 1; repeat < settings.values[4]; repeat++){
-        allSamplesShift = audioInfo->sampleRate * settings.values[2] * repeat;
+    for (uint repeat = 1; repeat < repeats; repeat++){
+        allSamplesShift = audioInfo->sampleRate * delay * repeat;
         sampleIndex = currentSample - allSamplesShift / audioInfo->sampleSize - 1;
         if (sampleIndex < 0){
             sampleIndex = sampleCount + sampleIndex;
@@ -72,8 +72,8 @@ void Component_Echo::apply(pipelineAudioBuffer* buffer){
         singleSampleShift = allSamplesShift % audioInfo->sampleSize;
         indexShift = audioInfo->sampleSize - singleSampleShift;
 
-        rVolume *= settings.values[3];
-        lVolume *= settings.values[3];
+        rVolume *= fade;
+        lVolume *= fade;
 
         i = 0;
         for (; i < singleSampleShift; i++){
@@ -111,7 +111,7 @@ void Component_Echo::defaultSettings(){
     settings.values[0] = 0.5;  //lvol
     settings.values[1] = 0.5;  //rvol
     settings.values[2] = 0.2;  //delay
-    settings.values[3] = 0.5;  //fade
+    settings.values[3] = 0.7;  //fade
     settings.values[4] = 5;    //repeats
 }
 
@@ -124,8 +124,8 @@ void Component_Echo::set(uint index, float value){
                 value = 0;
             }
         case 4:
-            if (settings.values[4] * settings.values[2] > maxDelayTime){
-                settings.values[4] = maxDelayTime / settings.values[2];
+            if (repeats * delay > maxDelayTime){
+                value = maxDelayTime / delay;
             } else if (value < 1){
                 value = 1;
             }

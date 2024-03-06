@@ -17,6 +17,9 @@ namespace pipeline{
 
     private:
         static const std::string privateNames[];
+
+        float& vol0 = settings.values[0];
+        float& vol1 = settings.values[1];
     };
 }
 
