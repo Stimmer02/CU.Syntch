@@ -300,7 +300,7 @@ void SynthUserInterface::commandToggle(){
     terminalDiscard.disableInput();
     audioPipeline->reausumeInput();
     terminalInput = false;
-    std::printf("Terminal input disabled, to neable it press \"Ctrl+Q\"\n");
+    std::printf("Terminal input disabled, to enable it press \"Ctrl+Q\"\n");
     while (terminalInput == false){
         std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
         if (userInput->getKeyState(KEY_LEFTCTRL) && userInput->getKeyState(KEY_Q)){

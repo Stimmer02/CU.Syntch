@@ -23,7 +23,7 @@ short ComponentManager::addComponent(component_type type){
             newComponent = new Component_Echo(audioInfo);
             break;
         case COMP_DISTORION:
-            newComponent = new Component_Pan(audioInfo);
+            newComponent = new Component_Distortion(audioInfo);
             break;
         }
 
