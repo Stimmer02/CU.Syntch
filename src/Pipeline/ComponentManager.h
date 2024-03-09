@@ -16,6 +16,7 @@
 
 #include "Components/AAdvancedComponent.h"
 #include "Components/AdvancedComponent_Sum2.h"
+#include "Components/AdvancedComponent_Copy.h"
 
 #include <set>
 

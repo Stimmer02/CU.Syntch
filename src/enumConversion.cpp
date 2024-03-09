@@ -76,16 +76,16 @@ pipeline::component_type pipeline::stringToComponentType(const char*& componentT
         {"DIST",           pipeline::COMP_DISTORION},
         {"COMP_DISTORION", pipeline::COMP_DISTORION},
 
-        {"compressor",    pipeline::COMP_COMPRESSOR},
-        {"comp",           pipeline::COMP_COMPRESSOR},
-        {"COMPRESSOR",     pipeline::COMP_COMPRESSOR},
-        {"COMP",           pipeline::COMP_COMPRESSOR},
+        {"compressor",      pipeline::COMP_COMPRESSOR},
+        {"comp",            pipeline::COMP_COMPRESSOR},
+        {"COMPRESSOR",      pipeline::COMP_COMPRESSOR},
+        {"COMP",            pipeline::COMP_COMPRESSOR},
         {"COMP_COMPRESSOR", pipeline::COMP_COMPRESSOR},
 
-        {"destroy",    pipeline::COMP_DESTROY},
-        {"dest",           pipeline::COMP_DESTROY},
-        {"DESTROY",     pipeline::COMP_DESTROY},
-        {"DEST",           pipeline::COMP_DESTROY},
+        {"destroy",      pipeline::COMP_DESTROY},
+        {"dest",         pipeline::COMP_DESTROY},
+        {"DESTROY",      pipeline::COMP_DESTROY},
+        {"DEST",         pipeline::COMP_DESTROY},
         {"COMP_DESTROY", pipeline::COMP_DESTROY},
 
         {"invalid",      pipeline::COMP_INVALID},
@@ -129,10 +129,15 @@ pipeline::advanced_component_type pipeline::stringToAdvComponentType(const char*
         }
     };
     static std::map<const char*, pipeline::advanced_component_type, cmp_str> advComponentTypeMap{
-        {"sum",  pipeline::ACOMP_SUM2},
-        {"SUM",  pipeline::ACOMP_SUM2},
-        {"sum2", pipeline::ACOMP_SUM2},
-        {"SUM2", pipeline::ACOMP_SUM2},
+        {"sum",        pipeline::ACOMP_SUM2},
+        {"SUM",        pipeline::ACOMP_SUM2},
+        {"sum2",       pipeline::ACOMP_SUM2},
+        {"SUM2",       pipeline::ACOMP_SUM2},
+        {"ACOMP_SUM2", pipeline::ACOMP_SUM2},
+
+        {"copy",       pipeline::ACOMP_COPY},
+        {"COPY",       pipeline::ACOMP_COPY},
+        {"ACOMP_COPY", pipeline::ACOMP_COPY},
 
         {"invalid",       pipeline::ACOMP_INVALID},
         {"INVALID",       pipeline::ACOMP_INVALID},
@@ -154,6 +159,8 @@ std::string pipeline::advComponentTypeToString(advanced_component_type compType)
             return "ACOMP_INVALID";
         case ACOMP_SUM2:
             return "ACOMP_SUM2";
+        case ACOMP_COPY:
+            return "ACOMP_COPY";
     }
     return "INVALID";
 }

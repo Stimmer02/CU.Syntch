@@ -43,6 +43,9 @@ short ComponentManager::addComponent(advanced_component_type type, audioBufferQu
         case ACOMP_SUM2:
             newComponent = new AdvancedComponent_Sum2(audioInfo, boundBuffer);
             break;
+        case ACOMP_COPY:
+            newComponent = new AdvancedComponent_Copy(audioInfo, boundBuffer);
+            break;
     }
 
     return components.add(newComponent);

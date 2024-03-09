@@ -8,6 +8,7 @@ namespace pipeline{
     enum advanced_component_type{
         ACOMP_INVALID,
         ACOMP_SUM2,
+        ACOMP_COPY,
     };
 
     class AAdvancedComponent: public AComponent{
