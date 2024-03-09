@@ -82,6 +82,12 @@ pipeline::component_type pipeline::stringToComponentType(const char*& componentT
         {"COMP",           pipeline::COMP_COMPRESSOR},
         {"COMP_COMPRESSOR", pipeline::COMP_COMPRESSOR},
 
+        {"destroy",    pipeline::COMP_DESTROY},
+        {"dest",           pipeline::COMP_DESTROY},
+        {"DESTROY",     pipeline::COMP_DESTROY},
+        {"DEST",           pipeline::COMP_DESTROY},
+        {"COMP_DESTROY", pipeline::COMP_DESTROY},
+
         {"invalid",      pipeline::COMP_INVALID},
         {"INVALID",      pipeline::COMP_INVALID},
         {"COMP_INVALID", pipeline::COMP_INVALID},
@@ -110,6 +116,8 @@ std::string pipeline::componentTypeToString(component_type compType){
             return "COMP_DISTORION";
         case COMP_COMPRESSOR:
             return "COMP_COMPRESSOR";
+        case COMP_DESTROY:
+            return "COMP_DESTROY";
         }
     return "INVALID";
 }

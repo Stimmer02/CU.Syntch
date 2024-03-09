@@ -27,6 +27,9 @@ short ComponentManager::addComponent(component_type type){
         case COMP_COMPRESSOR:
             newComponent = new Component_Compressor(audioInfo);
             break;
+        case COMP_DESTROY:
+            newComponent = new Component_Destroy(audioInfo);
+            break;
         }
 
     return components.add(newComponent);

@@ -11,6 +11,7 @@
 #include "Components/Component_Echo.h"
 #include "Components/Component_Distortion.h"
 #include "Components/Component_Compressor.h"
+#include "Components/Component_Destroy.h"
 
 
 #include "Components/AAdvancedComponent.h"
