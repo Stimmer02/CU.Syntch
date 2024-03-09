@@ -16,6 +16,7 @@ namespace pipeline{
         COMP_PAN,
         COMP_ECHO,
         COMP_DISTORION,
+        COMP_COMPRESSOR,
     };
 
     class AComponent{

@@ -10,6 +10,8 @@
 #include "Components/Component_Pan.h"
 #include "Components/Component_Echo.h"
 #include "Components/Component_Distortion.h"
+#include "Components/Component_Compressor.h"
+
 
 #include "Components/AAdvancedComponent.h"
 #include "Components/AdvancedComponent_Sum2.h"

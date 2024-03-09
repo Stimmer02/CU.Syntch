@@ -8,4 +8,6 @@ compAdd VOLUME
 compConnect 0 SYNTH 0
 compAdd ECHO
 compConnect 1 SYNTH 0
+compAdd COMP
+compConnect 2 SYNTH 0
 pStart

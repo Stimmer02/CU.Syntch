@@ -1,5 +1,4 @@
 #include "enumConversion.h"
-#include "Pipeline/ComponentManager.h"
 #include "Pipeline/Components/AComponent.h"
 
 pipeline::ID_type pipeline::stringToIDType(const char*& IDTypeString){
@@ -77,6 +76,12 @@ pipeline::component_type pipeline::stringToComponentType(const char*& componentT
         {"DIST",           pipeline::COMP_DISTORION},
         {"COMP_DISTORION", pipeline::COMP_DISTORION},
 
+        {"compressor",    pipeline::COMP_COMPRESSOR},
+        {"comp",           pipeline::COMP_COMPRESSOR},
+        {"COMPRESSOR",     pipeline::COMP_COMPRESSOR},
+        {"COMP",           pipeline::COMP_COMPRESSOR},
+        {"COMP_COMPRESSOR", pipeline::COMP_COMPRESSOR},
+
         {"invalid",      pipeline::COMP_INVALID},
         {"INVALID",      pipeline::COMP_INVALID},
         {"COMP_INVALID", pipeline::COMP_INVALID},
@@ -103,6 +108,8 @@ std::string pipeline::componentTypeToString(component_type compType){
             return "COMP_ECHO";
         case COMP_DISTORION:
             return "COMP_DISTORION";
+        case COMP_COMPRESSOR:
+            return "COMP_COMPRESSOR";
         }
     return "INVALID";
 }

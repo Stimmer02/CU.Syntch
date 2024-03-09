@@ -1,7 +1,6 @@
 #include "ComponentManager.h"
 
 
-
 using namespace pipeline;
 
 ComponentManager::ComponentManager(const audioFormatInfo* audioInfo) : audioInfo(audioInfo){}
@@ -24,6 +23,9 @@ short ComponentManager::addComponent(component_type type){
             break;
         case COMP_DISTORION:
             newComponent = new Component_Distortion(audioInfo);
+            break;
+        case COMP_COMPRESSOR:
+            newComponent = new Component_Compressor(audioInfo);
             break;
         }
 
