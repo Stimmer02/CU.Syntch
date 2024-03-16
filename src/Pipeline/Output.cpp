@@ -76,7 +76,7 @@ char Output::init(audioFormatInfo audioInfo){
 }
 
 //INITIALIZE BEFORE USING THIS!
-void Output::play(pipelineAudioBuffer* pipelineBuffer){//TODO: consider moving this exception higher
+void Output::play(pipelineAudioBuffer* pipelineBuffer){
     try {
         bufferConverter->toPCM(pipelineBuffer, buffer);
         audioOutput->playBuffer(buffer);
@@ -88,7 +88,7 @@ void Output::play(pipelineAudioBuffer* pipelineBuffer){//TODO: consider moving t
     }
 }
 
-void Output::onlyRecord(pipelineAudioBuffer* pipelineBuffer){//TODO: consider moving this exception higher
+void Output::onlyRecord(pipelineAudioBuffer* pipelineBuffer){
     try {
         bufferConverter->toPCM(pipelineBuffer, buffer);
         audioRecorder.saveBuffer(buffer);

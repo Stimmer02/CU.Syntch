@@ -235,30 +235,30 @@ void SynthUserInterface::stopPipeline(){
 
 void SynthUserInterface::initializeCommandMap(){
     commandMap = new std::map<const char*, methodPtr, SynthUserInterface::cmp_str>{
-        {"system",   &SynthUserInterface::commandSystem},
-        {"exit",     &SynthUserInterface::commandExit},
-        {"toggle",   &SynthUserInterface::commandToggle},
-        {"help",     &SynthUserInterface::commandHelp},
-        {"pStart",   &SynthUserInterface::commandPipelineStart},
-        {"pStop",    &SynthUserInterface::commandPipelineStop},
-        {"midiRec",  &SynthUserInterface::commandMidiRecord},
-        {"clear",    &SynthUserInterface::commandClear},
-        {"setOut",   &SynthUserInterface::commandSetOutputBuffer},
-        {"idReinit", &SynthUserInterface::commandReinitializeID},
-        {"execute",  &SynthUserInterface::commandExecuteScript},
-
+        {"help",         &SynthUserInterface::commandHelp},
+        {"exit",         &SynthUserInterface::commandExit},
         {"setUserInput", &SynthUserInterface::commandSetUserInput},
+        {"toggle",       &SynthUserInterface::commandToggle},
+        {"pStart",       &SynthUserInterface::commandPipelineStart},
+        {"pStop",        &SynthUserInterface::commandPipelineStop},
+        {"setOut",       &SynthUserInterface::commandSetOutputBuffer},
+        {"execute",      &SynthUserInterface::commandExecuteScript},
+        {"midiRec",      &SynthUserInterface::commandMidiRecord},
+        {"clear",        &SynthUserInterface::commandClear},
+        {"system",       &SynthUserInterface::commandSystem},
+        {"idReinit",     &SynthUserInterface::commandReinitializeID},
+
         {"\e[A",         &SynthUserInterface::browseHistory},
 
-        {"synthSave",       &SynthUserInterface::commandSynthSave},
         {"synthAdd",        &SynthUserInterface::commandSynthAdd},
         {"synthRemove",     &SynthUserInterface::commandSynthRemove},
-        {"synthCount",      &SynthUserInterface::commandSynthCount},
         {"synthConnect",    &SynthUserInterface::commandSynthConnect},
         {"synthDisconnect", &SynthUserInterface::commandSynthDisconnect},
+        {"synthCount",      &SynthUserInterface::commandSynthCount},
         {"synthGet",        &SynthUserInterface::commandSynthSettings},
         {"synthSet",        &SynthUserInterface::commandSynthModify},
-        {"synthInfo",        &SynthUserInterface::commandSynthInfo},
+        {"synthInfo",       &SynthUserInterface::commandSynthInfo},
+        {"synthSave",       &SynthUserInterface::commandSynthSave},
 
         {"inputAdd",    &SynthUserInterface::commandInputAdd},
         {"inputRemove", &SynthUserInterface::commandInputRemove},
@@ -266,12 +266,12 @@ void SynthUserInterface::initializeCommandMap(){
 
         {"compAdd",        &SynthUserInterface::commandComponentAdd},
         {"compRemove",     &SynthUserInterface::commandComponentRemove},
-        {"compCount",      &SynthUserInterface::commandComponentCount},
         {"compConnect",    &SynthUserInterface::commandComponentConnect},
         {"compDisconnect", &SynthUserInterface::commandComponentDisconnect},
         {"compConnection", &SynthUserInterface::commandComponentGetConnection},
-        {"compSet",        &SynthUserInterface::commandComponentModify},
+        {"compCount",      &SynthUserInterface::commandComponentCount},
         {"compGet",        &SynthUserInterface::commandComponentSettings},
+        {"compSet",        &SynthUserInterface::commandComponentModify},
         {"compTypes",      &SynthUserInterface::commandComponentTypes},
 
         {"aCompConnect",    &SynthUserInterface::commandAdvComponentConnect},
@@ -313,33 +313,165 @@ void SynthUserInterface::commandToggle(){
     std::printf("Terminal input enabled\n");
 }
 
-void SynthUserInterface::commandHelp(){//TODO
+void SynthUserInterface::commandHelp(){
+
+    static const std::string list =
+    "COMMAND LIST:\n"
+    "\n"
+    "SYSTEM\n"
+    "   help\n"
+    "   exit\n"
+    "   setUserInput\n"
+    "   toggle\n"
+    "   pStart\n"
+    "   pStop\n"
+    "   setOut\n"
+    "   execute\n"
+    "   midiRec\n"
+    "   clear\n"
+    "   system\n"
+    "   idReinit\n"
+    "\n"
+    "SYNTHESIZER\n"
+    "   synthAdd\n"
+    "   synthRemove\n"
+    "   synthConnect\n"
+    "   synthDisconnect\n"
+    "   synthCount\n"
+    "   synthGet\n"
+    "   synthSet\n"
+    "   synthInfo\n"
+    "   synthSave\n"
+    "\n"
+    "INPUT\n"
+    "   inputAdd\n"
+    "   inputRemove\n"
+    "   inputCount\n"
+    "\n"
+    "COMPONENT\n"
+    "   compAdd\n"
+    "   compRemove\n"
+    "   compConnect\n"
+    "   compDisconnect\n"
+    "   compConnection\n"
+    "   compCount\n"
+    "   compGet\n"
+    "   compSet\n"
+    "   compTypes\n"
+    "\n"
+    "ADVANCED COMPONENT\n"
+    "   aCompConnect\n"
+    "   aCompDisconnect\n"
+    "   aCompInfo\n"
+    "\n";
+
     static const std::string help =
     "HELP PROMPT:\n"
     "Usage: command <arguments>\n"
     "\n"
-    "command list:\n"
+    "SYSTEM - managment and utilities\n"
+    "   help    - shows this message, argument \"list\" will show no descriptions\n"
+    "   exit    - exits the program (if program does not turn off: press any key on every previously connected device to end reading threads)\n"
+    "   setUserInput <keyboard system stream> - sets keyboard stream to be used for receiving keyboard combinations (eg. Ctrl+Q)\n"
+    "   toggle  - toggles input between synthesizer and console, after switching to synthesizer press Ctrl+Q to switch back\n"
+    "   pStart  - starts audio pipeline\n"
+    "   pStop   - stops audio pipeline\n"
+    "   setOut  <ID type> <ID> - sets synthesize or advanced component to be system audio output\n"
+    "   execute <file path> - executes script of given path\n"
+    "   midiRec <midi file path> <output name> <synth ID> - reads MIDI file and records it to specified .WAV file using specific synthesizer\n"
+    "   clear   - clears console\n"
+    "   system  {system command and its arguments} - executes system command in current shell\n"
+    "   idReinit - reinitializes all ID's in the order of components memory allocation, this way there are no gaps between them and also breaks current initialization (used for clearing system)\n"
     "\n"
-    "help    - shows this message\n\n"
-    "toggle  - toggles input between synthesizer and console, after switching to synthesizer press Ctrl+Q to switch back\n\n"
-    "exit    - exits the program (if program does not turn off: press any key on every connected device to end keyboard input reading threads)\n\n"
-    "pStart  - starts audio pipeline\n\n"
-    "pStop   - stops audio pipeline\n\n"
-    "midiRec <midi file path> <output name> <synth ID> - reads MIDI file and records it to specified .WAV file using specific synthesizer\n\n"
+    "SYNTHESIZER - audio signall creation\n"
+    "   synthAdd     - adds new synthesizer and returns its ID\n"
+    "   synthRemove  synth ID> - removes synthesizer by its ID\n"
+    "   synthConnect <synth ID> <inputID> - connects specified synthesizer with specified input so the synth will receive keyboard state from that input\n"
+    "   synthDisconnect <synth ID> - removes the connection so the synthesizer wont't be used until new data stream is connected\n"
+    "   synthCount   - returns the total count of the synthesizers\n"
+    "   synthGet     <synth ID> {optional: <setting name>} - returns synthesizer settings (all/specified)\n"
+    "   synthSet     <synth ID> {<setting name> <value>} - sets specified setting values\n"
+    "   synthInfo    - returns information about queue of specified synthesizer\n"
+    "   synthSave    <load/save> <save file path> <synth ID> - loads or saves synthesizer configuration\n"
     "\n"
-    "synthSave <load/save> <save file path> <synth ID> - loads or saves synthesizer configuration\n\n"
-    "synthAdd - adds new synthesizer and returns its ID\n\n"
-    "synthRemove <synth ID> - removes synthesizer by its ID\n\n"
-    "synthCount - returns the total count of the synthesizers\n\n"
-    "synthConnect <synth ID> <inputID> - connects specified synthesizer with specified input so the synth will receive keyboard state from that input\n\n"
-    "synthDisconnect <synth ID> - removes the connection so the synthesizer wont't be used until new data stream is connected\n\n"
-    "\n\n"
-    "inputAdd <type> <stream path> <key count> <optional: key map file path> - adds new input and returns its ID, where the type is 'keyboard' or 'midi', stream path describes stream location, key count tells how many notes it should use, key map file path (if type is keybard) describes map file location that will provide keyboard layout interpretation\n\n"
-    "inputRemove <input ID> - removes input by its I\n\n"
-    "inputCount - returns the total count of the inputs\n\n"
+    "INPUT - midi input\n"
+    "   inputAdd <type> <stream path> <key count> <optional: key map file path> - adds new input and returns its ID, where the type is 'keyboard' or 'midi', stream path describes stream location, key count tells how many notes it should use, key map file path (if type is keybard) describes map file location that will provide keyboard layout interpretation\n"
+    "   inputRemove <input ID> - removes input by its I\n"
+    "   inputCount - returns the total count of the inputs\n"
     "\n"
+    "COMPONENT - audio stream manipulation\n"
+    "   compAdd      <component type> - adds specified component or advanced component to the systen\n"
+    "   compRemove   <component ID> - removes specified component\n"
+    "   compConnect  <component type> <parentType> <ID> - connects specified component to synthesizer of advanced component\n"
+    "   compDisconnect <component ID> - disconnects component from synthesizer of advanced component\n"
+    "   compConnection <component ID> - returns infornation about what system element specified component is connected to\n"
+    "   compCount    - returns total count of components in the system\n"
+    "   compGet      <component ID> {optional: <setting name>} - returns component settings (all/specified)\n"
+    "   compSet      <component ID> {<setting name> <value>} - sets specified setting values\n"
+    "   compTypes    - returns a list of all avaliable compomnent types\n"
+    "\n"
+    "ADVANCED COMPONENT - advanced audio stream manipulation\n"
+    "   aCompConnect    <component ID> <input index> <ID type> <ID> - connects advanced component input (specified by \"input index\") to another advanced component or synthesizer, extending pipeline, possibly creating branches or merging them\n"
+    "   aCompDisconnect <component ID> <input index> - disconnect advanced component input from source\n"
+    "   aCompInfo       <component ID> - returns information about queue of specified advanced component\n"
     "\n";
-    std::printf("%s\n", help.c_str());
+
+
+    if (inputTokenCount > 1 && std::strcmp("list", inputTokens[1]) == 0){
+        std::printf("%s\n", list.c_str());
+    } else {
+        std::printf("%s\n", help.c_str());
+    }
+}
+
+void SynthUserInterface::commandComponentTypes(){
+    const char* types =
+    "VOLUME:\n"
+    "   volume - changes the volume of a signall\n"
+    "\n"
+    "PAN:\n"
+    "   pan - balances stereo effect between left and right\n"
+    "\n"
+    "COMPRESSOR:\n"
+    "   threshold - volume after whitch compression will be applied\n"
+    "   ratio     - compression ratio for each step above the threshold\n"
+    "   step      - value after whitch ratio will be fully applied (effect stacks with each step)\n"
+    "   attack    - time in seconds to fully register volume level increase\n"
+    "   release   - time in seconds to fully register volume level decrease\n"
+    "   vol       - output volume multiplication\n"
+    "\n"
+    "ECHO:\n"
+    "   rvol    - volume of the right echo channel\n"
+    "   lvol    - volume of the left echo channel\n"
+    "   delay   - delay in seconds between repeats\n"
+    "   fade    - volume multiplication between repeats\n"
+    "   repeats - count of repeats\n"
+    "\n"
+    "DISTORTION:\n"
+    "   gain     - input volume multiplication\n"
+    "   compress - threshold that will cut everything above it's value\n"
+    "   symmetry - positive values will increase positive phase gain, negative - negative phase gain\n"
+    "   vol      - output volume multiplication\n"
+    "\n"
+    "DESTROY:\n"
+    "   subtract - value that will be substracted from positive phase and added to negative phase\n"
+    "\n"
+    "ADVANCED:\n"
+    "SUM2:\n"
+    "   vol0 - changes the volume of a firts input signall\n"
+    "   vol1 - changes the volume of a second input signall\n"
+    "\n"
+    "   in[0] - first signall to concatenate\n"
+    "   in[1] - second signall to concatenate\n"
+    "\n"
+    "\n"
+    "COPY:\n"
+    "   vol - changes the volume of input signall\n"
+    "\n"
+    "   in[0] - signall to copy\n"
+    "\n";
+
+    std::printf("%s", types);
 }
 
 void SynthUserInterface::commandPipelineStart(){
@@ -636,7 +768,7 @@ void SynthUserInterface::commandSetOutputBuffer(){
 
 void SynthUserInterface::commandSynthSettings(){
     if (inputTokenCount < 2){
-        std::printf("Usage: synthSettings <synth ID> {optional: setting type}\n");
+        std::printf("Usage: synthSettings <synth ID> {optional: setting name}\n");
         error = true;
         return;
     }
@@ -656,7 +788,7 @@ void SynthUserInterface::commandSynthSettings(){
             synthesizer::settings_name setting = synthesizer::stringToSettingName(inputTokens[i]);
             if (setting == synthesizer::INVALID){
                 if (std::strcmp("type", inputTokens[i]) != 0 && std::strcmp("TYPE", inputTokens[i]) != 0){
-                    std::printf("Invalid setting type: %s\n", inputTokens[i]);
+                    std::printf("Invalid setting name: %s\n", inputTokens[i]);
                 } else {
                     synthesizer::generator_type generatorType = audioPipeline->getSynthType(synthID);
                     switch (generatorType) {
@@ -723,7 +855,7 @@ void SynthUserInterface::commandSynthSettings(){
 
 void SynthUserInterface::commandSynthModify(){
     if (inputTokenCount < 4 || inputTokenCount%2 == 1){
-        std::printf("Usage: synthModify <synth ID> {<setting type> <value>}\n");
+        std::printf("Usage: synthSet <synth ID> {<setting name> <value>}\n");
         error = true;
         return;
     }
@@ -750,7 +882,7 @@ void SynthUserInterface::commandSynthModify(){
         } else {
             synthesizer::settings_name setting = synthesizer::stringToSettingName(inputTokens[i]);
             if (setting == synthesizer::INVALID){
-                std::printf("Invalid setting type: %s\n", inputTokens[i]);
+                std::printf("Invalid setting name: %s\n", inputTokens[i]);
             } else {
                 float value;
                 if (numberFromToken(i+1, value) == 0){
@@ -906,7 +1038,7 @@ void SynthUserInterface::commandComponentCount(){
 
 void SynthUserInterface::commandComponentConnect(){
     if (inputTokenCount < 4){
-        std::printf("Usage: compConnect <ID type> <parentType> <ID>\n");
+        std::printf("Usage: compConnect <component ID> <parentType> <ID>\n");
         error = true;
         return;
     }
@@ -1069,30 +1201,10 @@ void SynthUserInterface::commandComponentSettings(){
     }
 }
 
-void SynthUserInterface::commandComponentTypes(){
-    const char* types =
-    "VOLUME:\n"
-    "   volume - changes the volume of a signall\n"
-    "\n"
-    "PAN:\n"
-    "   pan - balances stereo effect between left and right\n"
-    "\n"
-    "ADVANCED:\n"
-    "SUM2:\n"
-    "   volume1 - changes the volume of a firts input signall\n"
-    "   volume2 - changes the volume of a second input signall\n"
-    "\n"
-    "   in0 - first signall to concatenate\n"
-    "   in1 - second signall to concatenate\n"
-    "\n";
-
-    std::printf("%s", types);
-}
-
 void SynthUserInterface::commandAdvComponentConnect(){
     stopPipeline();
     if (inputTokenCount < 5){
-        std::printf("Usage: aCompConnect <componentID> <input index> <ID type> <ID>\n");
+        std::printf("Usage: aCompConnect <component ID> <input index> <ID type> <ID>\n");
         error = true;
         return;
     }
@@ -1127,7 +1239,7 @@ void SynthUserInterface::commandAdvComponentConnect(){
 void SynthUserInterface::commandAdvComponentDisconnect(){
     stopPipeline();
     if (inputTokenCount < 3){
-        std::printf("Usage: aCompDisconnect <componentID> <input index>\n");
+        std::printf("Usage: aCompDisconnect <component ID> <input index>\n");
         error = true;
         return;
     }
@@ -1152,7 +1264,7 @@ void SynthUserInterface::commandAdvComponentDisconnect(){
 
 void SynthUserInterface::commandAdvComponentInfo(){
     if (inputTokenCount < 2){
-        std::printf("Usage: aCompInfo <componentID>\n");
+        std::printf("Usage: aCompInfo <component ID>\n");
         error = true;
         return;
     }

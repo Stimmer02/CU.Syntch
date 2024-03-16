@@ -47,8 +47,8 @@ void Component_Distortion::clear(){
 }
 
 void Component_Distortion::defaultSettings(){
-    settings.values[0] = 4.0; //gain
-    settings.values[1] = 0.5; //compress
+    settings.values[0] = 4.0;  //gain
+    settings.values[1] = 0.5;  //compress
     settings.values[2] = 0.17; //symmetry
-    settings.values[3] = 1.0; //vol
+    settings.values[3] = 1.0;  //vol
 }

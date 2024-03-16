@@ -117,7 +117,7 @@ namespace pipeline{
         ComponentManager component;//component collection, processing
         std::vector<audioBufferQueue*> componentQueues;//audio buffers, processing order of any queue
         audioBufferQueue* outputBuffer;//the last componentQueue to be executed
-        ExecutionQueue executionQueue;//processing order of componentQueues//TODO
+        ExecutionQueue executionQueue;//processing order of componentQueues
 
         statistics::PipelineStatisticsService* statisticsService;
 
