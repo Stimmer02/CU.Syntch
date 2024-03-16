@@ -18,42 +18,41 @@ void ExecutionQueue::build(std::vector<audioBufferQueue*>& componentQueues, audi
         operations.push_back(outputQueue);
         connectedSynthIDs.push_back(outputQueue->getParentID());
     } else {
-        ShiftBuffer<audioBufferQueue*> toBuild(componentQueues.size(), &compareFunction);
-        audioBufferQueue** builded = new audioBufferQueue*[componentQueues.size()];
-        short buildedCount = 0;
+        UniqueShiftBuffer<audioBufferQueue*> toBuild(componentQueues.size(), &compareFunction);
+        audioBufferQueue* currentElement;
 
-        toBuild.put(outputQueue);
+        toBuild.putOrMoveToEnd(outputQueue);
 
         while (toBuild.leftInBuffer() > 0){
-            builded[buildedCount] = toBuild.get();
-            bool unique = true;
-            for (short i = 0; i < buildedCount; i++){
-                if (builded[i]->getParentID() == builded[buildedCount]->getParentID() && builded[i]->parentType == builded[buildedCount]->parentType){
-                    unique = false;
+            currentElement = toBuild.get();
+
+            bool uniqueElement = true;
+            for (uint i = 0; i < operations.size(); i++){
+                if (operations.at(i)->getParentID() == currentElement->getParentID() && operations.at(i)->parentType == currentElement->parentType){
+                    uniqueElement = false;
+                    operations.erase(operations.cbegin() + i);
                     break;
                 }
             }
-            if (unique == false){
-                continue;
-            }
-            operations.push_back(builded[buildedCount]);
-            if (builded[buildedCount]->parentType == pipeline::SYNTH){
-                connectedSynthIDs.push_back(builded[buildedCount]->getParentID());
+            operations.push_back(currentElement);
+
+            if (currentElement->parentType == pipeline::SYNTH){
+                if (uniqueElement){
+                    connectedSynthIDs.push_back(currentElement->getParentID());
+                }
             } else {
-                AAdvancedComponent* advComp = reinterpret_cast<AAdvancedComponent*>(components.getElement(builded[buildedCount]->getParentID()));
-                if (advComp->allNeededConnections() == false){
-                    invalidAdvancedComponents.push_back(builded[buildedCount]->getParentID());
+                AAdvancedComponent* advComp = reinterpret_cast<AAdvancedComponent*>(components.getElement(currentElement->getParentID()));
+                if (advComp->allNeededConnections() == false && uniqueElement){
+                    invalidAdvancedComponents.push_back(currentElement->getParentID());
                 }
                 for (uint i = 0; i < advComp->maxConnections; i++){
                     audioBufferQueue* connection = advComp->getConnection(i);
                     if (connection != nullptr){
-                        toBuild.putIfUnique(connection);
+                        toBuild.putOrMoveToEnd(connection);
                     }
                 }
             }
-            buildedCount++;
         }
-        delete[] builded;
     }
 }
 

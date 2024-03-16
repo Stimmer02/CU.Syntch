@@ -103,10 +103,8 @@ void AudioPipelineManager::pipelineThreadFunction(){
     ulong sampleTimeLength = audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate;
     static const std::vector<audioBufferQueue*>& backwardsExecution = executionQueue.getQueue();
 
-    // midiInput->buffer->swapActiveBuffer();
     input.swapActiveBuffers();
 
-    // ulong nextLoop = midiInput->buffer->getActivationTimestamp() + sampleTimeLength;
     ulong nextLoop = input.getActivationTimestamp() + sampleTimeLength;
 
     statisticsService->firstInvocation();
