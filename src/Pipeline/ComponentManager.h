@@ -32,7 +32,7 @@ namespace pipeline{
         // char removeComponent(short componentID);
         char addComonentToQueue(short componentID, short queueParentID, ID_type queueParentType);
         char applyEffects(audioBufferQueue* queue);
-        void printTrace(short ID);
+        void printTrace(short ID);//TODO
         AAdvancedComponent* getAdvancedComponent(short componentID);
 
         const audioFormatInfo* audioInfo;

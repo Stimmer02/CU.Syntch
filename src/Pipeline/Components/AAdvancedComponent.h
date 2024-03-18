@@ -25,7 +25,7 @@ namespace pipeline{
         audioBufferQueue* getConnection(short index);
         short getConnectionCount();
 
-        const ushort maxConnections;
+        const short maxConnections;
     protected:
         short connectionsCount;
         audioBufferQueue** connections;

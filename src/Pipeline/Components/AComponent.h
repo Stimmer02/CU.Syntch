@@ -39,8 +39,6 @@ namespace pipeline{
     protected:
         componentSettings settings;
         const audioFormatInfo* audioInfo;
-
-        //parentID
     };
 }
 

@@ -51,26 +51,26 @@ namespace pipeline{
         void clearInputBuffers();
 
         short addInput(AKeyboardRecorder*& input);
-        char removeInput(short ID);
+        char removeInput(short inputID);
         short getInputCount();
 
         short addSynthesizer();
-        char removeSynthesizer(short ID);
+        char removeSynthesizer(short synthID);
         short getSynthesizerCount();
 
         char connectInputToSynth(short inputID, short synthID);
         char disconnectSynth(short synthID);
 
-        const synthesizer::settings* getSynthSettings(const ushort& ID);
-        synthesizer::generator_type getSynthType(const ushort& ID);
-        float getSynthSetting(const ushort& ID, synthesizer::settings_name settingName);
-        void setSynthSetting(const ushort& ID, const synthesizer::settings_name& settingsName, const float& value);
-        void setSynthSetting(const ushort& ID, const synthesizer::generator_type& type);
+        const synthesizer::settings* getSynthSettings(const ushort& synthID);
+        synthesizer::generator_type getSynthType(const ushort& synthID);
+        float getSynthSetting(const ushort& synthID, synthesizer::settings_name settingName);
+        void setSynthSetting(const ushort& synthID, const synthesizer::settings_name& settingsName, const float& value);
+        void setSynthSetting(const ushort& synthID, const synthesizer::generator_type& type);
 
-        char saveSynthConfig(std::string path, ushort ID);
-        char loadSynthConfig(std::string path, ushort ID);
+        char saveSynthConfig(std::string path, ushort synthID);
+        char loadSynthConfig(std::string path, ushort synthID);
 
-        char printSynthInfo(short ID);
+        char printSynthInfo(short synthID);
 
         //COMPONENT CONTROL
 
@@ -79,9 +79,9 @@ namespace pipeline{
         short addComponent(component_type type);
         short addComponent(advanced_component_type type);
 
-        char removeComponent(short ID);
-        char removeSimpleComponent(short ID);
-        char removeAdvancedComponent(short ID);
+        char removeComponent(short componentID);
+        char removeSimpleComponent(short componentID);
+        char removeAdvancedComponent(short componentID);
 
         char disconnectCommponent(short componentID);
         void disconnectSimpleCommponent(short componentID);
@@ -99,7 +99,7 @@ namespace pipeline{
 
         bool isAdvancedComponent(short ID);
 
-        char printAdvancedComponentInfo(short ID);
+        char printAdvancedComponentInfo(short componentID);
 
 
     private:
