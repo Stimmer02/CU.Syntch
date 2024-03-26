@@ -81,7 +81,8 @@
         "filesystem": "cpp",
         "__hash_table": "cpp",
         "__split_buffer": "cpp",
-        "__tree": "cpp"
+        "__tree": "cpp",
+        "cfenv": "cpp"
     },
     "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
         "clang-analyzer-optin.cplusplus.VirtualCall"
