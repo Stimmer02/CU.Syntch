@@ -121,8 +121,9 @@ void MidiFileReader::fillBuffer(keyboardTransferBuffer* buffer, ushort chunkNumb
     buffer->convertBuffer(tempNoteBuffer);
 }
 
-uint MidiFileReader::eventTimePlacement(ushort chunkNumber){
-    return sampleSize * ((lastEventTime[chunkNumber] + settings.ticksPerSample - chunkTime[chunkNumber]) / settings.ticksPerSample);
+int MidiFileReader::eventTimePlacement(ushort chunkNumber){
+    int out = sampleSize * ((lastEventTime[chunkNumber] + settings.ticksPerSample - chunkTime[chunkNumber]) / settings.ticksPerSample);
+    return out > 0 ? out : 0;
 }
 
 void MidiFileReader::readReverse(void* out, uint byteCount){

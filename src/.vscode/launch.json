@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/CPU-synth.out",
-            "args": [],
+            "args": ["/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/config/scripts/recording_test.txt"],
             "stopAtEntry": false,
             "cwd": "/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/",
             "environment": [],

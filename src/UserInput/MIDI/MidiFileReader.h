@@ -39,9 +39,7 @@ namespace MIDI{
         void readReverse(uint32_t& out);
         void readReverse(uint64_t& out);
 
-
-
-        uint eventTimePlacement(ushort chunkNumber);
+        int eventTimePlacement(ushort chunkNumber);
 
         MidiMessageInterpreter interpreter;
         uchar* tempNoteBuffer[127];

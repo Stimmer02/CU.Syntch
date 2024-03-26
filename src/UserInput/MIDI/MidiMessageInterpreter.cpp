@@ -53,6 +53,7 @@ char MidiMessageInterpreter::getEvent(std::ifstream* stream, midiEvent& event){
             return 1;
         }
     } else {
+        //outside of the MIDI standard range: 0x80 - 0xFF
         event.type = NONE;
     }
 
@@ -77,19 +78,19 @@ void MidiMessageInterpreter::executeMidiEvent(const midiEvent& event, uchar* buf
             break;
 
         case 0xB0:
-            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Controller unimplemented\n");
+            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeMidiEvent: Controller unimplemented\n");
             break;
 
         case 0xC0:
-            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Program change unimplemented\n");
+            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeMidiEvent: Program change unimplemented\n");
             break;
 
         case 0xD0:
-            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Channel pressure unimplemented\n");
+            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeMidiEvent: Channel pressure unimplemented\n");
             break;
 
         case 0xE0:
-            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: Pitch / modulation wheel unimplemented\n");
+            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeMidiEvent: Pitch / modulation wheel unimplemented\n");
             break;
 
         case 0x00:
@@ -97,7 +98,7 @@ void MidiMessageInterpreter::executeMidiEvent(const midiEvent& event, uchar* buf
             break;
 
         default:
-            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: unrecognised MIDI event: 0x%02x\n", event.message[0]);
+            std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeMidiEvent: unrecognised MIDI event: 0x%02x\n", event.message[0]);
             break;
     }
 }
@@ -115,6 +116,7 @@ char MidiMessageInterpreter::executeEvent(const midiEvent& event, uchar* buffer[
         case META:
             switch (event.message[1]){
                 case 0x00: //Sequence Number
+                    printf("MIDI INFO [sequence number]: %s\n", event.longerMessage);
                     break;
 
                 case 0x01: //Text
@@ -165,7 +167,7 @@ char MidiMessageInterpreter::executeEvent(const midiEvent& event, uchar* buffer[
                     return 1;
 
                 case 0x51: //Tempo
-                    settings.tempo = (event.longerMessage[0] << 16) | (event.longerMessage[1] << 8) | event.longerMessage[2];
+                    settings.tempo = (event.longerMessage[0] << 16) + (event.longerMessage[1] << 8) + event.longerMessage[2];
                     settings.calculateTickValue(info.timeDivision, sampleRate, sampleSize);
                     std::printf("Tempo set to %.02f BPM\n", settings.calculateBPM());
                     break;
@@ -183,7 +185,7 @@ char MidiMessageInterpreter::executeEvent(const midiEvent& event, uchar* buffer[
 
 
                 default:
-                    std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: unrecognised META event: 0x%02x\n", event.message[0]);
+                    std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeEvent: unrecognised META event: 0x%02x\n", event.message[1]);
                     break;
             }
             break;
