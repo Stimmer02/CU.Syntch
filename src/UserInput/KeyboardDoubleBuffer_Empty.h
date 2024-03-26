@@ -1,5 +1,5 @@
-#ifndef KEYBOARDDOUBLEBUFFER_H
-#define KEYBOARDDOUBLEBUFFER_H
+#ifndef KEYBOARDDOUBLEBUFFER_EMPTY_H
+#define KEYBOARDDOUBLEBUFFER_EMPTY_H
 
 #include <chrono>
 #include "IKeyboardDoubleBuffer.h"
@@ -8,11 +8,11 @@ typedef unsigned int uint;
 typedef unsigned short int ushort;
 typedef unsigned char uchar;
 
-class KeyboardDoubleBuffer: public IKeyboardDoubleBuffer{
+class KeyboardDoubleBuffer_Empty: public IKeyboardDoubleBuffer{
 
 public:
-    KeyboardDoubleBuffer(const uint& sampleSize, const ushort& keyCount);
-    ~KeyboardDoubleBuffer() override;
+    KeyboardDoubleBuffer_Empty(const uint& sampleSize, const ushort& keyCount);
+    ~KeyboardDoubleBuffer_Empty() override;
     uchar** getInactiveBuffer() override;
     uchar** getActiveBuffer() override;
     void swapActiveBuffer() override;
@@ -26,9 +26,8 @@ private:
     const ushort keyCount;
     const uint sampleSize;
 
-    bool activeBuffer;
-    long activationTimestamp[2];
-    uchar** buffer[2];//first dimension is keyCount second sampleSize
+    long activationTimestamp;
+    uchar** buffer;//first dimension is keyCount second sampleSize
 };
 
 #endif

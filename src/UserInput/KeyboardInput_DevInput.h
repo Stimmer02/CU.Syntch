@@ -12,14 +12,14 @@
 class KeyboardInput_DevInput :public IKeyboardInput{
     public:
     KeyboardInput_DevInput();
-    ~KeyboardInput_DevInput();
-    char init(const std::string path);
-    char start();
-    char stop();
-    bool getKeyState(ushort key);
-    const ushort* getPressedKeysArr();
-    ushort getPressedKeysCount();
-    ushort getKeyCount();
+    ~KeyboardInput_DevInput() override;
+    char init(const std::string path) override;
+    char start() override;
+    char stop() override;
+    bool getKeyState(ushort key) override;
+    const ushort* getPressedKeysArr() override;
+    ushort getPressedKeysCount() override;
+    ushort getKeyCount() override;
 
     const ushort keyCount;
 

@@ -8,18 +8,19 @@
 
 
 #include "AKeyboardRecorder.h"
+#include "KeyboardDoubleBuffer.h"
 #include "InputMap.h"
 
 
-class KeyboardRecorder_DevInput :public AKeyboardRecorder {
+class KeyboardRecorder_DevInput: public AKeyboardRecorder{
     public:
     KeyboardRecorder_DevInput(const ushort& keyCount, InputMap*& keyboardMap);
-    ~KeyboardRecorder_DevInput();
-    char init(const std::string path, const uint& sampleSize, const uint& sampleFrequency);
-    char reInit(const uint& sampleSize, const uint& sampleFrequency);
-    char start();
-    char stop();
-    bool isRunning();
+    ~KeyboardRecorder_DevInput() override;
+    char init(const std::string path, const uint& sampleSize, const uint& sampleFrequency) override;
+    char reInit(const uint& sampleSize, const uint& sampleFrequency) override;
+    char start() override;
+    char stop() override;
+    bool isRunning() override;
 
     const ushort keyCount;
 

@@ -8,6 +8,41 @@
 #include "UserInput/MIDI/MidiFileReader.h"
 #include "UserInput/TerminalInputDiscard.h"
 
+//AI
+
+void initializeAudioInfoFromFile(audioFormatInfo& audioInfo, const std::string& filename){
+    std::ifstream file(filename);
+    if (file.is_open()) {
+        std::string line;
+        while (std::getline(file, line)) {
+            std::istringstream is_line(line);
+            std::string key;
+            if (std::getline(is_line, key, '=')) {
+                std::string value;
+                if (std::getline(is_line, value)) {
+                    try {
+                        if (key == "BIT_DEPTH") {
+                            audioInfo.bitDepth = std::stoi(value);
+                        } else if (key == "CHANNELS") {
+                            audioInfo.channels = std::stoi(value);
+                        } else if (key == "SAMPLE_RATE") {
+                            audioInfo.sampleRate = std::stoi(value);
+                        } else if (key == "SAMPLE_SIZE") {
+                            audioInfo.sampleSize = std::stoi(value);
+                        } else if (key == "LITTLE_ENDIAN") {
+                            audioInfo.littleEndian = value == "1" or value == "true" or value == "TRUE";
+                        }
+                    } catch (const std::exception& e) {
+                        std::fprintf(stderr, "Error: Invalid value for %s. Using default value.\n", key.c_str());
+                    }
+                }
+            }
+        }
+        audioInfo.byteRate = audioInfo.sampleRate * audioInfo.channels * audioInfo.bitDepth/8;
+        audioInfo.blockAlign = audioInfo.channels * audioInfo.bitDepth/8;
+    }
+}
+
 
 void updateStatistics(const statistics::pipelineStatistics* pStatistics, const audioFormatInfo& audioInfo);
 
@@ -16,13 +51,8 @@ int main(int argc, char** argv){
     const ushort keyCount = 127;
 
     audioFormatInfo audioInfo;
-    audioInfo.bitDepth = 16;
-    audioInfo.channels = 2;
-    audioInfo.sampleRate = 48000;
-    audioInfo.sampleSize = 512;
-    audioInfo.littleEndian = true;
-    audioInfo.byteRate = audioInfo.sampleRate * audioInfo.channels * audioInfo.bitDepth/8;
-    audioInfo.blockAlign = audioInfo.channels * audioInfo.bitDepth/8;
+    initializeAudioInfoFromFile(audioInfo, "./config/audio.config");
+    
 
 
     if (argc == 2 && (std::strcmp("help", argv[1]) || std::strcmp("--help", argv[1]))){

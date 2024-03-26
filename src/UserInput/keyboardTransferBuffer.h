@@ -1,12 +1,12 @@
 #ifndef KEYBOARDTRANSFERBUFFER_H
 #define KEYBOARDTRANSFERBUFFER_H
 
-#include "KeyboardDoubleBuffer.h"
+#include "IKeyboardDoubleBuffer.h"
 
 struct keyboardTransferBuffer{
     keyboardTransferBuffer(const uint& sampleSize, const ushort& keyCount);
     ~keyboardTransferBuffer();
-    void convertBuffer(KeyboardDoubleBuffer* keyboardBuffer);
+    void convertBuffer(IKeyboardDoubleBuffer* keyboardBuffer);
     void convertBuffer(uchar* buff[127]);
 
     uchar** buffer;

@@ -20,7 +20,7 @@ keyboardTransferBuffer::~keyboardTransferBuffer(){
     delete[] lastState;
 }
 
-void keyboardTransferBuffer::convertBuffer(KeyboardDoubleBuffer* keyboardBuffer){
+void keyboardTransferBuffer::convertBuffer(IKeyboardDoubleBuffer* keyboardBuffer){
     convertBuffer(keyboardBuffer->getInactiveBuffer());
 }
 

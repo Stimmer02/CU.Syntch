@@ -45,7 +45,7 @@ void ExecutionQueue::build(std::vector<audioBufferQueue*>& componentQueues, audi
                 if (advComp->allNeededConnections() == false && uniqueElement){
                     invalidAdvancedComponents.push_back(currentElement->getParentID());
                 }
-                for (uint i = 0; i < advComp->maxConnections; i++){
+                for (int i = 0; i < advComp->maxConnections; i++){
                     audioBufferQueue* connection = advComp->getConnection(i);
                     if (connection != nullptr){
                         toBuild.putOrMoveToEnd(connection);

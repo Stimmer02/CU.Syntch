@@ -68,7 +68,7 @@ void SynthUserInterface::browseHistory(){
         return;
     }
     terminalDiscard.disableInput();
-    std::printf("\e[A\e[2K\e[G\e[30m\e[107m⮞ ");
+    std::printf("\e[A\e[2K\e[G\e[30m\e[107mH⮞\e[30m");
     std::string entry = history.getPreviousEntry();
     std::printf("%s", entry.c_str());
     fflush(stdout);
@@ -79,19 +79,19 @@ void SynthUserInterface::browseHistory(){
         std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
         if (userInput->getKeyState(KEY_UP)){
             entry = history.getPreviousEntry();
-            std::printf("e[0m\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
+            std::printf("e[0m\e[2K\e[G\e[30m\e[107mH⮞\e[30m %s\e[0m", entry.c_str());
             fflush(stdout);
             waitUntilKeyReleased(KEY_UP);
         } else if (userInput->getKeyState(KEY_DOWN)){
             entry = history.getNextEntry();
-            std::printf("e[0m\e[2K\e[G\e[30m\e[107m⮞ %s\e[0m", entry.c_str());
+            std::printf("e[0m\e[2K\e[G\e[30m\e[107mH⮞\e[30m %s\e[0m", entry.c_str());
             fflush(stdout);
             waitUntilKeyReleased(KEY_DOWN);
         } else if (userInput->getKeyState(KEY_ENTER)){
             std::printf("\n");
             inputLine = entry;
             parseInput();
-            std::printf("\n\e[30m\e[107m⮞ %s", entry.c_str());
+            std::printf("\e[30m\e[107mH⮞\e[30m %s\e[0m", entry.c_str());
             fflush(stdout);
             // specialSequence = false;
             waitUntilKeyReleased(KEY_ENTER);
@@ -264,6 +264,14 @@ void SynthUserInterface::initializeCommandMap(){
         {"inputRemove", &SynthUserInterface::commandInputRemove},
         {"inputCount",  &SynthUserInterface::commandInputCount},
 
+        {"midiAdd",    &SynthUserInterface::commandMidiReaderAdd},
+        {"midiSet",    &SynthUserInterface::commandMidiReaderSet},
+        {"midiPlay",   &SynthUserInterface::commandMidiReaderPlay},
+        {"midiPause",  &SynthUserInterface::commandMidiReaderPause},
+        {"midiRecord", &SynthUserInterface::commandMidiReaderRecord},
+        {"midiRewind", &SynthUserInterface::commandMidiReaderRewind},
+        {"midiList",   &SynthUserInterface::commandMidiReaderList},
+
         {"compAdd",        &SynthUserInterface::commandComponentAdd},
         {"compRemove",     &SynthUserInterface::commandComponentRemove},
         {"compConnect",    &SynthUserInterface::commandComponentConnect},
@@ -348,6 +356,15 @@ void SynthUserInterface::commandHelp(){
     "   inputRemove\n"
     "   inputCount\n"
     "\n"
+    "MIDI\n"
+    "   midiAdd\n"
+    "   midiSet\n"
+    "   midiPlay\n"
+    "   midiPause\n"
+    "   midiRecord\n"
+    "   midiRewind\n"
+    "   midiList\n"
+    "\n"
     "COMPONENT\n"
     "   compAdd\n"
     "   compRemove\n"
@@ -378,7 +395,7 @@ void SynthUserInterface::commandHelp(){
     "   pStop   - stops audio pipeline\n"
     "   setOut  <ID type> <ID> - sets synthesize or advanced component to be system audio output\n"
     "   execute <file path> - executes script of given path\n"
-    "   midiRec <midi file path> <output name> <synth ID> - reads MIDI file and records it to specified .WAV file using specific synthesizer\n"
+    "   midiRec <midi file path> <output name> <synth ID> - [DEPRECATED] reads MIDI file and records it to specified .WAV file using specific synthesizer\n"
     "   clear   - clears console\n"
     "   system  {system command and its arguments} - executes system command in current shell\n"
     "   idReinit - reinitializes all ID's in the order of components memory allocation, this way there are no gaps between them and also breaks current initialization (used for clearing system)\n"
@@ -398,6 +415,18 @@ void SynthUserInterface::commandHelp(){
     "   inputAdd <type> <stream path> <key count> <optional: key map file path> - adds new input and returns its ID, where the type is 'keyboard' or 'midi', stream path describes stream location, key count tells how many notes it should use, key map file path (if type is keybard) describes map file location that will provide keyboard layout interpretation\n"
     "   inputRemove <input ID> - removes input by its I\n"
     "   inputCount - returns the total count of the inputs\n"
+    "\n"
+    "MIDI - midi file playback (other MIDI functions work the same as INPUT)\n"
+    "   midiAdd     - adds new MIDI file reader to the system with INPUT ID\n"
+    "   midiSet     <file path> - sets MIDI file reader a file to read\n"
+    "   midiPlay    optional: {input ID} - starts playback of specified MIDI reader or all MIDI readers\n"
+    "   midiPause   optional: {input ID} - pauses playback of specified MIDI reader or all MIDI readers\n"
+    "   midiRecord  <output name> optional: {flags} - records MIDI file to .WAV file using all MIDI readers\n"
+    "      offline - records without playback, as fast as possible\n"
+    "      user    - toggles user input then starts recording\n"
+    "      time <file to append> - saves elapsed time to specified file\n"
+    "   midiRewind  optional: {input ID} - rewinds playback of specified MIDI reader or all MIDI readers\n"
+    "   midiList    - returns list of all MIDI readers\n"
     "\n"
     "COMPONENT - audio stream manipulation\n"
     "   compAdd      <component type> - adds specified component or advanced component to the systen\n"
@@ -1280,3 +1309,180 @@ void SynthUserInterface::commandAdvComponentInfo(){
     }
 }
 
+void SynthUserInterface::commandMidiReaderAdd(){
+    // audioPipeline->stop();
+    short inputID = audioPipeline->addMidiReader();
+    std::printf("MIDI reader created INPUT(%d)\n", inputID);
+}
+
+void SynthUserInterface::commandMidiReaderSet(){
+    if (inputTokenCount < 3){
+        std::printf("Usage: midiSet <input ID> <file path>\n");
+        error = true;
+        return;
+    }
+    short inputID;
+    if (numberFromToken(1, inputID)){
+        error = true;
+        return;
+    }
+    if (audioPipeline->setMidiReader(inputID, inputTokens[2])){
+        std::printf("Something went wrong!\n");
+        error = true;
+        return;
+    }
+    std::printf("MIDI reader set to: %s\n", inputTokens[2]);
+}
+
+void SynthUserInterface::commandMidiReaderPlay(){
+    if (inputTokenCount > 1){
+        short inputID;
+        for (uint i = 1; i < inputTokenCount; i++){
+            if (numberFromToken(i, inputID)){
+                error = true;
+                return;
+            }
+            if (audioPipeline->isMidiReader(inputID) == false){
+                std::printf("MIDI INPUT(%d) does not exist\n", inputID);
+                continue;
+            }
+            if (audioPipeline->playMidiReader(inputID)){
+                std::printf("Something went wrong!\n");
+                error = true;
+                return;
+            }
+            std::printf("MIDI INPUT(%d) playing\n", inputID);
+        }
+    } else {
+        audioPipeline->playMidiReaders();
+        std::printf("All MIDI readers playing\n");
+    }
+}
+
+void SynthUserInterface::commandMidiReaderPause(){
+    if (inputTokenCount > 1){
+        short inputID;
+        for (uint i = 1; i < inputTokenCount; i++){
+            if (numberFromToken(i, inputID)){
+                error = true;
+                return;
+            }
+            if (audioPipeline->isMidiReader(inputID) == false){
+                std::printf("MIDI INPUT(%d) does not exist\n", inputID);
+                continue;
+            }
+            if (audioPipeline->pauseMidiReader(inputID)){
+                std::printf("Something went wrong!\n");
+                error = true;
+                return;
+            }
+            std::printf("MIDI INPUT(%d) paused\n", inputID);
+        }
+    } else {
+        audioPipeline->pauseMidiReaders();
+        std::printf("All MIDI readers paused\n");
+    }
+}
+
+void SynthUserInterface::commandMidiReaderRecord(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: midiRecord <output file> optional: {flags}\n");
+        error = true;
+        return;
+    }
+    
+    bool offlineFlag = false;
+    bool userFlag = false;
+    bool timeFlag = false;
+    std::string saveFilePath;
+    for (uint i = 2; i < inputTokenCount; i++){
+        if (std::strcmp("offline", inputTokens[i]) == 0){
+            offlineFlag = true;
+        } else if (std::strcmp("user", inputTokens[i]) == 0){
+            userFlag = true;
+        } else if (std::strcmp("time", inputTokens[i]) == 0){
+            timeFlag = true;
+            i++;
+            if (i >= inputTokenCount){
+                std::printf("Time flag requires time output file\n");
+                error = true;
+                return;
+            }
+            saveFilePath = inputTokens[i];            
+        } else {
+            std::printf("Unrecognised flag: %s\n", inputTokens[i]);
+        }
+    }
+    if (offlineFlag && userFlag){
+        std::printf("Flags 'offline' and 'user' are mutually exclusive\n");
+        error = true;
+        return;
+    }
+    auto timeStart = std::chrono::system_clock::now();
+    std::fstream outputFile;
+    if (timeFlag){
+        outputFile.open(saveFilePath, std::ios::out);
+        if (outputFile.is_open() == false){
+            std::printf("Could not open file: %s\n", saveFilePath.c_str());
+            error = true;
+            return;
+        }
+    }
+    if (offlineFlag){
+        if (audioPipeline->isRuning()){
+            std::printf("To continue audio pipeline have to be idle (run pStop)\n");
+            error = true;
+            return;
+        }
+        double calculationTime;
+        if (audioPipeline->recordMidiFilesOffline(inputTokens[1], calculationTime)){
+            std::printf("Something went wrong!\n");
+            error = true;
+            return;
+        }
+        std::printf("Calculations time: %fs\n", calculationTime);
+    } else {
+        if (audioPipeline->recordMidiFiles(inputTokens[1])){
+            std::printf("Something went wrong!\n");
+            error = true;
+            return;
+        }
+    }
+    auto timeEnd = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = timeEnd-timeStart;
+    if (timeFlag){
+        outputFile << elapsed_seconds.count();
+        outputFile.close();
+    }
+    std::printf("Elapsed time: %fs\n", std::chrono::duration<double>(timeEnd-timeStart).count());
+}
+
+void SynthUserInterface::commandMidiReaderRewind(){
+    if (inputTokenCount > 1){
+        short inputID;
+        for (uint i = 1; i < inputTokenCount; i++){
+            if (numberFromToken(i, inputID)){
+                error = true;
+                return;
+            }
+            if (audioPipeline->isMidiReader(inputID) == false){
+                std::printf("MIDI INPUT(%d) does not exist\n", inputID);
+                continue;
+            }
+            if (audioPipeline->rewindMidiReader(inputID)){
+                std::printf("Something went wrong!\n");
+                error = true;
+                return;
+            }
+            std::printf("MIDI INPUT(%d) rewinded\n", inputID);
+        }
+    } else {
+        audioPipeline->rewindMidiReaders();
+        std::printf("All MIDI readers rewinded\n");
+    }
+}
+
+void SynthUserInterface::commandMidiReaderList(){
+    printf("MIDI readers:\n");
+    audioPipeline->printMidiReaders();
+}

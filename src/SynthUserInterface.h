@@ -89,12 +89,12 @@ namespace pipeline{
         void commandClear();
 
 
-        void commandSynthSave();
         void commandSynthAdd();
         void commandSynthRemove();
         void commandSynthCount();
         void commandSynthModify();
         void commandSynthSettings();
+        void commandSynthSave();
         void commandSynthList();//TODO
         void commandSynthInfo();
 
@@ -102,6 +102,14 @@ namespace pipeline{
         void commandInputRemove();
         void commandInputCount();
         void commandInputList();//TODO
+
+        void commandMidiReaderAdd();
+        void commandMidiReaderSet();
+        void commandMidiReaderPlay();
+        void commandMidiReaderPause();
+        void commandMidiReaderRecord();
+        void commandMidiReaderRewind();
+        void commandMidiReaderList();
 
         void commandSynthConnect();
         void commandSynthDisconnect();

@@ -8,7 +8,7 @@
 
 using namespace pipeline;
 
-AudioPipelineManager::AudioPipelineManager(audioFormatInfo audioInfo, ushort keyCount): audioInfo(audioInfo), keyCount(keyCount), component(&this->audioInfo){
+AudioPipelineManager::AudioPipelineManager(audioFormatInfo audioInfo, ushort keyCount): audioInfo(audioInfo), keyCount(keyCount), midiReaderManager(&this->audioInfo), component(&this->audioInfo){
     running = false;
     pipelineThread = nullptr;
 
@@ -40,6 +40,7 @@ char AudioPipelineManager::start(){
     if (input.startAllInputs()){
         input.stopAllInputs();
         std::fprintf(stderr, "ERR: AudioPipelineManager::start COULD NOT START ALL INPUTS\n");
+        return -3;
         return -3;
     }
 
@@ -325,13 +326,15 @@ short AudioPipelineManager::addInput(AKeyboardRecorder*& newInput){
 }
 
 char AudioPipelineManager::removeInput(short ID){
+    if (midiReaderManager.isMidiFileReader(ID)){
+        midiReaderManager.remove(ID);
+    }
     return input.removeInput(ID);
 }
 
 short AudioPipelineManager::getInputCount(){
     return input.getInputCount();
 }
-
 
 char AudioPipelineManager::pauseInput(){
     return input.stopAllInputs();
@@ -409,7 +412,7 @@ char AudioPipelineManager::removeAdvancedComponent(short ID){
     }
     for (short potentialConnectionID : component.advancedIDs){//disconnecting those attached to it
         AAdvancedComponent* potentialConnection = reinterpret_cast<AAdvancedComponent*>(component.components.getElement(potentialConnectionID));
-        for (uint i = 0; i < potentialConnection->maxConnections; i++){
+        for (int i = 0; i < potentialConnection->maxConnections; i++){
             ID_type paretType;
             short paretID;
             potentialConnection->getConnection(i, paretType, paretID);
@@ -517,7 +520,7 @@ void AudioPipelineManager::disconnectSimpleCommponent(short componentID){
 
 void AudioPipelineManager::disconnectAdvancedCommponentFromAll(short componentID){
     AAdvancedComponent* toBeDisconnected = component.getAdvancedComponent(componentID);
-    for (uint i = 0; i < toBeDisconnected->maxConnections; i++){
+    for (int i = 0; i < toBeDisconnected->maxConnections; i++){
         toBeDisconnected->disconnect(i);
     }
 }
@@ -532,7 +535,7 @@ void AudioPipelineManager::disconnectAdvancedCommponent(short componentID, uint 
     toBeDisconnected->disconnect(index);
 }
 
-char AudioPipelineManager::tryDisconnectAdvancedCommponent(short componentID, uint index){
+char AudioPipelineManager::tryDisconnectAdvancedCommponent(short componentID, short index){
     AAdvancedComponent* toBeDisconnected = component.getAdvancedComponent(componentID);
     if (toBeDisconnected == nullptr){
         return -1;
@@ -596,7 +599,7 @@ char AudioPipelineManager::printAdvancedComponentInfo(short ID){
 
     std::printf("COMP(%d):\n", ID);
 
-    for (uint i = 0; i < toPrint->maxConnections; i++){
+    for (int i = 0; i < toPrint->maxConnections; i++){
         if (toPrint->getConnection(i) == nullptr){
             std::printf("   in%d: not connected\n", i);
         } else {
@@ -637,3 +640,106 @@ bool AudioPipelineManager::isAdvancedComponent(short ID){
     return true;
 }
 
+//MIDI READER
+
+short AudioPipelineManager::addMidiReader(){
+    MIDI::KeyboardRecorder_MidiFile* newMidiReader = new  MIDI::KeyboardRecorder_MidiFile();
+    newMidiReader->init(audioInfo.sampleSize, audioInfo.sampleRate);
+    short newID = input.addInput(newMidiReader);
+    midiReaderManager.add(newMidiReader, newID);
+    return newID;
+}
+
+char AudioPipelineManager::setMidiReader(short inputID, std::string filePath){
+    return midiReaderManager.setFile(inputID, filePath);
+}
+
+char AudioPipelineManager::rewindMidiReader(short inputID){
+    return midiReaderManager.rewind(inputID);
+}
+
+void AudioPipelineManager::rewindMidiReaders(){
+    midiReaderManager.rewind();
+}
+
+char AudioPipelineManager::playMidiReader(short inputID){
+    return midiReaderManager.play(inputID);
+}
+
+void AudioPipelineManager::playMidiReaders(){
+    midiReaderManager.play();
+}
+
+char AudioPipelineManager::pauseMidiReader(short inputID){
+    return midiReaderManager.pause(inputID);
+}
+
+void AudioPipelineManager::pauseMidiReaders(){
+    midiReaderManager.pause();
+}
+
+void AudioPipelineManager::printMidiReaders(){
+    midiReaderManager.printReaders();
+}
+
+bool AudioPipelineManager::isMidiReader(short ID){
+    return midiReaderManager.isMidiFileReader(ID);
+}
+
+char AudioPipelineManager::recordMidiFiles(std::string fileName){
+    if (running == false){
+        std::fprintf(stderr, "ERR: AudioPipelineManager::recordMidiFiles PIPELINE IS NOT RUNNING\n");
+        return -1;
+    }
+
+    if (output.startRecording(fileName)){
+        std::fprintf(stderr, "ERR: AudioPipelineManager::recordMidiFilesOffline COULD NOT START RECORDING\n");
+        return -3;
+    }
+    midiReaderManager.play();
+    while (midiReaderManager.getPlayCounter() > 0){
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    output.stopRecording();
+    return 0;
+}
+
+char AudioPipelineManager::recordMidiFilesOffline(std::string fileName, double& time){
+    if (running == true){
+        std::fprintf(stderr, "ERR: AudioPipelineManager::recordMidiFilesOffline PIPELINE IS RUNNING\n");
+        return -1;
+    }
+
+    executionQueue.build(componentQueues, outputBuffer, component.components);
+    if (executionQueue.error() != 0){
+        std::fprintf(stderr, "ERR: AudioPipelineManager::recordMidiFilesOffline PIPELINE IS NOT VALID\n");
+        return -2;
+    }
+    
+    static const std::vector<audioBufferQueue*>& backwardsExecution = executionQueue.getQueue();
+    input.clearBuffers();
+    component.clearBuffers();
+    if (output.startRecording(fileName)){
+        std::fprintf(stderr, "ERR: AudioPipelineManager::recordMidiFilesOffline COULD NOT START RECORDING\n");
+        return -3;
+    }
+
+    std::chrono::_V2::system_clock::time_point timeStart;
+    std::chrono::_V2::system_clock::time_point timeEnd;
+    time = 0.0;
+    midiReaderManager.rewind();
+    midiReaderManager.play();
+    while (midiReaderManager.getPlayCounter() > 0){
+        input.cycleBuffers();
+        timeStart = std::chrono::system_clock::now();
+        input.generateSamples(executionQueue.getConnectedSynthIDs());
+        for (int i = backwardsExecution.size() - 1; i >= 0; i--){
+            component.applyEffects(backwardsExecution[i]);
+        }
+        output.onlyRecord(&outputBuffer->buffer, timeEnd);
+        time += std::chrono::duration<double>(timeEnd - timeStart).count();
+    }
+    output.stopRecording();
+
+    return 0;
+}

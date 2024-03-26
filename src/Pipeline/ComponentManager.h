@@ -34,6 +34,7 @@ namespace pipeline{
         char applyEffects(audioBufferQueue* queue);
         void printTrace(short ID);//TODO
         AAdvancedComponent* getAdvancedComponent(short componentID);
+        void clearBuffers();
 
         const audioFormatInfo* audioInfo;
 

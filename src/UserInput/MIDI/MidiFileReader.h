@@ -6,6 +6,8 @@
 #include "midiEvent.h"
 #include "midiHeaderChunk.h"
 #include "midiSettings.h"
+#include "IMidiFileReaderObserver.h"
+
 #include <string>
 #include <cstring>
 #include <memory>
@@ -21,8 +23,13 @@ namespace MIDI{
         bool eofChunk(ushort chunkNumber);
         bool isFileReady();
         void fillBuffer(keyboardTransferBuffer* buffer, ushort chunkNumber);
+        void fillBuffer(ushort chunkNumber);
         uint16_t getChunkCount();
+        uchar** getTempBuffer();
         char close();
+
+        void setObserver(IMidiFileReaderObserver* observer);
+        void notifyObserver();
 
     private:
 
@@ -31,6 +38,8 @@ namespace MIDI{
         void readReverse(uint16_t& out);
         void readReverse(uint32_t& out);
         void readReverse(uint64_t& out);
+
+
 
         uint eventTimePlacement(ushort chunkNumber);
 
@@ -51,6 +60,8 @@ namespace MIDI{
 
         const uint sampleSize;
         const uint sampleRate;
+
+        IMidiFileReaderObserver* observer;
     };
 }
 #endif

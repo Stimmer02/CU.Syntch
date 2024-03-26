@@ -193,7 +193,7 @@ namespace pipeline{
     template <class TYPE, typename CAPACITY>
     void IDManager<TYPE, CAPACITY>::doForAll(methodPtr method){
         for (CAPACITY i = 0; i < elementsUsed; i++){
-            (elements[i].*method)();
+            (elements[i]->*method)();
         }
     }
 

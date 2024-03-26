@@ -4,19 +4,19 @@
 #include <string>
 #include <thread>
 
-#include "KeyboardDoubleBuffer.h"
+#include "IKeyboardDoubleBuffer.h"
 
 
 class AKeyboardRecorder{
 public:
-    virtual ~AKeyboardRecorder(){};
+    virtual ~AKeyboardRecorder() = default;
     virtual char init(const std::string path, const uint& sampleSize, const uint& sampleRate) = 0;
     virtual char reInit(const uint& sampleSize, const uint& sampleRate) = 0;
     virtual char start() = 0;
     virtual char stop() = 0;
     virtual bool isRunning() = 0;
 
-    KeyboardDoubleBuffer* buffer;
+    IKeyboardDoubleBuffer* buffer;
 };
 
 #endif

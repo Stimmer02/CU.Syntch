@@ -20,6 +20,8 @@ MidiFileReader::MidiFileReader(std::string path, uint sampleSize, uint sampleRat
     if (parseFile() != 0){
         close();
     }
+
+    observer = nullptr;
 }
 
 
@@ -53,8 +55,11 @@ char MidiFileReader::rewindChunk(ushort chunkNumber){
     if (fileReady == false){
         return 1;
     }
-
+    chunks[chunkNumber].lastPosition = chunks[chunkNumber].dataPosition;
     endOfChunk[chunkNumber] = false;
+    chunkTime[chunkNumber] = 0;
+    lastEventTime[chunkNumber] = 0;
+    lastEvent[chunkNumber].init();
     return 0;
 }
 
@@ -63,9 +68,12 @@ char MidiFileReader::rewindFile(){
         return 1;
     }
 
-    for(uint i = 0; i < info.trackCount; i++){
+    for (uint i = 0; i < info.trackCount; i++){
         chunks[i].lastPosition = chunks[i].dataPosition;
         endOfChunk[i] = false;
+        chunkTime[i] = 0;
+        lastEventTime[i] = 0;
+        lastEvent[i].init();
     }
 
     return 0;
@@ -79,8 +87,7 @@ bool MidiFileReader::eofChunk(ushort chunkNumber){
     return endOfChunk[chunkNumber];
 }
 
-
-void MidiFileReader::fillBuffer(keyboardTransferBuffer* buffer, ushort chunkNumber){
+void MidiFileReader::fillBuffer(ushort chunkNumber){
     static bool emptyBuffer = false;
 
     if (emptyBuffer == false){
@@ -107,6 +114,10 @@ void MidiFileReader::fillBuffer(keyboardTransferBuffer* buffer, ushort chunkNumb
         lastEventTime[chunkNumber] += lastEvent[chunkNumber].deltaTime;
     }
     chunks[chunkNumber].lastPosition = file->tellg();
+}
+
+void MidiFileReader::fillBuffer(keyboardTransferBuffer* buffer, ushort chunkNumber){
+    fillBuffer(chunkNumber);
     buffer->convertBuffer(tempNoteBuffer);
 }
 
@@ -192,7 +203,7 @@ char MidiFileReader::parseFile(){
                 j = 0;
             }
         }
-        std::strcpy(chunks[i].ID, ID);
+        strlcpy(chunks[i].ID, ID, 5);
         readReverse(chunks[i].size);
         chunks[i].dataPosition = file->tellg();
         chunks[i].lastPosition = chunks[i].dataPosition;
@@ -201,3 +212,18 @@ char MidiFileReader::parseFile(){
     return 0;
 }
 
+uchar** MidiFileReader::getTempBuffer(){
+    return tempNoteBuffer;
+}
+
+void MidiFileReader::setObserver(IMidiFileReaderObserver* observer){
+    this->observer = observer;
+}
+
+void MidiFileReader::notifyObserver(){
+    if (endOfChunk[0] == true){
+        if (observer != nullptr){
+            observer->notifyFileEnd();
+        }   
+    }
+}

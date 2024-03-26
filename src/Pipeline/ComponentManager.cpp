@@ -71,4 +71,7 @@ AAdvancedComponent* ComponentManager::getAdvancedComponent(short componentID){
     return reinterpret_cast<AAdvancedComponent*>(components.getElement(componentID));
 }
 
+void ComponentManager::clearBuffers(){
+    components.doForAll(&AComponent::clear);
+}
 

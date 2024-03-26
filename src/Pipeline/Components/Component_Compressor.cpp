@@ -39,6 +39,8 @@ void Component_Compressor::apply(pipelineAudioBuffer* buffer){
         if (lDiff > 0){
             buffer->bufferL[i] *= (threshold + (lDiff / (step*ratio))) / lLevel;
         }
+        buffer->bufferR[i] *= vol;
+        buffer->bufferL[i] *= vol;
     }
 }
 

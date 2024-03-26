@@ -29,6 +29,14 @@ namespace MIDI{
         midiEvent(){
             lMessageMaxLength = 64;
             longerMessage = new char[lMessageMaxLength];
+            init();
+        }
+
+        void init(){
+            deltaTime = 0;
+            messageLength = 0;
+            type = NONE;
+            channel = 0;
         }
 
         ~midiEvent(){

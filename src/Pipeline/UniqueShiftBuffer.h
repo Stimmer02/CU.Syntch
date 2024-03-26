@@ -54,15 +54,28 @@ void UniqueShiftBuffer<TYPE>::put(const TYPE& newItem){
 
 template<typename TYPE>
 void UniqueShiftBuffer<TYPE>::erase(int index){
-    int movedEnd = end + 1;
-    if (movedEnd == size){
-        movedEnd = 0;
+    // int movedEnd = end + 1;
+    // if (movedEnd == size){
+    //     movedEnd = 0;
+    // }
+    // for (int i = index + 1; i != end; i++){
+    //     if (i == size){
+    //         i = 0;
+    //         arr[size - 1] = arr[i];
+    //     } else {
+    //         arr[i - 1] = arr[i];
+    //     }
+    // }
+    int numElementsToEnd = (end > index) ? end - index : 0;
+    int numElementsFromStart = (end <= index) ? end : 0;
+
+    for (int i = index + 1; i < index + numElementsToEnd; i++) {
+        arr[i - 1] = arr[i];
     }
-    for (int i = index + 1; i != movedEnd; i++){
-        if (i == size){
-            i = 0;
-            arr[size - 1] = arr[i];
-        } else {
+
+    if (numElementsFromStart > 0) {
+        arr[size - 1] = arr[0];
+        for (int i = 1; i < numElementsFromStart; i++) {
             arr[i - 1] = arr[i];
         }
     }

@@ -15,6 +15,8 @@
 #include "BufferConverter/BufferConverter_Stereo24.h"
 #include "BufferConverter/BufferConverter_Stereo32.h"
 
+#include <chrono>
+
 
 namespace pipeline{
     class Output{
@@ -27,6 +29,7 @@ namespace pipeline{
 
         void play(pipelineAudioBuffer* pipelineBuffer);
         void onlyRecord(pipelineAudioBuffer* pipelineBuffer);
+        void onlyRecord(pipelineAudioBuffer* pipelineBuffer, std::chrono::_V2::system_clock::time_point& timeEnd);
 
         char startRecording();
         char startRecording(std::string outPath);

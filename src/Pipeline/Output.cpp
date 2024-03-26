@@ -97,6 +97,16 @@ void Output::onlyRecord(pipelineAudioBuffer* pipelineBuffer){
     }
 }
 
+void Output::onlyRecord(pipelineAudioBuffer* pipelineBuffer, std::chrono::_V2::system_clock::time_point& timeEnd){
+    try {
+        bufferConverter->toPCM(pipelineBuffer, buffer);
+        timeEnd = std::chrono::system_clock::now();
+        audioRecorder.saveBuffer(buffer);
+    } catch (std::exception& e){
+        std::fprintf(stderr, "ERR pipeline::Output::play: %s\n", e.what());
+    }
+}
+
 char Output::startRecording(){
     if (recording) {
         return 1;

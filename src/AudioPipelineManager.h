@@ -14,6 +14,7 @@
 #include "Synthesizer.h"
 #include "UserInput/MIDI/MidiFileReader.h"
 #include "enumConversion.h"
+#include "UserInput/MIDI/MidiReaderManager.h"
 
 
 
@@ -88,7 +89,7 @@ namespace pipeline{
         void disconnectAdvancedCommponentFromAll(short componentID);
         void disconnectAdvancedCommponent(short componentID, ID_type parentType, short parentID);
         void disconnectAdvancedCommponent(short componentID, uint index);
-        char tryDisconnectAdvancedCommponent(short componentID, uint index);
+        char tryDisconnectAdvancedCommponent(short componentID, short index);
 
         short getComponentCout();
         char connectComponent(short componentID, ID_type parentType, short parentID);
@@ -100,6 +101,21 @@ namespace pipeline{
         bool isAdvancedComponent(short ID);
 
         char printAdvancedComponentInfo(short componentID);
+
+        //MIDI READER
+
+        short addMidiReader();
+        char setMidiReader(short inputID, std::string filePath);
+        char rewindMidiReader(short inputID);
+        void rewindMidiReaders();
+        char playMidiReader(short inputID);
+        void playMidiReaders();
+        char pauseMidiReader(short inputID);
+        void pauseMidiReaders();
+        void printMidiReaders();
+        bool isMidiReader(short ID);
+        char recordMidiFiles(std::string fileName);
+        char recordMidiFilesOffline(std::string fileName, double& time);
 
 
     private:
@@ -113,6 +129,7 @@ namespace pipeline{
 
         Input input;//synths, inputs
         Output output;//audio output, recording
+        MIDI::MidiReaderManager midiReaderManager;//midi file input manager
 
         ComponentManager component;//component collection, processing
         std::vector<audioBufferQueue*> componentQueues;//audio buffers, processing order of any queue
