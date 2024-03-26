@@ -29,7 +29,7 @@ namespace pipeline{
         virtual void clear() = 0;
         virtual void defaultSettings() = 0;
 
-        void set(uint index, float value);
+        virtual void set(uint index, float value);
         const componentSettings* getSettings();
 
         audioBufferQueue* includedIn;

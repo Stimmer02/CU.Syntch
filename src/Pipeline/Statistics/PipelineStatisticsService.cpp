@@ -10,8 +10,9 @@ PipelineStatisticsService::PipelineStatisticsService(ulong loopLength, uint buff
     pStatistics.userInputLatency = 1000000.0*2 *audioFormat.sampleSize / audioFormat.sampleRate  + pulseAudioLatency;
     loopWorkEndPoint = 0;
     loopStartPoint = 0;
-    loopLength = 0;
     loopWorkEndPoint = 0;
+    loopEndPoint = 0;
+    workLength = 0;
 }
 
 PipelineStatisticsService::~PipelineStatisticsService(){}

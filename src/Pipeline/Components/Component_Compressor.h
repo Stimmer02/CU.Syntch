@@ -13,7 +13,7 @@ namespace pipeline{
         void apply(pipelineAudioBuffer* buffer) override;
         void clear() override;
         void defaultSettings() override;
-        void set(uint index, float value);
+        void set(uint index, float value) override;
 
 
     private:

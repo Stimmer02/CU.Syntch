@@ -3,7 +3,7 @@
 using namespace pipeline;
 
 audioBufferQueue::audioBufferQueue(const ID_type parentType, const uint sampleSize): buffer(sampleSize), parentType(parentType){
-
+    parentID = -2;
 }
 
 audioBufferQueue::~audioBufferQueue(){

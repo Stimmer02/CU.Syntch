@@ -56,6 +56,9 @@ void Component_Compressor::defaultSettings(){
     settings.values[3] = 0.00001; //attack
     settings.values[4] = 0.1;     //release
     settings.values[5] = 1.0;     //vol
+
+    levelRiseTime = audioInfo->sampleRate * attack;
+    levelDecreaseTime= audioInfo->sampleRate * release;
 }
 
 void Component_Compressor::set(uint index, float value){
