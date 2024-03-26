@@ -311,7 +311,7 @@ char AudioPipelineManager::printSynthInfo(short synthID){
     if (queue.componentIDQueue.size() > 1){
         for (uint i = 1; i < queue.componentIDQueue.size(); i++){
             short subCompID = queue.componentIDQueue.at(i);
-            std::printf("   %d: %s(%d)\n", i, componentTypeToString(component.components.getElement(subCompID)->type).c_str(), subCompID);
+            std::printf("   %u: %s(%d)\n", i, componentTypeToString(component.components.getElement(subCompID)->type).c_str(), subCompID);
         }
     } else {
         std::printf("   (empty queue)\n");
@@ -621,7 +621,7 @@ char AudioPipelineManager::printAdvancedComponentInfo(short ID){
     if (queue.componentIDQueue.size() > 1){
         for (uint i = 1; i < queue.componentIDQueue.size(); i++){
             short subCompID = queue.componentIDQueue.at(i);
-            std::printf("   %d: %s(%d)\n", i, componentTypeToString(component.components.getElement(subCompID)->type).c_str(), subCompID);
+            std::printf("   %u: %s(%d)\n", i, componentTypeToString(component.components.getElement(subCompID)->type).c_str(), subCompID);
         }
     } else {
         std::printf("   (empty queue)\n");

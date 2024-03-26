@@ -11,6 +11,7 @@ SynthUserInterface::SynthUserInterface(std::string terminalHistoryPath, audioFor
     this->keyCount = keyCount;
 
     inputTokens = new const char*[inputTokenMax];
+    inputTokenCount = 0;
     initializeCommandMap();
 
     audioPipeline = new AudioPipelineManager(audioInfo, keyCount);
@@ -693,6 +694,7 @@ void SynthUserInterface::commandInputAdd(){
     if (newInput->init(inputTokens[2], audioPipeline->getAudioInfo()->sampleSize, audioPipeline->getAudioInfo()->sampleRate)){
         std::printf("Could not initialize new input from stream: %s\n", inputTokens[2]);
         error = true;
+        delete newInput;
         return;
     }
 
@@ -992,6 +994,7 @@ void SynthUserInterface::commandSetUserInput(){
     IKeyboardInput* userInput = new KeyboardInput_DevInput();
     if (userInput->init(inputTokens[1])){
         std::printf("Could not initialize user input from stream: %s\n", inputTokens[1]);
+        delete userInput;
         error = true;
         return;
     }

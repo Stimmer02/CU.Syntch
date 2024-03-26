@@ -29,6 +29,9 @@ namespace MIDI{
         midiEvent(){
             lMessageMaxLength = 64;
             longerMessage = new char[lMessageMaxLength];
+            message[0] = 0;
+            message[1] = 0;
+            message[2] = 0;
             init();
         }
 

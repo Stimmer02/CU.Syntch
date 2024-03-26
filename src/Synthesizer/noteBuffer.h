@@ -31,6 +31,7 @@ namespace synthesizer{
             stereoFactorR = 0;
             frequency = 0;
             multiplier = 0;
+            velocity = 0;
         }
         noteBuffer(const uint& bufferSize){
             buffer = new float[bufferSize];
@@ -42,6 +43,7 @@ namespace synthesizer{
             stereoFactorR = 0;
             frequency = 0;
             multiplier = 0;
+            velocity = 0;
             // state = new uchar[bufferSize];
         }
         void init(const uint& bufferSize){

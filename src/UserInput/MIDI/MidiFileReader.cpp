@@ -194,7 +194,7 @@ char MidiFileReader::parseFile(){
         for (uint j = 0; j < 4;){
             file->get((char&)(byte));
             if (file->eof()){
-                std::fprintf(stderr, "ERR MidiFileReader::parseFile: FILE DOES NOT CONTAIN SPECIFIED AMOUNT OF TRACKS (%i, but only %i found)\n", info.trackCount, i);
+                std::fprintf(stderr, "ERR MidiFileReader::parseFile: FILE DOES NOT CONTAIN SPECIFIED AMOUNT OF TRACKS (%i, but only %u found)\n", info.trackCount, i);
                 return 3;
             }
             if (ID[j] == byte){

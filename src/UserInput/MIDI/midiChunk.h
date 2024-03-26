@@ -13,6 +13,9 @@ namespace MIDI{
 
         midiChunk(){
             ID[4] = 0;
+            size = 0;
+            dataPosition = -1;
+            lastPosition = -1;
         }
     };
 }
