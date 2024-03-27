@@ -1,0 +1,81 @@
+midiAdd
+midiSet 0 ./V_Bethoven/violin_1.mid
+synthAdd
+synthSave load ./config/synthSave/Vth_symphony/lead.bin 0
+synthConnect 0 0
+compAdd PAN
+compSet 0 pan 0.3
+compConnect 0 SYNTH 0
+
+midiAdd
+midiSet 1 ./V_Bethoven/violin_2.mid
+synthAdd
+synthSave load ./config/synthSave/Vth_symphony/lead.bin 1
+synthConnect 1 1
+compAdd PAN
+compSet 1 pan 0.5
+compConnect 1 SYNTH 1
+
+midiAdd
+midiSet 2 ./V_Bethoven/viole.mid
+synthAdd
+synthSave load ./config/synthSave/Vth_symphony/lead.bin 2
+synthConnect 2 2
+compAdd PAN
+compSet 2 pan 0.7
+compConnect 2 SYNTH 2
+
+midiAdd
+midiSet 3 ./V_Bethoven/double_bass.mid
+synthAdd
+synthSave load ./config/synthSave/Vth_symphony/bass.bin 3
+synthConnect 3 3
+compAdd PAN
+compSet 3 pan 0.2
+compConnect 3 SYNTH 3
+
+midiAdd
+midiSet 4 ./V_Bethoven/cello.mid
+synthAdd
+synthSave load ./config/synthSave/Vth_symphony/bass.bin 4
+synthConnect 4 4
+compAdd PAN
+compSet 4 pan 0.8
+compConnect 4 SYNTH 4
+
+midiAdd
+midiSet 5 ./V_Bethoven/bassoony.mid
+synthAdd
+synthSave load ./config/synthSave/basic.bin 5
+synthConnect 5 5
+compAdd PAN
+compSet 5 pan 0.2
+compConnect 5 SYNTH 5
+
+midiAdd
+midiSet 6 ./V_Bethoven/oboe.mid
+synthAdd
+synthSave load ./config/synthSave/basic.bin 6
+synthConnect 6 6
+compAdd PAN
+compSet 6 pan -0.2
+compConnect 6 SYNTH 6
+
+compAdd SUM7
+setOut COMP 7
+aCompConnect 7 0 SYNTH 0
+aCompConnect 7 1 SYNTH 1
+aCompConnect 7 2 SYNTH 2
+aCompConnect 7 3 SYNTH 3
+aCompConnect 7 4 SYNTH 4
+aCompConnect 7 5 SYNTH 5
+aCompConnect 7 6 SYNTH 6
+compAdd VOLUME
+compConnect 8 COMP 7
+compSet 8 vol 2
+compAdd COMPRESSOR
+compConnect 9 COMP 7
+compSet 7 ratio 4
+
+pStart
+midiList

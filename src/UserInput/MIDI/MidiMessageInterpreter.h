@@ -16,7 +16,7 @@ namespace MIDI{
         char getFileEvent(std::ifstream* stream, midiEvent& event);
         char getEvent(std::ifstream* stream, midiEvent& event);
         void executeMidiEvent(const midiEvent& event, uchar* buffer[127], uint timePlacement);
-        char executeEvent(const midiEvent& event, uchar* buffer[127], midiSettings& settings,  uint timePlacement, const uint& sampleSize, const uint& sampleRate, const midiCheaderChunk& info);
+        char executeEvent(const midiEvent& event, uchar* buffer[127], midiSettings& settings,  uint timePlacement, const uint& sampleSize, const uint& sampleRate, const midiCheaderChunk& info, double& chunkTime, double lastEventTime);
     private:
         char getVariableLengthValue(std::ifstream* stream, uint32_t& out);
         char ignoreSysEx(std::ifstream* stream);

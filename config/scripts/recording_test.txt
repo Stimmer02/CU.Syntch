@@ -9,6 +9,6 @@ setOut COMP 1
 compAdd COMP
 compConnect 2 COMP 1
 midiAdd
-midiSet 0 /home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/V_Bethoven/Violin_1.mid
+midiSet 0 /home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/V_Bethoven/violin_1.mid
 synthConnect 0 0
 midiRecord test.wav offline

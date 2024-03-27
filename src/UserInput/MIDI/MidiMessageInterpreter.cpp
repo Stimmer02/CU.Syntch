@@ -103,7 +103,7 @@ void MidiMessageInterpreter::executeMidiEvent(const midiEvent& event, uchar* buf
     }
 }
 
-char MidiMessageInterpreter::executeEvent(const midiEvent& event, uchar* buffer[127], midiSettings& settings, uint timePlacement, const uint& sampleSize, const uint& sampleRate, const midiCheaderChunk& info){
+char MidiMessageInterpreter::executeEvent(const midiEvent& event, uchar* buffer[127], midiSettings& settings, uint timePlacement, const uint& sampleSize, const uint& sampleRate, const midiCheaderChunk& info, double& chunkTime, double lastEventTime){
     switch (event.type){
         case MIDI:
             executeMidiEvent(event, buffer, timePlacement);
@@ -167,11 +167,16 @@ char MidiMessageInterpreter::executeEvent(const midiEvent& event, uchar* buffer[
                     return 1;
 
                 case 0x51: //Tempo
+                {
+                    double chunkPercentage = (lastEventTime - (chunkTime - settings.ticksPerSample)) / settings.ticksPerSample;
+
                     settings.tempo = (event.longerMessage[0] << 16) + (event.longerMessage[1] << 8) + event.longerMessage[2];
                     settings.calculateTickValue(info.timeDivision, sampleRate, sampleSize);
                     std::printf("Tempo set to %.02f BPM\n", settings.calculateBPM());
-                    break;
 
+                    chunkTime = lastEventTime + settings.ticksPerSample * chunkPercentage;
+                    break;
+                }
                 // case 0x54: //SMPTE Offset
                     // break;
 

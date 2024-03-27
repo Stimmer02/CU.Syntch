@@ -101,7 +101,7 @@ void MidiFileReader::fillBuffer(ushort chunkNumber){
     file->seekg(chunks[chunkNumber].lastPosition);
 
     while (lastEventTime[chunkNumber] < chunkTime[chunkNumber]){
-        if (interpreter.executeEvent(lastEvent[chunkNumber], tempNoteBuffer, settings, eventTimePlacement(chunkNumber), sampleSize, sampleRate, info)){
+        if (interpreter.executeEvent(lastEvent[chunkNumber], tempNoteBuffer, settings, eventTimePlacement(chunkNumber), sampleSize, sampleRate, info, chunkTime[chunkNumber], lastEventTime[chunkNumber])){
             endOfChunk[chunkNumber] = true;
             return;
         }
@@ -122,8 +122,7 @@ void MidiFileReader::fillBuffer(keyboardTransferBuffer* buffer, ushort chunkNumb
 }
 
 int MidiFileReader::eventTimePlacement(ushort chunkNumber){
-    int out = sampleSize * ((lastEventTime[chunkNumber] + settings.ticksPerSample - chunkTime[chunkNumber]) / settings.ticksPerSample);
-    return out > 0 ? out : 0;
+    return sampleSize * ((lastEventTime[chunkNumber] + settings.ticksPerSample - chunkTime[chunkNumber]) / settings.ticksPerSample);
 }
 
 void MidiFileReader::readReverse(void* out, uint byteCount){

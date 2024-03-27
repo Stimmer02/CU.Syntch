@@ -24,7 +24,7 @@ void keyboardTransferBuffer::convertBuffer(IKeyboardDoubleBuffer* keyboardBuffer
     convertBuffer(keyboardBuffer->getInactiveBuffer());
 }
 
-void inline keyboardTransferBuffer::convertBuffer(uchar* buff[127]){
+void keyboardTransferBuffer::convertBuffer(uchar* buff[127]){
     for (uint i = 0; i < keyCount; i++){
         for (uint j = 0; j < sampleSize; j++){
             if (buff[i][j] == 255){
