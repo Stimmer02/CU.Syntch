@@ -135,6 +135,10 @@ pipeline::advanced_component_type pipeline::stringToAdvComponentType(const char*
         {"SUM2",       pipeline::ACOMP_SUM2},
         {"ACOMP_SUM2", pipeline::ACOMP_SUM2},
 
+        {"sum7",       pipeline::ACOMP_SUM7},
+        {"SUM7",       pipeline::ACOMP_SUM7},
+        {"ACOMP_SUM7", pipeline::ACOMP_SUM7},
+
         {"copy",       pipeline::ACOMP_COPY},
         {"COPY",       pipeline::ACOMP_COPY},
         {"ACOMP_COPY", pipeline::ACOMP_COPY},
@@ -159,6 +163,8 @@ std::string pipeline::advComponentTypeToString(advanced_component_type compType)
             return "ACOMP_INVALID";
         case ACOMP_SUM2:
             return "ACOMP_SUM2";
+        case ACOMP_SUM7:
+            return "ACOMP_SUM7";
         case ACOMP_COPY:
             return "ACOMP_COPY";
     }
