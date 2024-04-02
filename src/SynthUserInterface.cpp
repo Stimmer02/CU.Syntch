@@ -1184,6 +1184,18 @@ void SynthUserInterface::commandComponentModify(){
             if (audioPipeline->setComponentSetting(componentID, j, settingValue)){
                 std::printf("Could not set setting %s: %f\n", inputTokens[i], settingValue);
             } else {
+                const componentSettings* settings = audioPipeline->getComopnentSettings(componentID);
+                if (settings == nullptr){
+                    std::printf("Something went wrong!\n");
+                    error = true;
+                    return;
+                }
+                for (uint j = 0; j < settings->count; j++){
+                    if (std::strcmp(inputTokens[i], settings->names[j].c_str()) == 0){
+                        settingValue = settings->values[j];
+                        break;
+                    }
+                }
                 std::printf("%s: %f\n", inputTokens[i], settingValue);
             }
         } else {

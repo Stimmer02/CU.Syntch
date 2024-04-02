@@ -1,5 +1,4 @@
 #include "Component_Echo.h"
-#include <cstring>
 
 using namespace pipeline;
 const std::string Component_Echo::privateNames[5] = {"lvol", "rvol", "delay", "fade", "repeats"};
@@ -124,7 +123,7 @@ void Component_Echo::set(uint index, float value){
                 value = 0;
             }
         case 4:
-            if (repeats * delay > maxDelayTime){
+            if (value * delay > maxDelayTime){
                 value = maxDelayTime / delay;
             } else if (value < 1){
                 value = 1;

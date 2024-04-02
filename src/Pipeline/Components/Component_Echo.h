@@ -30,6 +30,7 @@ namespace pipeline{
         float& delay = settings.values[2];
         float& fade = settings.values[3];
         float& repeats = settings.values[4];
+
     };
 }
 

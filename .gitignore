@@ -43,3 +43,4 @@ config/synthSave/*
 
 # Files
 config/histSave.txt
+src/.vscode/launch.json
