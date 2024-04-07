@@ -403,14 +403,14 @@ void SynthUserInterface::commandHelp(){
     "\n"
     "SYNTHESIZER - audio signall creation\n"
     "   synthAdd     - adds new synthesizer and returns its ID\n"
-    "   synthRemove  synth ID> - removes synthesizer by its ID\n"
+    "   synthRemove  <synth ID> - removes synthesizer by its ID\n"
     "   synthConnect <synth ID> <inputID> - connects specified synthesizer with specified input so the synth will receive keyboard state from that input\n"
     "   synthDisconnect <synth ID> - removes the connection so the synthesizer wont't be used until new data stream is connected\n"
     "   synthCount   - returns the total count of the synthesizers\n"
     "   synthGet     <synth ID> {optional: <setting name>} - returns synthesizer settings (all/specified)\n"
     "   synthSet     <synth ID> {<setting name> <value>} - sets specified setting values\n"
     "   synthInfo    - returns information about queue of specified synthesizer\n"
-    "   synthSave    <load/save> <save file path> <synth ID> - loads or saves synthesizer configuration\n"
+    "   synthSave    <synth ID> <load/save> <save file path> - loads or saves synthesizer configuration\n"
     "\n"
     "INPUT - midi input\n"
     "   inputAdd <type> <stream path> <key count> <optional: key map file path> - adds new input and returns its ID, where the type is 'keyboard' or 'midi', stream path describes stream location, key count tells how many notes it should use, key map file path (if type is keybard) describes map file location that will provide keyboard layout interpretation\n"
@@ -532,9 +532,9 @@ void SynthUserInterface::commandPipelineStop(){
     std::printf("Pipeline stopped\n");
 }
 
-void SynthUserInterface::commandMidiRecord(){
+void SynthUserInterface::commandMidiRecord(){//DEPRECATED
     if (inputTokenCount < 4){
-        std::printf("Usage: midiRec <midi file path> <output name> <synth ID>\n");
+        std::printf("[DEPRECATED] Usage: midiRec <midi file path> <output name> <synth ID>\n");
         error = true;
         return;
     }
@@ -576,37 +576,37 @@ void SynthUserInterface::commandClear(){
 
 void SynthUserInterface::commandSynthSave(){
     if (inputTokenCount < 4){
-        std::printf("Usage: synthSave <load/save> <save file path> <synth ID>\n");
+        std::printf("Usage: synthSave <synth ID> <load/save> <save file path>\n");
         error = true;
         return;
     }
     short synthID;
-    if (numberFromToken(3, synthID)){
+    if (numberFromToken(1, synthID)){
         error = true;
         return;
     }
     if (audioPipeline->IDValid(pipeline::SYNTH, synthID) == false){
-        std::printf("Given synthesizer ID (%i) is not valid\n", synthID);
+        std::printf("SYNTH(%d) does not exist\n", synthID);
         error = true;
         return;
     }
 
-    if (std::strcmp("load", inputTokens[1]) == 0){
-        if (audioPipeline->loadSynthConfig(inputTokens[2], synthID)){
+    if (std::strcmp("load", inputTokens[2]) == 0){
+        if (audioPipeline->loadSynthConfig(inputTokens[3], synthID)){
             std::printf("Something went wrong!\n");
             error = true;
             return;
         }
         std::printf("Configuration loaded\n");
-    } else if (std::strcmp("save", inputTokens[1]) == 0){
-        if (audioPipeline->saveSynthConfig(inputTokens[2], synthID)){
+    } else if (std::strcmp("save", inputTokens[2]) == 0){
+        if (audioPipeline->saveSynthConfig(inputTokens[3], synthID)){
             std::printf("Something went wrong!\n");
             error = true;
             return;
         }
         std::printf("Configuration saved\n");
     } else {
-        std::printf("Unknown option: %s\n", inputTokens[1]);
+        std::printf("Unknown option: %s\n", inputTokens[2]);
     }
 }
 
@@ -631,7 +631,7 @@ void SynthUserInterface::commandSynthRemove(){
         error = true;
         return;
     }
-    std::printf("Synth (%d) removed\n", synthID);
+    std::printf("SYNTH(%d) removed\n", synthID);
 }
 
 void SynthUserInterface::commandSynthCount(){
@@ -719,7 +719,7 @@ void SynthUserInterface::commandInputRemove(){
         error = true;
         return;
     }
-    std::printf("Input (%d) removed\n", inputID);
+    std::printf("INPUT(%d) removed\n", inputID);
 }
 
 void SynthUserInterface::commandInputCount(){
@@ -749,7 +749,7 @@ void SynthUserInterface::commandSynthConnect(){
         error = true;
         return;
     }
-    std::printf("Connected synth (%d) <- input (%d)\n", synthID, inputID);
+    std::printf("Synth connected SYNTH(%d) <- INPUT(%d)\n", synthID, inputID);
 }
 
 void SynthUserInterface::commandSynthDisconnect(){
@@ -769,7 +769,7 @@ void SynthUserInterface::commandSynthDisconnect(){
         error = true;
         return;
     }
-    std::printf("Disconnected synth (%d)\n", synthID);
+    std::printf("SYNTH(%d) disconnected\n", synthID);
 }
 
 void SynthUserInterface::commandSetOutputBuffer(){
@@ -809,7 +809,7 @@ void SynthUserInterface::commandSynthSettings(){
         return;
     }
     if (audioPipeline->IDValid(pipeline::SYNTH, synthID) == false){
-        std::printf("Synth (%d) does not exist\n", synthID);
+        std::printf("SYNTH(%d) does not exist\n", synthID);
         error = true;
         return;
     }
@@ -896,7 +896,7 @@ void SynthUserInterface::commandSynthModify(){
         return;
     }
     if (audioPipeline->IDValid(pipeline::SYNTH, synthID) == false){
-        std::printf("%d is not valid SYNTH id\n", synthID);
+        std::printf("SYNTH(%d) does not exist\n", synthID);
         error = true;
         return;
     }
@@ -1060,7 +1060,7 @@ void SynthUserInterface::commandComponentRemove(){
         error = true;
         return;
     }
-    std::printf("Component(%d) removed\n", componentID);
+    std::printf("COMP(%d) removed\n", componentID);
 }
 
 void SynthUserInterface::commandComponentCount(){
@@ -1116,7 +1116,7 @@ void SynthUserInterface::commandComponentDisconnect(){
         return;
     }
 
-    std::printf("Component(%d) disconnected\n", componentID);
+    std::printf("COMP(%d) disconnected\n", componentID);
 }
 
 void SynthUserInterface::commandComponentGetConnection(){//TODO update
@@ -1141,10 +1141,10 @@ void SynthUserInterface::commandComponentGetConnection(){//TODO update
     }
 
     if (IDType == pipeline::INVALID){
-        std::printf("Component(%d) is not connected\n", componentID);
+        std::printf("COMP(%d) is not connected\n", componentID);
     } else {
         std::string IDTypeString = pipeline::IDTypeToString(IDType);
-        std::printf("Component(%d) connected to: %s(%d)\n", componentID, IDTypeString.c_str(), parentID);
+        std::printf("COMP(%d) connected to: %s(%d)\n", componentID, IDTypeString.c_str(), parentID);
     }
 }
 
@@ -1199,7 +1199,7 @@ void SynthUserInterface::commandComponentModify(){
                 std::printf("%s: %f\n", inputTokens[i], settingValue);
             }
         } else {
-            std::printf("Component(%d) does not have setting type: %s\n", componentID, inputTokens[i]);
+            std::printf("COMP(%d) does not have setting type: %s\n", componentID, inputTokens[i]);
         }
     }
 }
@@ -1239,7 +1239,7 @@ void SynthUserInterface::commandComponentSettings(){
             if (settingFound){
                 std::printf("%s: %f\n", inputTokens[i], settings->values[j]);
             } else {
-                std::printf("Component(%d) does not have setting type: %s\n", componentID, inputTokens[i]);
+                std::printf("COMP(%d) does not have setting type: %s\n", componentID, inputTokens[i]);
             }
         }
     }
@@ -1456,6 +1456,10 @@ void SynthUserInterface::commandMidiReaderRecord(){
             return;
         }
         std::printf("Calculations time: %fs\n", calculationTime);
+        if (timeFlag){
+            outputFile << calculationTime;
+            outputFile.close();
+        }
     } else {
         if (audioPipeline->recordMidiFiles(inputTokens[1])){
             std::printf("Something went wrong!\n");
@@ -1465,7 +1469,7 @@ void SynthUserInterface::commandMidiReaderRecord(){
     }
     auto timeEnd = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = timeEnd-timeStart;
-    if (timeFlag){
+    if (timeFlag && !offlineFlag){
         outputFile << elapsed_seconds.count();
         outputFile.close();
     }
