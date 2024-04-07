@@ -6,7 +6,7 @@ synthAdd
 synthConnect 0 0
 synthConnect 1 0
 synthConnect 2 0
-synthSave load ./config/synthSave/default.bin 0
+synthSave 0 load ./config/synthSave/default.bin
 synthSet 1 PITCH -24
 compAdd SUM2
 compAdd SUM2

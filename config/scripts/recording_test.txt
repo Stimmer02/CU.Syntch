@@ -1,5 +1,5 @@
 synthAdd
-synthSave load ./config/synthSave/default.bin 0
+synthSave 0 load ./config/synthSave/default.bin
 compAdd COPY
 compAdd SUM
 aCompConnect 0 0 SYNTH 0
