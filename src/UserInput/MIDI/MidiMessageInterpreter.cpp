@@ -1,4 +1,5 @@
 #include "MidiMessageInterpreter.h"
+#define UNIMPLEMENTED_WARNING
 
 using namespace MIDI;
 
@@ -78,19 +79,27 @@ void MidiMessageInterpreter::executeMidiEvent(const midiEvent& event, uchar* buf
             break;
 
         case 0xB0:
+        #ifdef UNIMPLEMENTED_WARNING
             std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeMidiEvent: Controller unimplemented\n");
+        #endif
             break;
 
         case 0xC0:
+        #ifdef UNIMPLEMENTED_WARNING
             std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeMidiEvent: Program change unimplemented\n");
+        #endif
             break;
 
         case 0xD0:
+        #ifdef UNIMPLEMENTED_WARNING
             std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeMidiEvent: Channel pressure unimplemented\n");
+        #endif
             break;
 
         case 0xE0:
+        #ifdef UNIMPLEMENTED_WARNING
             std::fprintf(stderr, "WARNING: MidiMessageInterpreter::executeMidiEvent: Pitch / modulation wheel unimplemented\n");
+        #endif
             break;
 
         case 0x00:
@@ -172,7 +181,7 @@ char MidiMessageInterpreter::executeEvent(const midiEvent& event, uchar* buffer[
 
                     settings.tempo = (event.longerMessage[0] << 16) + (event.longerMessage[1] << 8) + event.longerMessage[2];
                     settings.calculateTickValue(info.timeDivision, sampleRate, sampleSize);
-                    std::printf("Tempo set to %.02f BPM\n", settings.calculateBPM());
+                    // std::printf("Tempo set to %.02f BPM\n", settings.calculateBPM());
 
                     chunkTime = lastEventTime + settings.ticksPerSample * chunkPercentage;
                     break;

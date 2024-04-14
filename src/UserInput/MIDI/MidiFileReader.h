@@ -35,6 +35,9 @@ namespace MIDI{
 
         char parseFile();
         void readReverse(void* out, uint byteCount);
+        uint readReverseAllocated = 0;
+        std::unique_ptr<char[]> readReverseTemp;
+        
         void readReverse(uint16_t& out);
         void readReverse(uint32_t& out);
         void readReverse(uint64_t& out);
@@ -43,6 +46,7 @@ namespace MIDI{
 
         MidiMessageInterpreter interpreter;
         uchar* tempNoteBuffer[127];
+        bool tempNoteBufferEmpty;
 
         midiCheaderChunk info;
         midiSettings settings;

@@ -15,6 +15,7 @@
 #include "UserInput/MIDI/MidiFileReader.h"
 #include "enumConversion.h"
 #include "UserInput/MIDI/MidiReaderManager.h"
+#include "Pipeline/AudioSpectrumVisualizer.h"
 
 
 
@@ -24,20 +25,19 @@ namespace pipeline{
         AudioPipelineManager(audioFormatInfo audioInfo, ushort keyCount);
         ~AudioPipelineManager();
 
-        char start();
+        char start(bool displayVisualizer);
         void stop();
         bool isRuning();
+        bool isUsingVisualizer();
 
         const statistics::pipelineStatistics* getStatistics();
         const audioFormatInfo* getAudioInfo();
 
-        char recordUntilStreamEmpty(MIDI::MidiFileReader& midi, short synthID, std::string filename = "");//TODO: rethink this function
+        char recordUntilStreamEmpty(MIDI::MidiFileReader& midi, short synthID, std::string filename = "");//DEPRECATED
         bool IDValid(pipeline::ID_type type, short ID);
         void reorganizeIDs();
 
         void emptyQueueBuffer(ID_type IDType, short ID);
-
-
 
         //OUTPUT CONTROL
         char startRecording();
@@ -117,12 +117,32 @@ namespace pipeline{
         char recordMidiFiles(std::string fileName);
         char recordMidiFilesOffline(std::string fileName, double& time);
 
+        //VISUALIZER
+
+        float setVisualizerFps(float fps);
+        void setVisualizerWindowSize(uint size);
+        void setVisualizerVolume(float volume);
+        void setVisualizerLowScope(float lowScope);
+        void setVisualizerHighScope(float highScope);
+
+        float getVisualizerFps();
+        uint getVisualizerWindowSize();
+        float getVisualizerVolume();
+        float getVisualizerLowScope();
+        float getVisualizerHighScope();
+
+        void startVisualizer();
+        void stopVisualizer();
+
+        void readTerminalDimensions();
+
 
     private:
         int findAudioQueueBufferIndex(ID_type IDType, short ID);
         audioBufferQueue* findAudioQueueBuffer(ID_type IDType, short ID);
 
         void pipelineThreadFunction();
+        void pipelineThreadFunctionWithVisualizer();
 
         const audioFormatInfo audioInfo;
         const ushort keyCount;
@@ -136,9 +156,12 @@ namespace pipeline{
         audioBufferQueue* outputBuffer;//the last componentQueue to be executed
         ExecutionQueue executionQueue;//processing order of componentQueues
 
+        AudioSpectrumVisualizer visualizer;//allows to display audio spectrum
+
         statistics::PipelineStatisticsService* statisticsService;
 
         bool running;
+        bool usingVisualizer;
         std::thread* pipelineThread;
     };
 }

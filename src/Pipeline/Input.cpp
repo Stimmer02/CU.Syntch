@@ -205,8 +205,8 @@ void Input::swapActiveBuffers(){
 }
 
 void Input::cycleBuffers(){
-    static AKeyboardRecorder** allInputs = midiInput.getAll();
-    static keyboardTransferBuffer** allBuffers = midiInput.getAllBuffers();
+    AKeyboardRecorder** allInputs = midiInput.getAll();
+    keyboardTransferBuffer** allBuffers = midiInput.getAllBuffers();
 
     for (int i = 0; i < midiInput.getElementCount(); i++){
         allInputs[i]->buffer->swapActiveBuffer();

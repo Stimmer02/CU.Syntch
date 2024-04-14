@@ -1,0 +1,110 @@
+midiAdd #MIDI 0
+midiSet 0 ./V_Bethoven/violin_1.mid
+synthAdd #SYNTH 0
+synthSave 0 load ./config/synthSave/Vth_symphony/lead.bin
+synthConnect 0 0
+synthAdd #SYNTH 1
+synthSave 1 load ./config/synthSave/Vth_symphony/lead_octave.bin
+synthConnect 1 0
+compAdd PAN #COMP 0
+compSet 0 pan 0.3
+compConnect 0 SYNTH 0
+compAdd PAN #COMP 1
+compSet 1 pan 0.2
+compConnect 1 SYNTH 1
+compAdd SUM2 #COMP 2
+aCompConnect 2 0 SYNTH 0
+aCompConnect 2 1 SYNTH 1
+compSet 2 vol0 1 vol1 0.7
+#
+midiAdd #MIDI 1
+midiSet 1 ./V_Bethoven/violin_2.mid
+synthAdd #SYNTH 2
+synthSave 2 load ./config/synthSave/Vth_symphony/lead.bin
+synthConnect 2 1
+synthAdd #SYNTH 3
+synthSave 3 load ./config/synthSave/Vth_symphony/lead_octave.bin
+synthConnect 3 1
+compAdd PAN #COMP 3
+compSet 3 pan 0.6
+compConnect 3 SYNTH 2
+compAdd PAN #COMP 4
+compSet 4 pan 0.7
+compConnect 4 SYNTH 3
+compAdd SUM2 #COMP 5
+aCompConnect 5 0 SYNTH 2
+aCompConnect 5 1 SYNTH 3
+compSet 5 vol0 1 vol1 0.7
+#
+midiAdd #MIDI 2
+midiSet 2 ./V_Bethoven/viole.mid
+synthAdd #SYNTH 4
+synthSave 4 load ./config/synthSave/Vth_symphony/lead.bin
+synthConnect 4 2
+compAdd PAN #COMP 6
+compSet 6 pan 0.8
+compConnect 6 SYNTH 4
+#
+midiAdd #MIDI 3
+midiSet 3 ./V_Bethoven/viole.mid
+synthAdd #SYNTH 5
+synthSave 5 load ./config/synthSave/Vth_symphony/bass.bin
+synthConnect 5 3
+compAdd PAN #COMP 7
+compSet 7 pan 0.55
+compConnect 7 SYNTH 5
+#
+midiAdd #MIDI 4
+midiSet 4 ./V_Bethoven/viole.mid
+synthAdd #SYNTH 6
+synthSave 6 load ./config/synthSave/Vth_symphony/bass.bin
+synthConnect 6 4
+compAdd PAN #COMP 8
+compSet 8 pan 0.45
+compConnect 8 SYNTH 6
+#
+midiAdd #MIDI 5
+midiSet 5 ./V_Bethoven/viole.mid
+synthAdd #SYNTH 7
+synthSave 7 load ./config/synthSave/basic.bin
+synthSet 7 type square
+synthConnect 7 5
+compAdd PAN #COMP 9
+compSet 9 pan 0.9
+compConnect 9 SYNTH 7
+#
+midiAdd #MIDI 6
+midiSet 6 ./V_Bethoven/oboe.mid
+synthAdd #SYNTH 8
+synthSave 8 load ./config/synthSave/basic.bin
+synthSet 8 type sawtooth
+synthConnect 8 6
+compAdd PAN #COMP 10
+compSet 10 pan -0.1 #negative value switches channels before pan is applied
+compConnect 10 SYNTH 8
+#
+compAdd SUM7 #COMP 11
+setOut COMP 11
+aCompConnect 11 0 COMP 2
+aCompConnect 11 1 COMP 5
+aCompConnect 11 2 SYNTH 4
+aCompConnect 11 3 SYNTH 5
+aCompConnect 11 4 SYNTH 6
+aCompConnect 11 5 SYNTH 7
+aCompConnect 11 6 SYNTH 8
+compSet 11 vol2 0.17 vol3 0.18 vol4 0.18 vol5 0.064 vol6 0.064
+compAdd VOLUME #COMP 12
+compConnect 12 COMP 11
+compSet 12 vol 2
+compAdd COMPRESSOR #COMP 13
+compConnect 13 COMP 11
+compSet 13 ratio 10
+#
+midiList
+# midiRecord test.wav offline
+execute ./config/scripts/setUserInput.txt
+visSet volume 34 high 6000
+pStart v
+midiPlay
+toggle
+

@@ -13,6 +13,7 @@
 class TerminalInputDiscard {
 public:
     TerminalInputDiscard();
+    ~TerminalInputDiscard();
 
     void disableInput();
     void enableInput(bool silent = false);
@@ -34,6 +35,8 @@ private:
     struct termios g_terminalSettings;
     std::streambuf* originalCin;
     std::istringstream* inputBuffer;
+
+    bool firstExecution;
 };
 
 #endif

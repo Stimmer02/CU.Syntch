@@ -71,6 +71,7 @@ namespace pipeline{
         template <typename INTEGER, typename = std::enable_if_t<std::is_integral_v<INTEGER>>>
         char numberFromToken(short tokenIndex, INTEGER& out);
         char numberFromToken(short tokenIndex, float& out);
+        std::string concatenateTokens(short startTokenIndex);
         void stopPipeline();
 
         void browseHistory();
@@ -88,6 +89,8 @@ namespace pipeline{
         void commandSetOutputBuffer();
         void commandClear();
 
+        void commandVisualizerModify();
+        void commandVisualizerSettings();
 
         void commandSynthAdd();
         void commandSynthRemove();
@@ -97,6 +100,7 @@ namespace pipeline{
         void commandSynthSave();
         void commandSynthList();//TODO
         void commandSynthInfo();
+        void commandSynthTypes();
 
         void commandInputAdd();
         void commandInputRemove();

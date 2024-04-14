@@ -12,7 +12,7 @@ AudioRecorder::~AudioRecorder(){
 }
 
 void AudioRecorder::writeInverted(uint64_t input, uchar length){
-    static char writeBuffer[8];
+    char writeBuffer[8];
     static const uint64_t mask = 0xFF;
     for (uchar i = 0; i < length; i++){
         writeBuffer[i] = input & mask;

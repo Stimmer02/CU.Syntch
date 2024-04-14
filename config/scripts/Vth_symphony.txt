@@ -1,4 +1,4 @@
-midiAdd
+midiAdd #MIDI 0
 midiSet 0 ./V_Bethoven/violin_1.mid
 synthAdd
 synthSave 0 load ./config/synthSave/Vth_symphony/lead.bin
@@ -6,61 +6,63 @@ synthConnect 0 0
 compAdd PAN
 compSet 0 pan 0.3
 compConnect 0 SYNTH 0
-
-midiAdd
+#
+midiAdd #MIDI 1
 midiSet 1 ./V_Bethoven/violin_2.mid
 synthAdd
 synthSave 1 load ./config/synthSave/Vth_symphony/lead.bin
 synthConnect 1 1
 compAdd PAN
-compSet 1 pan 0.5
+compSet 1 pan 0.7
 compConnect 1 SYNTH 1
-
-midiAdd
+#
+midiAdd #MIDI 2
 midiSet 2 ./V_Bethoven/viole.mid
 synthAdd
 synthSave 2 load ./config/synthSave/Vth_symphony/lead.bin
 synthConnect 2 2
 compAdd PAN
-compSet 2 pan 0.7
+compSet 2 pan 0.8
 compConnect 2 SYNTH 2
-
-midiAdd
+#
+midiAdd #MIDI 3
 midiSet 3 ./V_Bethoven/double_bass.mid
 synthAdd
 synthSave 3 load ./config/synthSave/Vth_symphony/bass.bin
 synthConnect 3 3
 compAdd PAN
-compSet 3 pan 0.2
+compSet 3 pan 0.55
 compConnect 3 SYNTH 3
-
-midiAdd
+#
+midiAdd #MIDI 4
 midiSet 4 ./V_Bethoven/cello.mid
 synthAdd
 synthSave 4 load ./config/synthSave/Vth_symphony/bass.bin
 synthConnect 4 4
 compAdd PAN
-compSet 4 pan 0.8
+compSet 4 pan 0.45
 compConnect 4 SYNTH 4
-
-midiAdd
+#
+midiAdd #MIDI 5
 midiSet 5 ./V_Bethoven/bassoony.mid
 synthAdd
 synthSave 5 load ./config/synthSave/basic.bin
+synthSet 5 type sawtooth
 synthConnect 5 5
 compAdd PAN
-compSet 5 pan 0.2
+compSet 5 pan 0.9
 compConnect 5 SYNTH 5
-
-midiAdd
+#
+midiAdd #MIDI 6
 midiSet 6 ./V_Bethoven/oboe.mid
 synthAdd
 synthSave 6 load ./config/synthSave/basic.bin
+synthSet 6 type sawtooth
 synthConnect 6 6
 compAdd PAN
-compSet 6 pan -0.2
+compSet 6 pan -0.1
 compConnect 6 SYNTH 6
-
+#
 compAdd SUM7
 setOut COMP 7
 aCompConnect 7 0 SYNTH 0
@@ -70,12 +72,15 @@ aCompConnect 7 3 SYNTH 3
 aCompConnect 7 4 SYNTH 4
 aCompConnect 7 5 SYNTH 5
 aCompConnect 7 6 SYNTH 6
+compSet 7 vol5 0.09 vol6 0.076
 compAdd VOLUME
 compConnect 8 COMP 7
 compSet 8 vol 2
 compAdd COMPRESSOR
 compConnect 9 COMP 7
-compSet 7 ratio 4
-
-pStart
+compSet 9 ratio 4
+#
 midiList
+#midiRecord test.wav offline
+execute ./config/scripts/setUserInput.txt
+pStart v

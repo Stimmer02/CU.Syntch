@@ -124,7 +124,7 @@ void SynthUserInterface::parseInput(){
         return;
     }
 
-    if (inputLine[0] == ' '){
+    if (inputLine[0] == ' ' || inputLine[0] == '#'){
         return;
     }
 
@@ -137,6 +137,8 @@ void SynthUserInterface::parseInput(){
             inputLine[i] = '\0';
             nextElementIsToken = true;
             break;
+        } else if (inputLine[i] == '#'){
+            return;
         }
     }
     std::printf("\n");
@@ -163,6 +165,9 @@ void SynthUserInterface::parseInput(){
         if (inputLine[i] == ' '){
             inputLine[i] = '\0';
             nextElementIsToken = true;
+        } else if (inputLine[i] == '#'){
+            inputLine[i] = '\0';
+            break;
         } else if (nextElementIsToken){
             nextElementIsToken = false;
             inputTokens[inputTokenCount] = &inputLine[i];
@@ -226,6 +231,15 @@ char SynthUserInterface::numberFromToken(short tokenIndex, float& out){
     return 0;
 }
 
+std::string SynthUserInterface::concatenateTokens(short startTokenIndex){
+    std::string result = inputTokens[startTokenIndex];
+    for (short i = startTokenIndex + 1; i < inputTokenCount; i++){
+        result += " ";
+        result += inputTokens[i];
+    }
+    return result;
+}
+
 void SynthUserInterface::stopPipeline(){
     if (audioPipeline->isRuning()){
         std::printf("Can not execute this action if pipeline is running\n");
@@ -251,6 +265,9 @@ void SynthUserInterface::initializeCommandMap(){
 
         {"\e[A",         &SynthUserInterface::browseHistory},
 
+        {"visGet",  &SynthUserInterface::commandVisualizerSettings},
+        {"visSet",  &SynthUserInterface::commandVisualizerModify},
+
         {"synthAdd",        &SynthUserInterface::commandSynthAdd},
         {"synthRemove",     &SynthUserInterface::commandSynthRemove},
         {"synthConnect",    &SynthUserInterface::commandSynthConnect},
@@ -260,6 +277,7 @@ void SynthUserInterface::initializeCommandMap(){
         {"synthSet",        &SynthUserInterface::commandSynthModify},
         {"synthInfo",       &SynthUserInterface::commandSynthInfo},
         {"synthSave",       &SynthUserInterface::commandSynthSave},
+        {"synthTypes",      &SynthUserInterface::commandSynthTypes},
 
         {"inputAdd",    &SynthUserInterface::commandInputAdd},
         {"inputRemove", &SynthUserInterface::commandInputRemove},
@@ -310,12 +328,19 @@ void SynthUserInterface::commandToggle(){
     audioPipeline->reausumeInput();
     terminalInput = false;
     std::printf("Terminal input disabled, to enable it press \"Ctrl+Q\"\n");
+    if (audioPipeline->isUsingVisualizer()){
+        audioPipeline->startVisualizer();
+        std::printf("Visualizer is printing\n");
+    }
     while (terminalInput == false){
         std::this_thread::sleep_for(std::chrono::milliseconds(loopDelay));
         if (userInput->getKeyState(KEY_LEFTCTRL) && userInput->getKeyState(KEY_Q)){
             waitUntilKeyReleased(KEY_Q);
             terminalInput = true;
         }
+    }
+    if (audioPipeline->isUsingVisualizer()){
+        audioPipeline->stopVisualizer();
     }
     audioPipeline->pauseInput();
     terminalDiscard.enableInput();
@@ -340,6 +365,11 @@ void SynthUserInterface::commandHelp(){
     "   clear\n"
     "   system\n"
     "   idReinit\n"
+    "\n"
+    "VISUALIZER\n"
+    "   visGet\n"
+    "   visSet\n"
+    "   visKey\n"
     "\n"
     "SYNTHESIZER\n"
     "   synthAdd\n"
@@ -392,7 +422,7 @@ void SynthUserInterface::commandHelp(){
     "   exit    - exits the program (if program does not turn off: press any key on every previously connected device to end reading threads)\n"
     "   setUserInput <keyboard system stream> - sets keyboard stream to be used for receiving keyboard combinations (eg. Ctrl+Q)\n"
     "   toggle  - toggles input between synthesizer and console, after switching to synthesizer press Ctrl+Q to switch back\n"
-    "   pStart  - starts audio pipeline\n"
+    "   pStart  <v> - starts audio pipeline. Use with \"v\" argument to start with audio spectrum visualizer (only after invoking \"toggle\" command it will be shown)\n"
     "   pStop   - stops audio pipeline\n"
     "   setOut  <ID type> <ID> - sets synthesize or advanced component to be system audio output\n"
     "   execute <file path> - executes script of given path\n"
@@ -400,6 +430,10 @@ void SynthUserInterface::commandHelp(){
     "   clear   - clears console\n"
     "   system  {system command and its arguments} - executes system command in current shell\n"
     "   idReinit - reinitializes all ID's in the order of components memory allocation, this way there are no gaps between them and also breaks current initialization (used for clearing system)\n"
+    "\n"
+    "VISUALIZER - audio spectrum visualizer (to enable run \"pStart v\")\n"
+    "   visGet  - returns visualizer settings\n"
+    "   visSet  {<setting name> <value>} - sets specified setting values\n"
     "\n"
     "SYNTHESIZER - audio signall creation\n"
     "   synthAdd     - adds new synthesizer and returns its ID\n"
@@ -411,13 +445,14 @@ void SynthUserInterface::commandHelp(){
     "   synthSet     <synth ID> {<setting name> <value>} - sets specified setting values\n"
     "   synthInfo    - returns information about queue of specified synthesizer\n"
     "   synthSave    <synth ID> <load/save> <save file path> - loads or saves synthesizer configuration\n"
+    "   synthTypes   - returns a list of all avaliable synthesizer types\n"
     "\n"
     "INPUT - midi input\n"
     "   inputAdd <type> <stream path> <key count> <optional: key map file path> - adds new input and returns its ID, where the type is 'keyboard' or 'midi', stream path describes stream location, key count tells how many notes it should use, key map file path (if type is keybard) describes map file location that will provide keyboard layout interpretation\n"
     "   inputRemove <input ID> - removes input by its I\n"
     "   inputCount - returns the total count of the inputs\n"
     "\n"
-    "MIDI - midi file playback (other MIDI functions work the same as INPUT)\n"
+    "MIDI - midi file playback (other MIDI functions work the same as INPUT). May not work on all MIDI files due to not implementing whole MIDI functionality\n"
     "   midiAdd     - adds new MIDI file reader to the system with INPUT ID\n"
     "   midiSet     <file path> - sets MIDI file reader a file to read\n"
     "   midiPlay    optional: {input ID} - starts playback of specified MIDI reader or all MIDI readers\n"
@@ -484,6 +519,7 @@ void SynthUserInterface::commandComponentTypes(){
     "   vol      - output volume multiplication\n"
     "\n"
     "DESTROY:\n"
+    "   \e[30;41m[MAY CAUSE HEARING OR SPEAKERS DAMAGE IF USED IMPROPERLY! - CAN DRASTICALLY INCREASE VOLUME LEVEL]\e[0m\n"
     "   subtract - value that will be substracted from positive phase and added to negative phase\n"
     "\n"
     "ADVANCED:\n"
@@ -505,11 +541,26 @@ void SynthUserInterface::commandComponentTypes(){
 }
 
 void SynthUserInterface::commandPipelineStart(){
-    if (audioPipeline->start()){
-        std::printf("Couldn't start pipeline!\n");
+    if (audioPipeline->isRuning()){
+        std::printf("Pipeline is already running\n");
         error = true;
         return;
     }
+    if (inputTokenCount > 1 && std::strcmp("v", inputTokens[1]) == 0){
+        if (audioPipeline->start(true)){
+            std::printf("Couldn't start pipeline!\n");
+            error = true;
+            return;
+        }
+        std::printf("Visualizer enabled\n");
+    } else {
+        if (audioPipeline->start(false)){
+            std::printf("Couldn't start pipeline!\n");
+            error = true;
+            return;
+        }
+    }
+    
     uint waitCounter = 0;
     while (audioPipeline->isRuning() == false){
         if (waitCounter > 1000/loopDelay + 1){;
@@ -573,6 +624,82 @@ void SynthUserInterface::commandMidiRecord(){//DEPRECATED
 void SynthUserInterface::commandClear(){
     system("clear");
 }
+
+void SynthUserInterface::commandVisualizerModify(){
+    if (inputTokenCount < 3 || inputTokenCount % 2 == 0){
+        std::printf("Usage: visSet {<setting name> <value>}\n");
+        error = true;
+        return;
+    }
+    for (short i = 1; i < inputTokenCount; i += 2){
+        if (std::strcmp(inputTokens[i], "fps") == 0){
+            float fps;
+            if (numberFromToken(i + 1, fps)){
+                error = true;
+                return;
+            }
+            fps = audioPipeline->setVisualizerFps(fps);
+            std::printf("FPS set to: %.2f\n", fps);
+        } else if (std::strcmp(inputTokens[i], "samples") == 0){
+            uint samples;
+            if (numberFromToken(i + 1, samples)){
+                error = true;
+                return;
+            }
+            audioPipeline->setVisualizerWindowSize(samples);
+            std::printf("Samples set to: %i\n", audioPipeline->getVisualizerWindowSize());
+        } else if (std::strcmp(inputTokens[i], "low") == 0){
+            float low;
+            if (numberFromToken(i + 1, low)){
+                error = true;
+                return;
+            }
+            audioPipeline->setVisualizerLowScope(low);
+            std::printf("Low set to: %.2f\n", audioPipeline->getVisualizerLowScope());
+        } else if (std::strcmp(inputTokens[i], "high") == 0){
+            float high;
+            if (numberFromToken(i + 1, high)){
+                error = true;
+                return;
+            }
+            audioPipeline->setVisualizerHighScope(high);
+            std::printf("High set to: %.2f\n", audioPipeline->getVisualizerHighScope());
+        } else if (std::strcmp(inputTokens[i], "volume") == 0){
+            float volume;
+            if (numberFromToken(i + 1, volume)){
+                error = true;
+                return;
+            }
+            audioPipeline->setVisualizerVolume(volume);
+            std::printf("Volume set to: %.2f\n", audioPipeline->getVisualizerVolume());
+        } else {
+            std::printf("Unknown setting: %s\n", inputTokens[i]);
+            error = true;
+            return;
+        }
+    }
+
+    
+}
+
+void SynthUserInterface::commandVisualizerSettings(){
+    std::printf(
+        "VISUALIZER SETTINGS:\n"
+        "   state: %s\n"
+        "   fps: %.2f\n"
+        "   samples: %i\n"
+        "   low: %.2fHz\n"
+        "   high: %.2fHz\n"
+        "   volume: %.2f\n",
+        audioPipeline->isUsingVisualizer() ? "enabled" : "disabled",
+        audioPipeline->getVisualizerFps(),
+        audioPipeline->getVisualizerWindowSize(),
+        audioPipeline->getVisualizerLowScope(),
+        audioPipeline->getVisualizerHighScope(),
+        audioPipeline->getVisualizerVolume()
+    );
+}
+
 
 void SynthUserInterface::commandSynthSave(){
     if (inputTokenCount < 4){
@@ -941,6 +1068,27 @@ void SynthUserInterface::commandSynthInfo(){
         error = true;
         return;
     }
+}
+
+void SynthUserInterface::commandSynthTypes(){
+    const char* types =
+    "SYNTH TYPES:\n"
+    "SINE:\n"
+    "   Simple sine wave generator\n"
+    "\n"
+    "SQUARE:\n"
+    "   Simple square wave generator\n"
+    "\n"
+    "SAWTOOTH:\n"
+    "   Simple sawtooth wave generator\n"
+    "\n"
+    "TRIANGLE:\n"
+    "   Simple triangle wave generator\n"
+    "\n"
+    "NOISE1:\n"
+    "   Non musical noise generator\n";
+
+    std::printf("%s", types);
 }
 
 void SynthUserInterface::commandReinitializeID(){
@@ -1341,12 +1489,12 @@ void SynthUserInterface::commandMidiReaderSet(){
         error = true;
         return;
     }
-    if (audioPipeline->setMidiReader(inputID, inputTokens[2])){
+    if (audioPipeline->setMidiReader(inputID, concatenateTokens(2))){
         std::printf("Something went wrong!\n");
         error = true;
         return;
     }
-    std::printf("MIDI reader set to: %s\n", inputTokens[2]);
+    std::printf("MIDI reader set to: %s\n", concatenateTokens(2).c_str());
 }
 
 void SynthUserInterface::commandMidiReaderPlay(){

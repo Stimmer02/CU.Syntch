@@ -8,8 +8,9 @@
 
 using namespace pipeline;
 
-AudioPipelineManager::AudioPipelineManager(audioFormatInfo audioInfo, ushort keyCount): audioInfo(audioInfo), keyCount(keyCount), midiReaderManager(&this->audioInfo), component(&this->audioInfo){
+AudioPipelineManager::AudioPipelineManager(audioFormatInfo audioInfo, ushort keyCount): audioInfo(audioInfo), keyCount(keyCount), midiReaderManager(&this->audioInfo), component(&this->audioInfo), visualizer(&this->audioInfo, 2048, 30){
     running = false;
+    usingVisualizer = false;
     pipelineThread = nullptr;
 
     statisticsService = new statistics::PipelineStatisticsService(audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate, 64, audioInfo, 0);
@@ -26,9 +27,12 @@ AudioPipelineManager::~AudioPipelineManager(){
     for (uint i = 0; i < componentQueues.size(); i++){
         delete componentQueues.at(i);
     }
+    if (pipelineThread != nullptr){
+        delete pipelineThread;
+    }
 }
 
-char AudioPipelineManager::start(){
+char AudioPipelineManager::start(bool useVisualizer){
     if (running){
         std::fprintf(stderr, "ERR: AudioPipelineManager::start PIPELINE ALREADY RUNNING\n");
         return -1;
@@ -63,13 +67,17 @@ char AudioPipelineManager::start(){
         delete pipelineThread;
     }
 
-    static const std::vector<audioBufferQueue*>& backwardsExecution = executionQueue.getQueue();
+    const std::vector<audioBufferQueue*>& backwardsExecution = executionQueue.getQueue();
 
     for (int i = backwardsExecution.size() - 1; i >= 0; i--){
         std::printf("%s(%d)\n", IDTypeToString(backwardsExecution.at(i)->parentType).c_str(), backwardsExecution.at(i)->getParentID());
     }
 
-    pipelineThread = new std::thread(&AudioPipelineManager::pipelineThreadFunction, this);
+    if (useVisualizer){
+        pipelineThread = new std::thread(&AudioPipelineManager::pipelineThreadFunctionWithVisualizer, this);
+    } else {
+        pipelineThread = new std::thread(&AudioPipelineManager::pipelineThreadFunction, this);
+    }
 
     return 0;
 }
@@ -90,6 +98,10 @@ bool AudioPipelineManager::isRuning(){
     return running;
 }
 
+bool AudioPipelineManager::isUsingVisualizer(){
+    return usingVisualizer;
+}
+
 
 const statistics::pipelineStatistics* AudioPipelineManager::getStatistics(){
     return statisticsService->getStatistics();
@@ -102,7 +114,7 @@ const audioFormatInfo* AudioPipelineManager::getAudioInfo(){
 void AudioPipelineManager::pipelineThreadFunction(){
     running = true;
     ulong sampleTimeLength = audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate;
-    static const std::vector<audioBufferQueue*>& backwardsExecution = executionQueue.getQueue();
+    const std::vector<audioBufferQueue*>& backwardsExecution = executionQueue.getQueue();
 
     input.swapActiveBuffers();
 
@@ -126,6 +138,39 @@ void AudioPipelineManager::pipelineThreadFunction(){
 
         output.play(&outputBuffer->buffer);
     }
+}
+
+void AudioPipelineManager::pipelineThreadFunctionWithVisualizer(){
+    running = true;
+    usingVisualizer = true;
+    ulong sampleTimeLength = audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate;
+    const std::vector<audioBufferQueue*>& backwardsExecution = executionQueue.getQueue();
+
+    input.swapActiveBuffers();
+
+    ulong nextLoop = input.getActivationTimestamp() + sampleTimeLength;
+
+    statisticsService->firstInvocation();
+
+    while (running){
+        std::this_thread::sleep_until(std::chrono::time_point<std::chrono::system_clock>(std::chrono::nanoseconds((nextLoop)*1000)));
+        statisticsService->loopStart();
+        nextLoop += sampleTimeLength;
+
+        input.cycleBuffers();
+
+        input.generateSamples(executionQueue.getConnectedSynthIDs());
+        for (int i = backwardsExecution.size() - 1; i >= 0; i--){
+            component.applyEffects(backwardsExecution[i]);
+        }
+        
+        visualizer.displayBuffer(&outputBuffer->buffer);
+
+        statisticsService->loopWorkEnd();
+
+        output.play(&outputBuffer->buffer);
+    }
+    usingVisualizer = false;
 }
 
 char AudioPipelineManager::recordUntilStreamEmpty(MIDI::MidiFileReader& midi, short synthID, std::string filename){
@@ -643,7 +688,7 @@ bool AudioPipelineManager::isAdvancedComponent(short ID){
 //MIDI READER
 
 short AudioPipelineManager::addMidiReader(){
-    MIDI::KeyboardRecorder_MidiFile* newMidiReader = new  MIDI::KeyboardRecorder_MidiFile();
+    MIDI::KeyboardRecorder_MidiFile* newMidiReader = new MIDI::KeyboardRecorder_MidiFile();
     newMidiReader->init(audioInfo.sampleSize, audioInfo.sampleRate);
     short newID = input.addInput(newMidiReader);
     midiReaderManager.add(newMidiReader, newID);
@@ -716,7 +761,7 @@ char AudioPipelineManager::recordMidiFilesOffline(std::string fileName, double& 
         return -2;
     }
     
-    static const std::vector<audioBufferQueue*>& backwardsExecution = executionQueue.getQueue();
+    const std::vector<audioBufferQueue*>& backwardsExecution = executionQueue.getQueue();
     input.clearBuffers();
     component.clearBuffers();
     if (output.startRecording(fileName)){
@@ -742,4 +787,58 @@ char AudioPipelineManager::recordMidiFilesOffline(std::string fileName, double& 
     output.stopRecording();
 
     return 0;
+}
+
+//VISUALIZER
+        
+float AudioPipelineManager::setVisualizerFps(float fps){
+    return visualizer.setFps(fps);
+}
+
+void AudioPipelineManager::setVisualizerWindowSize(uint size){
+    visualizer.setAudioWindowSize(size);
+}
+
+void AudioPipelineManager::setVisualizerVolume(float volume){
+    visualizer.setVolume(volume);
+}
+
+void AudioPipelineManager::setVisualizerLowScope(float lowScope){
+    visualizer.setLowScope(lowScope);
+}
+
+void AudioPipelineManager::setVisualizerHighScope(float highScope){
+    visualizer.setHighScope(highScope);
+}
+
+float AudioPipelineManager::getVisualizerFps(){
+    return visualizer.getFps();
+}
+
+uint AudioPipelineManager::getVisualizerWindowSize(){
+    return visualizer.getAudioWindowSize();
+}
+
+float AudioPipelineManager::getVisualizerVolume(){
+    return visualizer.getVolume();
+}
+
+float AudioPipelineManager::getVisualizerLowScope(){
+    return visualizer.getLowScope();
+}
+
+float AudioPipelineManager::getVisualizerHighScope(){
+    return visualizer.getHighScope();
+}
+
+void AudioPipelineManager::startVisualizer(){
+    visualizer.start();
+}
+
+void AudioPipelineManager::stopVisualizer(){
+    visualizer.stop();
+}  
+
+void AudioPipelineManager::readTerminalDimensions(){
+    visualizer.readTerminalDimensions();
 }

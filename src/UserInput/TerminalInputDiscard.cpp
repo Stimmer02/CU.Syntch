@@ -3,6 +3,11 @@
 TerminalInputDiscard::TerminalInputDiscard(){
     originalCin = std::cin.rdbuf();
     inputBuffer = new std::istringstream("alternative_empty_input_buffer");
+    firstExecution = true;
+}
+
+TerminalInputDiscard::~TerminalInputDiscard(){
+    delete inputBuffer;
 }
 
 void TerminalInputDiscard::disableInput(){
@@ -44,9 +49,8 @@ void TerminalInputDiscard::turnStdinOn(){
 }
 
 void TerminalInputDiscard::setTermiosBit(const int& fd, const tcflag_t& bit, const int& onElseOff){
-    static int first = 1;
-    if (first) {
-        first = 0;
+    if (firstExecution){
+        firstExecution = false;
         tcgetattr(fd,&g_terminalSettings);
     }
     if (onElseOff)

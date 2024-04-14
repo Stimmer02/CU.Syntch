@@ -7,6 +7,7 @@ MidiFileReader::MidiFileReader(std::string path, uint sampleSize, uint sampleRat
     for (uint i = 0; i < 127; i++){
         tempNoteBuffer[i] = new uchar[sampleSize];
     }
+    tempNoteBufferEmpty = false;
 
     file = new std::ifstream(path, std::ios::in | std::ios::binary);
     if (file->is_open() == false){
@@ -16,12 +17,18 @@ MidiFileReader::MidiFileReader(std::string path, uint sampleSize, uint sampleRat
     }
 
     fileReady = true;
+    
     chunks = nullptr;
+    lastEvent = nullptr;
+    chunkTime = nullptr;
+    lastEventTime = nullptr;
+    endOfChunk = nullptr;
+
+    observer = nullptr;
+    
     if (parseFile() != 0){
         close();
     }
-
-    observer = nullptr;
 }
 
 
@@ -39,6 +46,7 @@ char MidiFileReader::close(){
         return 1;
     }
     file->close();
+    delete file;
     if (chunks != nullptr){
         delete[] chunks;
         delete[] lastEvent;
@@ -88,24 +96,24 @@ bool MidiFileReader::eofChunk(ushort chunkNumber){
 }
 
 void MidiFileReader::fillBuffer(ushort chunkNumber){
-    static bool emptyBuffer = false;
-
-    if (emptyBuffer == false){
+    if (tempNoteBufferEmpty == false){
         for (uint i = 0; i < 127; i++){
             std::memset(tempNoteBuffer[i], 0, sampleSize);
         }
-        emptyBuffer = true;
+        tempNoteBufferEmpty = true;
     }
 
     chunkTime[chunkNumber] += settings.ticksPerSample;
     file->seekg(chunks[chunkNumber].lastPosition);
 
     while (lastEventTime[chunkNumber] < chunkTime[chunkNumber]){
+
         if (interpreter.executeEvent(lastEvent[chunkNumber], tempNoteBuffer, settings, eventTimePlacement(chunkNumber), sampleSize, sampleRate, info, chunkTime[chunkNumber], lastEventTime[chunkNumber])){
             endOfChunk[chunkNumber] = true;
             return;
         }
-        emptyBuffer = false;
+
+        tempNoteBufferEmpty = false;
         if (interpreter.getFileEvent(file, lastEvent[chunkNumber])){
             std::fprintf(stderr, "ERR: MidiFileReader::fillBuffer: UNEXPECTED END OF FILE REACHED - CLOSING FILE\n");
             close();
@@ -126,17 +134,14 @@ int MidiFileReader::eventTimePlacement(ushort chunkNumber){
 }
 
 void MidiFileReader::readReverse(void* out, uint byteCount){
-    static uint allocated = 0;
-    static std::unique_ptr<char[]> temp;
-
-    if (byteCount > allocated){
-        allocated = byteCount;
-        temp.reset(new char[allocated]);
+    if (byteCount > readReverseAllocated){
+        readReverseAllocated = byteCount;
+        readReverseTemp.reset(new char[readReverseAllocated]);
     }
 
-    file->read(temp.get(), byteCount);
+    file->read(readReverseTemp.get(), byteCount);
     for (uint i = 0, j = byteCount-1; i < byteCount; i++, j--){
-        ((char*)out)[i] = temp.get()[j];
+        ((char*)out)[i] = readReverseTemp.get()[j];
     }
 }
 

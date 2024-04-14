@@ -53,7 +53,7 @@ int main(int argc, char** argv){
     
 
 
-    if (argc > 3 && (std::strcmp("help", argv[1]) || std::strcmp("--help", argv[1]))){
+    if (argc > 2 && (std::strcmp("help", argv[1]) == 0 || std::strcmp("--help", argv[1]) == 0)){
         std::printf(
         "USAGE: \n"
         "%s (no arguments)     - launches default script in user mode\n"
