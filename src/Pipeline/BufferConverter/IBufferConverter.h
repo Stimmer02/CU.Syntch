@@ -3,9 +3,9 @@
 
 #include "../../AudioOutput/audioBuffer.h"
 #include "../pipelineAudioBuffer.h"
-#include <immintrin.h>
 
 #ifndef NO_AVX2
+#include <immintrin.h>
 #define AVX2
 #endif
 
