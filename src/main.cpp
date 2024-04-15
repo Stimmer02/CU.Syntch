@@ -29,8 +29,6 @@ void initializeAudioInfoFromFile(audioFormatInfo& audioInfo, const std::string& 
                             audioInfo.sampleRate = std::stoi(value);
                         } else if (key == "SAMPLE_SIZE") {
                             audioInfo.sampleSize = std::stoi(value);
-                        } else if (key == "LITTLE_ENDIAN") {
-                            audioInfo.littleEndian = value == "1" or value == "true" or value == "TRUE";
                         }
                     } catch (const std::exception& e) {
                         std::fprintf(stderr, "Error: Invalid value for %s. Using default value.\n", key.c_str());
@@ -40,6 +38,8 @@ void initializeAudioInfoFromFile(audioFormatInfo& audioInfo, const std::string& 
         }
         audioInfo.byteRate = audioInfo.sampleRate * audioInfo.channels * audioInfo.bitDepth/8;
         audioInfo.blockAlign = audioInfo.channels * audioInfo.bitDepth/8;
+    } else {
+        std::fprintf(stderr, "Error: Could not open file \"%s\". Using default values.\n", filename.c_str());
     }
 }
 
