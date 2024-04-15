@@ -46,7 +46,7 @@ compSet 6 pan 0.8
 compConnect 6 SYNTH 4
 #
 midiAdd #MIDI 3
-midiSet 3 ./V_Bethoven/viole.mid
+midiSet 3 ./V_Bethoven/double_bass.mid
 synthAdd #SYNTH 5
 synthSave 5 load ./config/synthSave/Vth_symphony/bass.bin
 synthConnect 5 3
@@ -55,7 +55,7 @@ compSet 7 pan 0.55
 compConnect 7 SYNTH 5
 #
 midiAdd #MIDI 4
-midiSet 4 ./V_Bethoven/viole.mid
+midiSet 4 ./V_Bethoven/cello.mid
 synthAdd #SYNTH 6
 synthSave 6 load ./config/synthSave/Vth_symphony/bass.bin
 synthConnect 6 4
@@ -64,10 +64,10 @@ compSet 8 pan 0.45
 compConnect 8 SYNTH 6
 #
 midiAdd #MIDI 5
-midiSet 5 ./V_Bethoven/viole.mid
+midiSet 5 ./V_Bethoven/bassoony.mid
 synthAdd #SYNTH 7
 synthSave 7 load ./config/synthSave/basic.bin
-synthSet 7 type square
+synthSet 7 type sawtooth
 synthConnect 7 5
 compAdd PAN #COMP 9
 compSet 9 pan 0.9
@@ -77,7 +77,7 @@ midiAdd #MIDI 6
 midiSet 6 ./V_Bethoven/oboe.mid
 synthAdd #SYNTH 8
 synthSave 8 load ./config/synthSave/basic.bin
-synthSet 8 type sawtooth
+synthSet 8 type square
 synthConnect 8 6
 compAdd PAN #COMP 10
 compSet 10 pan -0.1 #negative value switches channels before pan is applied
@@ -101,10 +101,10 @@ compConnect 13 COMP 11
 compSet 13 ratio 10
 #
 midiList
-# midiRecord test.wav offline
-execute ./config/scripts/setUserInput.txt
-visSet volume 34 high 6000
-pStart v
-midiPlay
-toggle
+midiRecord test.wav offline
+# execute ./config/scripts/setUserInput.txt
+# visSet volume 34 high 6000
+# pStart v
+# midiPlay
+# toggle
 
