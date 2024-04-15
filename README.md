@@ -5,7 +5,7 @@ To run it you need to have PulseAudio server running on your linux device.
 To compile it you need:
 1. libpulse - pulse audio client library
 2. fftw3 - discrete Fourier transform library
-3. intell-oneapi (optional) - AVX2 instructions library (to disable you to uncomment "-DNO_AVX2" at the end of compilation line in compile.sh)
+3. intell-oneapi (optional) - AVX2 instructions library (to disable you to uncomment "-DNO_AVX2" and remove "-mavx2" flag at the end of compilation line in compile.sh)
 
 To compile run: compile.sh
 
