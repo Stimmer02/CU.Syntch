@@ -88,7 +88,7 @@ char Input::init(audioFormatInfo audioInfo, ushort keyCount){
     this->audioInfo = audioInfo;
     this->keyCount = keyCount;
     if (midiInput.getElementCount() > 0 || synths.getElementCount() > 0){
-        std::fprintf(stderr, "WARNING pipeline::Input::init: OBJECT CONTAINED COMPONENTS (Synthesizer/AKeyborRecorder) BEFORE INITIALIZATION (ALL DELETED)");
+        std::fprintf(stderr, "WARNING pipeline::Input::init: OBJECT CONTAINED COMPONENTS (Synthesizer_CUDA/AKeyborRecorder) BEFORE INITIALIZATION (ALL DELETED)");
         cleanup();
     }
 
@@ -123,7 +123,7 @@ short Input::getInputCount(){
     return midiInput.getElementCount();
 }
 
-short Input::addSynthesizer(pipelineAudioBuffer* buffer){
+short Input::addSynthesizer(pipelineAudioBuffer_CUDA* buffer){
     synthWithConnection* newSynth = new synthWithConnection(buffer, audioInfo, keyCount);
     return synths.add(newSynth);
 }
@@ -206,7 +206,7 @@ void Input::swapActiveBuffers(){
 
 void Input::cycleBuffers(){
     AKeyboardRecorder** allInputs = midiInput.getAll();
-    keyboardTransferBuffer** allBuffers = midiInput.getAllBuffers();
+    keyboardTransferBuffer_CUDA** allBuffers = midiInput.getAllBuffers();
 
     for (int i = 0; i < midiInput.getElementCount(); i++){
         allInputs[i]->buffer->swapActiveBuffer();
@@ -215,7 +215,7 @@ void Input::cycleBuffers(){
     }
 }
 
-void Input::generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keyboardTransferBuffer* keyboardState){
+void Input::generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keyboardTransferBuffer_CUDA* keyboardState){
     synths.getElement(synthID)->synth.generateSample(buffer, keyboardState);
 }
 

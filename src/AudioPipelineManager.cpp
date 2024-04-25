@@ -182,8 +182,8 @@ char AudioPipelineManager::recordUntilStreamEmpty(MIDI::MidiFileReader& midi, sh
         return 3;
     }
 
-    keyboardTransferBuffer* keyboardState = new keyboardTransferBuffer(audioInfo.sampleSize, keyCount);
-    pipelineAudioBuffer* pipelineBuffer = new pipelineAudioBuffer(audioInfo.sampleSize);
+    keyboardTransferBuffer_CUDA* keyboardState = new keyboardTransferBuffer_CUDA(audioInfo.sampleSize, keyCount);
+    pipelineAudioBuffer_CUDA* pipelineBuffer = new pipelineAudioBuffer_CUDA(audioInfo.sampleSize);
 
     midi.rewindFile();
     if (filename.empty()){

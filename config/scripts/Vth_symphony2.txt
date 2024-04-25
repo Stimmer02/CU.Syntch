@@ -101,10 +101,10 @@ compConnect 13 COMP 11
 compSet 13 ratio 10
 #
 midiList
-midiRecord test.wav offline
-# execute ./config/scripts/setUserInput.txt
-# visSet volume 34 high 6000
-# pStart v
-# midiPlay
-# toggle
+# midiRecord test.wav offline
+execute ./config/scripts/setUserInput.txt
+visSet volume 34 high 6000
+pStart v
+midiPlay
+toggle
 

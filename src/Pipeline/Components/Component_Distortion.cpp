@@ -11,32 +11,32 @@ Component_Distortion::~Component_Distortion(){
 
 }
 
-void Component_Distortion::apply(pipelineAudioBuffer* buffer){
+void Component_Distortion::apply(pipelineAudioBuffer_CUDA* buffer){
     float positiveGain = gain * (1 + symmetry);
     float negativeGain = gain * (1 - symmetry);
     for (uint i = 0; i < audioInfo->sampleSize; i++){
-        if (buffer->bufferR[i] > 0){
-            buffer->bufferR[i] *= positiveGain;
-            if (buffer->bufferR[i] > compress){
-                buffer->bufferR[i] = compress;
+        if (buffer->d_bufferR[i] > 0){
+            buffer->d_bufferR[i] *= positiveGain;
+            if (buffer->d_bufferR[i] > compress){
+                buffer->d_bufferR[i] = compress;
             }
         } else {
-            buffer->bufferR[i] *= negativeGain;
-            if (buffer->bufferR[i] < -compress){
-                buffer->bufferR[i] = -compress;
+            buffer->d_bufferR[i] *= negativeGain;
+            if (buffer->d_bufferR[i] < -compress){
+                buffer->d_bufferR[i] = -compress;
             }
         }
 
 
-        if (buffer->bufferL[i] > 0){
-            buffer->bufferL[i] *= positiveGain;
-            if (buffer->bufferL[i] > compress){
-                buffer->bufferL[i] = compress;
+        if (buffer->d_bufferL[i] > 0){
+            buffer->d_bufferL[i] *= positiveGain;
+            if (buffer->d_bufferL[i] > compress){
+                buffer->d_bufferL[i] = compress;
             }
         } else {
-            buffer->bufferL[i] *= negativeGain;
-            if (buffer->bufferL[i] < -compress){
-                buffer->bufferL[i] = -compress;
+            buffer->d_bufferL[i] *= negativeGain;
+            if (buffer->d_bufferL[i] < -compress){
+                buffer->d_bufferL[i] = -compress;
             }
         }
     }

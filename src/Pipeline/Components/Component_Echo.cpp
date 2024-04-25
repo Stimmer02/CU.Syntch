@@ -29,10 +29,10 @@ Component_Echo::~Component_Echo(){
     delete[] rMemory;
 }
 
-void Component_Echo::apply(pipelineAudioBuffer* buffer){
+void Component_Echo::apply(pipelineAudioBuffer_CUDA* buffer){
     for (uint i = 0; i < audioInfo->sampleSize; i++){
-        rMemory[currentSample][i] = buffer->bufferR[i];
-        lMemory[currentSample][i] = buffer->bufferL[i];
+        rMemory[currentSample][i] = buffer->d_bufferR[i];
+        lMemory[currentSample][i] = buffer->d_bufferL[i];
     }
 
     uint allSamplesShift = audioInfo->sampleRate * delay;
@@ -48,8 +48,8 @@ void Component_Echo::apply(pipelineAudioBuffer* buffer){
 
     uint i = 0;
     for (; i < singleSampleShift; i++){
-        buffer->bufferR[i] = buffer->bufferR[i] + rMemory[sampleIndex][i+indexShift] * rVolume;
-        buffer->bufferL[i] = buffer->bufferL[i] + lMemory[sampleIndex][i+indexShift] * lVolume;
+        buffer->d_bufferR[i] = buffer->d_bufferR[i] + rMemory[sampleIndex][i+indexShift] * rVolume;
+        buffer->d_bufferL[i] = buffer->d_bufferL[i] + lMemory[sampleIndex][i+indexShift] * lVolume;
     }
 
     sampleIndex++;
@@ -58,8 +58,8 @@ void Component_Echo::apply(pipelineAudioBuffer* buffer){
     }
 
     for (; i < audioInfo->sampleSize; i++){
-        buffer->bufferR[i] = buffer->bufferR[i] + rMemory[sampleIndex][i-singleSampleShift] * rVolume;
-        buffer->bufferL[i] = buffer->bufferL[i] + lMemory[sampleIndex][i-singleSampleShift] * lVolume;
+        buffer->d_bufferR[i] = buffer->d_bufferR[i] + rMemory[sampleIndex][i-singleSampleShift] * rVolume;
+        buffer->d_bufferL[i] = buffer->d_bufferL[i] + lMemory[sampleIndex][i-singleSampleShift] * lVolume;
     }
 
     for (uint repeat = 1; repeat < repeats; repeat++){
@@ -76,8 +76,8 @@ void Component_Echo::apply(pipelineAudioBuffer* buffer){
 
         i = 0;
         for (; i < singleSampleShift; i++){
-            buffer->bufferR[i] += rMemory[sampleIndex][i+indexShift] * rVolume;
-            buffer->bufferL[i] += lMemory[sampleIndex][i+indexShift] * lVolume;
+            buffer->d_bufferR[i] += rMemory[sampleIndex][i+indexShift] * rVolume;
+            buffer->d_bufferL[i] += lMemory[sampleIndex][i+indexShift] * lVolume;
         }
 
         sampleIndex++;
@@ -86,8 +86,8 @@ void Component_Echo::apply(pipelineAudioBuffer* buffer){
         }
 
         for (; i < audioInfo->sampleSize; i++){
-            buffer->bufferR[i] += rMemory[sampleIndex][i-singleSampleShift] * rVolume;
-            buffer->bufferL[i] += lMemory[sampleIndex][i-singleSampleShift] * lVolume;
+            buffer->d_bufferR[i] += rMemory[sampleIndex][i-singleSampleShift] * rVolume;
+            buffer->d_bufferL[i] += lMemory[sampleIndex][i-singleSampleShift] * lVolume;
         }
     }
 

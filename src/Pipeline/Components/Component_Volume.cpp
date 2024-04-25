@@ -11,10 +11,10 @@ Component_Volume::~Component_Volume(){
 
 }
 
-void Component_Volume::apply(pipelineAudioBuffer* buffer){
+void Component_Volume::apply(pipelineAudioBuffer_CUDA* buffer){
     for (uint i = 0; i < audioInfo->sampleSize; i++){
-        buffer->bufferR[i] *= vol;
-        buffer->bufferL[i] *= vol;
+        buffer->d_bufferR[i] *= vol;
+        buffer->d_bufferL[i] *= vol;
     }
 }
 

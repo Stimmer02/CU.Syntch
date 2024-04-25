@@ -18,7 +18,7 @@ public:
     void start();
     void stop();
     void readTerminalDimensions();
-    void displayBuffer(pipelineAudioBuffer* buffer);
+    void displayBuffer(pipelineAudioBuffer_CUDA* buffer);
     float setFps(float fps);
     float getFps();
     void setAudioWindowSize(uint size);

@@ -9,7 +9,7 @@ namespace pipeline{
         AdvancedComponent_Sum2(const audioFormatInfo* audioInfo, audioBufferQueue* boundBuffer);
         ~AdvancedComponent_Sum2();
 
-        void apply(pipelineAudioBuffer* buffer) override;
+        void apply(pipelineAudioBuffer_CUDA* buffer) override;
         void clear() override;
         void defaultSettings() override;
 

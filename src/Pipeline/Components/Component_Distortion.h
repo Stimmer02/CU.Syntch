@@ -9,7 +9,7 @@ namespace pipeline{
         Component_Distortion(const audioFormatInfo* audioInfo);
         ~Component_Distortion();
 
-        void apply(pipelineAudioBuffer* buffer) override;
+        void apply(pipelineAudioBuffer_CUDA* buffer) override;
         void clear() override;
         void defaultSettings() override;
 

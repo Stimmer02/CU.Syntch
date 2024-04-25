@@ -31,7 +31,7 @@ char Output::init(audioFormatInfo audioInfo){
     this->audioInfo = audioInfo;
     celanup();
 
-    if (audioOutput->init(audioInfo, "Synth", "Synthesizer")){
+    if (audioOutput->init(audioInfo, "Synth", "Synthesizer_CUDA")){
         return 1;
     }
 
@@ -40,13 +40,13 @@ char Output::init(audioFormatInfo audioInfo){
 
     if (audioInfo.channels == 1){
         if (audioInfo.bitDepth <= 8){
-            bufferConverter = new BufferConverter_Mono8();
+            bufferConverter = new BufferConverter_Mono8_CUDA();
         } else if (audioInfo.bitDepth <= 16){
-            bufferConverter = new BufferConverter_Mono16();
+            bufferConverter = new BufferConverter_Mono16_CUDA();
         } else if (audioInfo.bitDepth <= 24){
-            bufferConverter = new BufferConverter_Mono24();
+            bufferConverter = new BufferConverter_Mono24_CUDA();
         } else if (audioInfo.bitDepth <= 32){
-            bufferConverter = new BufferConverter_Mono32();
+            bufferConverter = new BufferConverter_Mono32_CUDA();
         } else {
             bufferConverter = nullptr;
             std::fprintf(stderr, "ERR pipeline::Output::init: UNSUPPORTED BIT DEPTH\n");
@@ -54,13 +54,13 @@ char Output::init(audioFormatInfo audioInfo){
         }
     } else if (audioInfo.channels == 2){
         if (audioInfo.bitDepth <= 8){
-            bufferConverter = new BufferConverter_Stereo8();
+            bufferConverter = new BufferConverter_Stereo8_CUDA();
         } else if (audioInfo.bitDepth <= 16){
-            bufferConverter = new BufferConverter_Stereo16();
+            bufferConverter = new BufferConverter_Stereo16_CUDA();
         } else if (audioInfo.bitDepth <= 24){
-            bufferConverter = new BufferConverter_Stereo24();
+            bufferConverter = new BufferConverter_Stereo24_CUDA();
         } else if (audioInfo.bitDepth <= 32){
-            bufferConverter = new BufferConverter_Stereo32();
+            bufferConverter = new BufferConverter_Stereo32_CUDA();
         } else {
             bufferConverter = nullptr;
             std::fprintf(stderr, "ERR pipeline::Output::init: UNSUPPORTED BIT DEPTH\n");
@@ -76,7 +76,7 @@ char Output::init(audioFormatInfo audioInfo){
 }
 
 //INITIALIZE BEFORE USING THIS!
-void Output::play(pipelineAudioBuffer* pipelineBuffer){
+void Output::play(pipelineAudioBuffer_CUDA* pipelineBuffer){
     try {
         bufferConverter->toPCM(pipelineBuffer, buffer);
         audioOutput->playBuffer(buffer);
@@ -88,7 +88,7 @@ void Output::play(pipelineAudioBuffer* pipelineBuffer){
     }
 }
 
-void Output::onlyRecord(pipelineAudioBuffer* pipelineBuffer){
+void Output::onlyRecord(pipelineAudioBuffer_CUDA* pipelineBuffer){
     try {
         bufferConverter->toPCM(pipelineBuffer, buffer);
         audioRecorder.saveBuffer(buffer);
@@ -97,7 +97,7 @@ void Output::onlyRecord(pipelineAudioBuffer* pipelineBuffer){
     }
 }
 
-void Output::onlyRecord(pipelineAudioBuffer* pipelineBuffer, std::chrono::_V2::system_clock::time_point& timeEnd){
+void Output::onlyRecord(pipelineAudioBuffer_CUDA* pipelineBuffer, std::chrono::_V2::system_clock::time_point& timeEnd){
     try {
         bufferConverter->toPCM(pipelineBuffer, buffer);
         timeEnd = std::chrono::system_clock::now();

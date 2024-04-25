@@ -9,10 +9,10 @@ AdvancedComponent_Sum2::AdvancedComponent_Sum2(const audioFormatInfo* audioInfo,
 
 AdvancedComponent_Sum2::~AdvancedComponent_Sum2(){}
 
-void AdvancedComponent_Sum2::apply(pipelineAudioBuffer* buffer){
+void AdvancedComponent_Sum2::apply(pipelineAudioBuffer_CUDA* buffer){
     for (uint i = 0; i < audioInfo->sampleSize; i++){
-        buffer->bufferL[i] = connections[0]->buffer.bufferL[i] * vol0 + connections[1]->buffer.bufferL[i] * vol1;
-        buffer->bufferR[i] = connections[0]->buffer.bufferR[i] * vol0 + connections[1]->buffer.bufferR[i] * vol1;
+        buffer->d_bufferL[i] = connections[0]->buffer.d_bufferL[i] * vol0 + connections[1]->buffer.d_bufferL[i] * vol1;
+        buffer->d_bufferR[i] = connections[0]->buffer.d_bufferR[i] * vol0 + connections[1]->buffer.d_bufferR[i] * vol1;
     }
 }
 

@@ -12,10 +12,10 @@ Component_Compressor::~Component_Compressor(){
 
 }
 
-void Component_Compressor::apply(pipelineAudioBuffer* buffer){
+void Component_Compressor::apply(pipelineAudioBuffer_CUDA* buffer){
     for (uint i = 0; i < audioInfo->sampleSize; i++){
-        float rAbs = std::abs(buffer->bufferR[i]);
-        float lAbs = std::abs(buffer->bufferL[i]);
+        float rAbs = std::abs(buffer->d_bufferR[i]);
+        float lAbs = std::abs(buffer->d_bufferL[i]);
 
         if (rAbs >= rLevel){
             rLevel += rAbs / levelRiseTime;
@@ -33,14 +33,14 @@ void Component_Compressor::apply(pipelineAudioBuffer* buffer){
         float lDiff = lLevel - threshold;
 
         if (rDiff > 0){
-            buffer->bufferR[i] *= (threshold + (rDiff / (step*ratio))) / rLevel;
+            buffer->d_bufferR[i] *= (threshold + (rDiff / (step*ratio))) / rLevel;
         }
 
         if (lDiff > 0){
-            buffer->bufferL[i] *= (threshold + (lDiff / (step*ratio))) / lLevel;
+            buffer->d_bufferL[i] *= (threshold + (lDiff / (step*ratio))) / lLevel;
         }
-        buffer->bufferR[i] *= vol;
-        buffer->bufferL[i] *= vol;
+        buffer->d_bufferR[i] *= vol;
+        buffer->d_bufferL[i] *= vol;
     }
 }
 

@@ -3,7 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/opt/cuda/include/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

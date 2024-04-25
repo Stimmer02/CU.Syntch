@@ -11,10 +11,10 @@ Component_Pan::~Component_Pan(){
 
 }
 
-void Component_Pan::apply(pipelineAudioBuffer* buffer){
+void Component_Pan::apply(pipelineAudioBuffer_CUDA* buffer){
     for (uint i = 0; i < audioInfo->sampleSize; i++){
-        buffer->bufferR[i] = pan >= 0.5 ? buffer->bufferR[i] : buffer->bufferR[i]*pan*2;
-        buffer->bufferL[i] = pan <= 0.5 ? buffer->bufferL[i] : buffer->bufferL[i]*(2-pan*2);
+        buffer->d_bufferR[i] = pan >= 0.5 ? buffer->d_bufferR[i] : buffer->d_bufferR[i]*pan*2;
+        buffer->d_bufferL[i] = pan <= 0.5 ? buffer->d_bufferL[i] : buffer->d_bufferL[i]*(2-pan*2);
     }
 }
 

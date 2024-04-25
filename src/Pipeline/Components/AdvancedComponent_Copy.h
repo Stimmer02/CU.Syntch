@@ -9,7 +9,7 @@ namespace pipeline{
         AdvancedComponent_Copy(const audioFormatInfo* audioInfo, audioBufferQueue* boundBuffer);
         ~AdvancedComponent_Copy();
 
-        void apply(pipelineAudioBuffer* buffer) override;
+        void apply(pipelineAudioBuffer_CUDA* buffer) override;
         void clear() override;
         void defaultSettings() override;
 

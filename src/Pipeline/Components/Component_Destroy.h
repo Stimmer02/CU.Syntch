@@ -9,7 +9,7 @@ namespace pipeline{
         Component_Destroy(const audioFormatInfo* audioInfo);
         ~Component_Destroy();
 
-        void apply(pipelineAudioBuffer* buffer) override;
+        void apply(pipelineAudioBuffer_CUDA* buffer) override;
         void clear() override;
         void defaultSettings() override;
 

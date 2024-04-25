@@ -10,7 +10,7 @@ namespace pipeline{
         Component_Compressor(const audioFormatInfo* audioInfo);
         ~Component_Compressor();
 
-        void apply(pipelineAudioBuffer* buffer) override;
+        void apply(pipelineAudioBuffer_CUDA* buffer) override;
         void clear() override;
         void defaultSettings() override;
         void set(uint index, float value) override;

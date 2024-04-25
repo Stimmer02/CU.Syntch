@@ -17,7 +17,7 @@ namespace pipeline{
 
         short getParentID();
 
-        pipelineAudioBuffer buffer;
+        pipelineAudioBuffer_CUDA buffer;
         const ID_type parentType;
         std::vector<short> componentIDQueue;
 

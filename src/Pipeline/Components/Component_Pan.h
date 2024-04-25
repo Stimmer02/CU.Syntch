@@ -9,7 +9,7 @@ namespace pipeline{
         Component_Pan(const audioFormatInfo* audioInfo);
         ~Component_Pan();
 
-        void apply(pipelineAudioBuffer* buffer) override;
+        void apply(pipelineAudioBuffer_CUDA* buffer) override;
         void clear() override;
         void defaultSettings() override;
 

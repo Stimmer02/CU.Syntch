@@ -27,9 +27,9 @@ namespace pipeline{
         char init(audioFormatInfo audioInfo);
         bool isReady();
 
-        void play(pipelineAudioBuffer* pipelineBuffer);
-        void onlyRecord(pipelineAudioBuffer* pipelineBuffer);
-        void onlyRecord(pipelineAudioBuffer* pipelineBuffer, std::chrono::_V2::system_clock::time_point& timeEnd);
+        void play(pipelineAudioBuffer_CUDA* pipelineBuffer);
+        void onlyRecord(pipelineAudioBuffer_CUDA* pipelineBuffer);
+        void onlyRecord(pipelineAudioBuffer_CUDA* pipelineBuffer, std::chrono::_V2::system_clock::time_point& timeEnd);
 
         char startRecording();
         char startRecording(std::string outPath);
@@ -42,7 +42,7 @@ namespace pipeline{
         audioFormatInfo audioInfo;
 
         audioBuffer* buffer;
-        IBufferConverter* bufferConverter;
+        IBufferConverter_CUDA* bufferConverter;
         AudioRecorder audioRecorder;
         IOutStream* audioOutput;
 

@@ -69,18 +69,18 @@ void AudioSpectrumVisualizer::readTerminalDimensions(){
     delete[] oldBandsState;
 }
 
-void AudioSpectrumVisualizer::displayBuffer(pipelineAudioBuffer* buffer){
+void AudioSpectrumVisualizer::displayBuffer(pipelineAudioBuffer_CUDA* buffer){
     if (running == false){
         return;
     }
     if (sampleCounter < samplesPerFrame - 1){
         for (uint i = 0; i < audioInfo->sampleSize; i++){
-            workBuffer[sampleCounter * audioInfo->sampleSize + i] = buffer->bufferL[i] + buffer->bufferR[i];
+            workBuffer[sampleCounter * audioInfo->sampleSize + i] = buffer->d_bufferL[i] + buffer->d_bufferR[i];
         }
     } else if (sampleCounter == samplesPerFrame - 1){
         uint rest = audioWindowSize - (samplesPerFrame - 1) * audioInfo->sampleSize;
         for (uint i = 0; i < rest; i++){
-            workBuffer[sampleCounter * audioInfo->sampleSize + i] = buffer->bufferL[i] + buffer->bufferR[i];
+            workBuffer[sampleCounter * audioInfo->sampleSize + i] = buffer->d_bufferL[i] + buffer->d_bufferR[i];
         }
         computeFFT();
         draw("█");

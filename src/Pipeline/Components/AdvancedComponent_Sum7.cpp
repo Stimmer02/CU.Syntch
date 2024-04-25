@@ -9,25 +9,25 @@ AdvancedComponent_Sum7::AdvancedComponent_Sum7(const audioFormatInfo* audioInfo,
 
 AdvancedComponent_Sum7::~AdvancedComponent_Sum7(){}
 
-void AdvancedComponent_Sum7::apply(pipelineAudioBuffer* buffer){
+void AdvancedComponent_Sum7::apply(pipelineAudioBuffer_CUDA* buffer){
     for (uint i = 0; i < audioInfo->sampleSize; i++){
-        buffer->bufferL[i] = 
-        connections[0]->buffer.bufferL[i] * vol0 + 
-        connections[1]->buffer.bufferL[i] * vol1 + 
-        connections[2]->buffer.bufferL[i] * vol2 + 
-        connections[3]->buffer.bufferL[i] * vol3 + 
-        connections[4]->buffer.bufferL[i] * vol4 + 
-        connections[5]->buffer.bufferL[i] * vol5 + 
-        connections[6]->buffer.bufferL[i] * vol6;
+        buffer->d_bufferL[i] = 
+        connections[0]->buffer.d_bufferL[i] * vol0 + 
+        connections[1]->buffer.d_bufferL[i] * vol1 + 
+        connections[2]->buffer.d_bufferL[i] * vol2 + 
+        connections[3]->buffer.d_bufferL[i] * vol3 + 
+        connections[4]->buffer.d_bufferL[i] * vol4 + 
+        connections[5]->buffer.d_bufferL[i] * vol5 + 
+        connections[6]->buffer.d_bufferL[i] * vol6;
 
-        buffer->bufferR[i] = 
-        connections[0]->buffer.bufferR[i] * vol0 + 
-        connections[1]->buffer.bufferR[i] * vol1 + 
-        connections[2]->buffer.bufferR[i] * vol2 + 
-        connections[3]->buffer.bufferR[i] * vol3 + 
-        connections[4]->buffer.bufferR[i] * vol4 + 
-        connections[5]->buffer.bufferR[i] * vol5 + 
-        connections[6]->buffer.bufferR[i] * vol6;
+        buffer->d_bufferR[i] = 
+        connections[0]->buffer.d_bufferR[i] * vol0 + 
+        connections[1]->buffer.d_bufferR[i] * vol1 + 
+        connections[2]->buffer.d_bufferR[i] * vol2 + 
+        connections[3]->buffer.d_bufferR[i] * vol3 + 
+        connections[4]->buffer.d_bufferR[i] * vol4 + 
+        connections[5]->buffer.d_bufferR[i] * vol5 + 
+        connections[6]->buffer.d_bufferR[i] * vol6;
     }
 }
 

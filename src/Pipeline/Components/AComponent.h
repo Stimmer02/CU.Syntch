@@ -25,7 +25,7 @@ namespace pipeline{
         AComponent(const audioFormatInfo* audioInfo, uint settingCount, const std::string* settingNames, component_type type);
         virtual ~AComponent() = default;
 
-        virtual void apply(pipelineAudioBuffer* buffer) = 0;
+        virtual void apply(pipelineAudioBuffer_CUDA* buffer) = 0;
         virtual void clear() = 0;
         virtual void defaultSettings() = 0;
 

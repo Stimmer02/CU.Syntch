@@ -9,10 +9,10 @@ AdvancedComponent_Copy::AdvancedComponent_Copy(const audioFormatInfo* audioInfo,
 
 AdvancedComponent_Copy::~AdvancedComponent_Copy(){}
 
-void AdvancedComponent_Copy::apply(pipelineAudioBuffer* buffer){
+void AdvancedComponent_Copy::apply(pipelineAudioBuffer_CUDA* buffer){
     for (uint i = 0; i < audioInfo->sampleSize; i++){
-        buffer->bufferL[i] = connections[0]->buffer.bufferL[i] * vol;
-        buffer->bufferR[i] = connections[0]->buffer.bufferR[i] * vol;
+        buffer->d_bufferL[i] = connections[0]->buffer.d_bufferL[i] * vol;
+        buffer->d_bufferR[i] = connections[0]->buffer.d_bufferR[i] * vol;
     }
 }
 
