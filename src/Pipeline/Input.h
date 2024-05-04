@@ -1,9 +1,9 @@
 #ifndef PIPELINEINPUT_H
 #define PIPELINEINPUT_H
 
-#include "../Synthesizer.h"
+#include "../Synthesizer_CUDA.h"
 #include "KeyboardManager.h"
-#include "pipelineAudioBuffer.h"
+#include "pipelineAudioBuffer_CUDA.h"
 #include <vector>
 
 namespace pipeline{
@@ -49,7 +49,7 @@ namespace pipeline{
         short getSynthesizerCount();
         void setSynthetiserSetting(short ID, synthesizer::settings_name settingsName, float value);
         void setSynthetiserSetting(short ID, synthesizer::generator_type type);
-        const synthesizer::settings* getSynthetiserSettings(short ID);
+        const synthesizer::settings_CUDA* getSynthetiserSettings(short ID);
         synthesizer::generator_type getSynthetiserType(const ushort& ID);
         float getSynthetiserSetting(short ID, synthesizer::settings_name settingName);
 

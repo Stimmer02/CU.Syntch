@@ -1,7 +1,7 @@
 #ifndef AUDIOSPECTRUMVISUALIZER_H
 #define AUDIOSPECTRUMVISUALIZER_H
 
-#include "./pipelineAudioBuffer.h"
+#include "./pipelineAudioBuffer_CUDA.h"
 #include "../AudioOutput/audioFormatInfo.h"
 
 #include <fftw3.h>
@@ -36,7 +36,7 @@ public:
 
 private:
     void draw(const char* c = "#");
-    void computeFFT();
+    void computeFFT(); //TODO: use CUDA to compute FFT
     
     bool running;
     uint width;

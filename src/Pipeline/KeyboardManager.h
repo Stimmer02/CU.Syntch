@@ -2,7 +2,7 @@
 #define KEYBOARDMANAGER_H
 
 #include "../UserInput/AKeyboardRecorder.h"
-#include "../UserInput/keyboardTransferBuffer.h"
+#include "../UserInput/keyboardTransferBuffer_CUDA.h"
 #include "IDManager.h"
 
 #include <cstring>

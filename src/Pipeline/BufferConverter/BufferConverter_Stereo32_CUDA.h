@@ -10,7 +10,6 @@ public:
     void toPCM(pipelineAudioBuffer_CUDA* pipelineBuffer, audioBuffer* pcmBuffer) override;
 
 private:
-    __global__ void toPCM_kernel(const float* bufferL, const float* bufferR);
     uint8_t* d_buffer;
     const uint sampleSize;
 };

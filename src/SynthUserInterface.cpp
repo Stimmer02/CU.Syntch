@@ -976,7 +976,7 @@ void SynthUserInterface::commandSynthSettings(){
         }
 
     } else {
-        const synthesizer::settings& settings = *audioPipeline->getSynthSettings(synthID);
+        const synthesizer::settings_CUDA& settings = *audioPipeline->getSynthSettings(synthID);
         synthesizer::generator_type generatorType = audioPipeline->getSynthType(synthID);
         switch (generatorType) {
             case synthesizer::SINE:

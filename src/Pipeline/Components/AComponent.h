@@ -1,7 +1,7 @@
 #ifndef ACOMPONENT_H
 #define ACOMPONENT_H
 
-#include "../pipelineAudioBuffer.h"
+#include "../pipelineAudioBuffer_CUDA.h"
 #include "../../AudioOutput/audioFormatInfo.h"
 #include "../audioBufferQueue.h"
 #include "componentSettings.h"

@@ -8,13 +8,14 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/CPU-synth.out",
-            "args": ["user","/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/config/scripts/multipleDeviceTest.txt"],
+            "program": "/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/GPU-synth.out", //src/test.out",
+            // "args": ["user","/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/config/scripts/multipleDeviceTest.txt"],
             "stopAtEntry": false,
             "cwd": "/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
+            "miDebuggerPath": "/opt/cuda/bin/cuda-gdb",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",

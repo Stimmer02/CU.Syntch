@@ -3,11 +3,11 @@ synthAdd
 synthSave 0 load ./config/synthSave/default.bin
 synthConnect 0 0
 setOut SYNTH 0
-compAdd VOLUME
-compConnect 0 SYNTH 0
-compAdd ECHO
-compConnect 1 SYNTH 0
-compAdd COMP
-compConnect 2 SYNTH 0
-compSet 2 ratio 10
-pStart v
+#compAdd VOLUME
+#compConnect 0 SYNTH 0
+#compAdd ECHO
+#compConnect 1 SYNTH 0
+#compAdd COMP
+#compConnect 2 SYNTH 0
+#compSet 2 ratio 10
+pStart

@@ -1,7 +1,7 @@
 #ifndef MIDIFILEREADR_H
 #define MIDIFILEREADR_H
 
-#include "../keyboardTransferBuffer.h"
+#include "../keyboardTransferBuffer_CUDA.h"
 #include "MidiMessageInterpreter.h"
 #include "midiEvent.h"
 #include "midiHeaderChunk.h"

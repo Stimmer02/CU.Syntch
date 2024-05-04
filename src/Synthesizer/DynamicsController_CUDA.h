@@ -36,7 +36,7 @@ namespace synthesizer{
         uint dynamicsAllocated;
 
         float* d_noteReleaseProfile;
-        uint* d_releaseToAttackIndexMap;//TODO
+        uint* d_releaseToAttackIndexMap;
         uint releaseDuration;
         uint releaseAllocated;
     };

@@ -1,7 +1,7 @@
 #ifndef AUDIOBUFFERQUEUE_H
 #define AUDIOBUFFERQUEUE_H
 
-#include "pipelineAudioBuffer.h"
+#include "pipelineAudioBuffer_CUDA.h"
 #include "IDManager.h"
 #include <string>
 #include <vector>

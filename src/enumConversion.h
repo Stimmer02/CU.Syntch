@@ -4,7 +4,7 @@
 #include "Pipeline/ComponentManager.h"
 #include "Pipeline/Components/AAdvancedComponent.h"
 #include "Pipeline/IDManager.h"
-#include "Synthesizer.h"
+#include "Synthesizer_CUDA.h"
 
 #include <stdexcept>
 #include <cstring>

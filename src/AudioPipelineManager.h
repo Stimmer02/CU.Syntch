@@ -10,8 +10,8 @@
 #include "Pipeline/Statistics/pipelineStatistics.h"
 #include "Pipeline/ExecutionQueue.h"
 #include "Pipeline/audioBufferQueue.h"
-#include "Pipeline/pipelineAudioBuffer.h"
-#include "Synthesizer.h"
+#include "Pipeline/pipelineAudioBuffer_CUDA.h"
+#include "Synthesizer_CUDA.h"
 #include "UserInput/MIDI/MidiFileReader.h"
 #include "enumConversion.h"
 #include "UserInput/MIDI/MidiReaderManager.h"
@@ -62,7 +62,7 @@ namespace pipeline{
         char connectInputToSynth(short inputID, short synthID);
         char disconnectSynth(short synthID);
 
-        const synthesizer::settings* getSynthSettings(const ushort& synthID);
+        const synthesizer::settings_CUDA* getSynthSettings(const ushort& synthID);
         synthesizer::generator_type getSynthType(const ushort& synthID);
         float getSynthSetting(const ushort& synthID, synthesizer::settings_name settingName);
         void setSynthSetting(const ushort& synthID, const synthesizer::settings_name& settingsName, const float& value);

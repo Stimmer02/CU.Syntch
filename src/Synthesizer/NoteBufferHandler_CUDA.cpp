@@ -14,6 +14,7 @@ NoteBufferHandler_CUDA::NoteBufferHandler_CUDA(const uint& sampleSize, const uin
 
 NoteBufferHandler_CUDA::~NoteBufferHandler_CUDA(){
    deallocate();
+   cudaFree(d_noteBuffer);
 }
 
 void NoteBufferHandler_CUDA::init(const uint& sampleSize, const uint& keyCount){
@@ -28,34 +29,40 @@ noteBuffer_CUDA* NoteBufferHandler_CUDA::getDeviceNoteBuffer(){
 void NoteBufferHandler_CUDA::allocate(const uint& sampleSize, const uint& keyCount){
     this->keyCount = keyCount;
 
-    cudaMalloc((void**)&(d_noteBuffer->buffer), keyCount * sampleSize * sizeof(float));
+    noteBuffer_CUDA* h_noteBuffer = (noteBuffer_CUDA*)malloc(sizeof(noteBuffer_CUDA));
 
-    cudaMalloc((void**)&(d_noteBuffer->phaze), keyCount * sizeof(uint));
-    cudaMemset(&(d_noteBuffer->phaze), 0, keyCount * sizeof(uint));
+    cudaMalloc((void**)&(h_noteBuffer->buffer), keyCount * sampleSize * sizeof(float));
 
-    cudaMalloc((void**)&(d_noteBuffer->pressSamplessPassed), keyCount * sizeof(uint));
-    cudaMemset(&(d_noteBuffer->pressSamplessPassed), 0, keyCount * sizeof(uint));
+    cudaMalloc((void**)&(h_noteBuffer->phaze), keyCount * sizeof(uint));
+    cudaMemset(&(h_noteBuffer->phaze), 0, keyCount * sizeof(uint));
 
-    cudaMalloc((void**)&(d_noteBuffer->lastKeyState), keyCount * sizeof(char));
-    cudaMemset(&(d_noteBuffer->lastKeyState), 0, keyCount * sizeof(char));
+    cudaMalloc((void**)&(h_noteBuffer->pressSamplessPassed), keyCount * sizeof(uint));
+    cudaMemset(&(h_noteBuffer->pressSamplessPassed), 0, keyCount * sizeof(uint));
 
-    cudaMalloc((void**)&(d_noteBuffer->releaseSamplesPassed), keyCount * sizeof(uint));
-    cudaMemset(&(d_noteBuffer->releaseSamplesPassed), 0, keyCount * sizeof(uint));
+    cudaMalloc((void**)&(h_noteBuffer->lastKeyState), keyCount * sizeof(char));
+    cudaMemset(&(h_noteBuffer->lastKeyState), 0, keyCount * sizeof(char));
 
-    cudaMalloc((void**)&(d_noteBuffer->stereoFactorL), keyCount * sizeof(float));
-    cudaMemset(&(d_noteBuffer->stereoFactorL), 0, keyCount * sizeof(float));
+    cudaMalloc((void**)&(h_noteBuffer->releaseSamplesPassed), keyCount * sizeof(uint));
+    cudaMemset(&(h_noteBuffer->releaseSamplesPassed), 0, keyCount * sizeof(uint));
 
-    cudaMalloc((void**)&(d_noteBuffer->stereoFactorR), keyCount * sizeof(float));
-    cudaMemset(&(d_noteBuffer->stereoFactorR), 0, keyCount * sizeof(float));
+    cudaMalloc((void**)&(h_noteBuffer->stereoFactorL), keyCount * sizeof(float));
+    cudaMemset(&(h_noteBuffer->stereoFactorL), 0, keyCount * sizeof(float));
 
-    cudaMalloc((void**)&(d_noteBuffer->frequency), keyCount * sizeof(float));
-    cudaMemset(&(d_noteBuffer->frequency), 0, keyCount * sizeof(float));
+    cudaMalloc((void**)&(h_noteBuffer->stereoFactorR), keyCount * sizeof(float));
+    cudaMemset(&(h_noteBuffer->stereoFactorR), 0, keyCount * sizeof(float));
 
-    cudaMalloc((void**)&(d_noteBuffer->multiplier), keyCount * sizeof(float));
-    cudaMemset(&(d_noteBuffer->multiplier), 0, keyCount * sizeof(float));
+    cudaMalloc((void**)&(h_noteBuffer->frequency), keyCount * sizeof(float));
+    cudaMemset(&(h_noteBuffer->frequency), 0, keyCount * sizeof(float));
 
-    cudaMalloc((void**)&(d_noteBuffer->velocity), keyCount * sizeof(float));
-    cudaMemset(&(d_noteBuffer->velocity), 0, keyCount * sizeof(float));
+    cudaMalloc((void**)&(h_noteBuffer->multiplier), keyCount * sizeof(float));
+    cudaMemset(&(h_noteBuffer->multiplier), 0, keyCount * sizeof(float));
+
+    cudaMalloc((void**)&(h_noteBuffer->velocity), keyCount * sizeof(float));
+    cudaMemset(&(h_noteBuffer->velocity), 0, keyCount * sizeof(float));
+
+    cudaMemcpy(d_noteBuffer, h_noteBuffer, sizeof(noteBuffer_CUDA), cudaMemcpyHostToDevice);
+
+    free(h_noteBuffer);
 }
 
 void NoteBufferHandler_CUDA::deallocate(){

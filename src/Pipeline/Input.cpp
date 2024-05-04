@@ -145,12 +145,12 @@ void Input::setSynthetiserSetting(short ID, synthesizer::generator_type type){
 }
 
 
-const synthesizer::settings* Input::getSynthetiserSettings(short ID){
+const synthesizer::settings_CUDA* Input::getSynthetiserSettings(short ID){
     return synths.getElement(ID)->synth.getSettings();
 }
 
 float Input::getSynthetiserSetting(short ID, synthesizer::settings_name settingName){
-    const synthesizer::settings& settings = *synths.getElement(ID)->synth.getSettings();
+    const synthesizer::settings_CUDA& settings = *synths.getElement(ID)->synth.getSettings();
     switch (settingName) {
         case synthesizer::PITCH:
             return settings.pitch;
@@ -215,7 +215,7 @@ void Input::cycleBuffers(){
     }
 }
 
-void Input::generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keyboardTransferBuffer_CUDA* keyboardState){
+void Input::generateSampleWith(short synthID, pipelineAudioBuffer_CUDA* buffer, keyboardTransferBuffer_CUDA* keyboardState){
     synths.getElement(synthID)->synth.generateSample(buffer, keyboardState);
 }
 

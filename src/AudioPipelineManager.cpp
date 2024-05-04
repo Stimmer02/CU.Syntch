@@ -133,7 +133,7 @@ void AudioPipelineManager::pipelineThreadFunction(){
         for (int i = backwardsExecution.size() - 1; i >= 0; i--){
             component.applyEffects(backwardsExecution[i]);
         }
-
+        cudaDeviceSynchronize(); //TODO: remove statisticsService
         statisticsService->loopWorkEnd();
 
         output.play(&outputBuffer->buffer);
@@ -166,6 +166,7 @@ void AudioPipelineManager::pipelineThreadFunctionWithVisualizer(){
         
         visualizer.displayBuffer(&outputBuffer->buffer);
 
+        cudaDeviceSynchronize();
         statisticsService->loopWorkEnd();
 
         output.play(&outputBuffer->buffer);
@@ -325,7 +326,7 @@ char AudioPipelineManager::disconnectSynth(short synthID){
     return input.disconnectSynth(synthID);
 }
 
-const synthesizer::settings* AudioPipelineManager::getSynthSettings(const ushort& ID){
+const synthesizer::settings_CUDA* AudioPipelineManager::getSynthSettings(const ushort& ID){
     return input.getSynthetiserSettings(ID);
 }
 
@@ -781,6 +782,7 @@ char AudioPipelineManager::recordMidiFilesOffline(std::string fileName, double& 
         for (int i = backwardsExecution.size() - 1; i >= 0; i--){
             component.applyEffects(backwardsExecution[i]);
         }
+        cudaDeviceSynchronize();
         output.onlyRecord(&outputBuffer->buffer, timeEnd);
         time += std::chrono::duration<double>(timeEnd - timeStart).count();
     }
