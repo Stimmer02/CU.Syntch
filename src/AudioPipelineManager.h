@@ -30,7 +30,7 @@ namespace pipeline{
         bool isRuning();
         bool isUsingVisualizer();
 
-        const statistics::pipelineStatistics* getStatistics();
+        // const statistics::pipelineStatistics* getStatistics();
         const audioFormatInfo* getAudioInfo();
 
         char recordUntilStreamEmpty(MIDI::MidiFileReader& midi, short synthID, std::string filename = "");//DEPRECATED
@@ -158,7 +158,7 @@ namespace pipeline{
 
         AudioSpectrumVisualizer visualizer;//allows to display audio spectrum
 
-        statistics::PipelineStatisticsService* statisticsService;
+        // statistics::PipelineStatisticsService* statisticsService;
 
         bool running;
         bool usingVisualizer;

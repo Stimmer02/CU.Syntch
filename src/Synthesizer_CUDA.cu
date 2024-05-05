@@ -196,30 +196,7 @@ void Synthesizer_CUDA::generateSample(pipelineAudioBuffer_CUDA* audioBuffer, con
 
     soundGenerator->generate(notes.getDeviceNoteBuffer(), keyboardState->d_buffer, d_settings, settings, dynamicsController.getDynamicsProfile(), dynamicsController.getReleaseProfile(), dynamicsController.getReleaseToAttackIndexMap());
 
-    //copy individual notes audio streams to check if they are correct
-    // cudaDeviceSynchronize();
-    // noteBuffer_CUDA* h_noteBuffer = (noteBuffer_CUDA*)malloc(sizeof(noteBuffer_CUDA));
-    // cudaMemcpy(h_noteBuffer, notes.getDeviceNoteBuffer(), sizeof(noteBuffer_CUDA), cudaMemcpyDeviceToHost);
-    // float* buffer = new float[audioBuffer->size * settings.keyCount];
-    // cudaMemcpy(buffer, h_noteBuffer->buffer, audioBuffer->size * settings.keyCount * sizeof(float), cudaMemcpyDeviceToHost);
-    // for (uint i = 0; i < settings.keyCount; i++){
-    //     for (uint j = 0; j < audioBuffer->size; j++){
-    //         if (buffer[j + i * settings.sampleSize] != 0){
-    //             printf("buffer[%d] = %f\n", j + i * settings.sampleSize, buffer[j + i * settings.sampleSize]);
-    //         }
-    //     }
-    // }
-
     mixAudio(audioBuffer);
-
-    // static float* bufferR = new float[audioBuffer->size];
-    // cudaDeviceSynchronize();
-    // cudaMemcpy(bufferR, audioBuffer->d_bufferR, audioBuffer->size * sizeof(float), cudaMemcpyDeviceToHost);
-    // for (uint i = 0; i < audioBuffer->size; i++){
-    //     if (bufferR[i] != 0){
-    //         printf("audioBuffer[%d] = %f\n", i, bufferR[i]);
-    //     }
-    // }
 }
 
 char Synthesizer_CUDA::saveConfig(std::string path){

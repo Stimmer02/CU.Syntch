@@ -92,7 +92,6 @@ void Output::play(pipelineAudioBuffer_CUDA* pipelineBuffer){
 void Output::onlyRecord(pipelineAudioBuffer_CUDA* pipelineBuffer){
     try {
         bufferConverter->toPCM(pipelineBuffer, buffer);
-        cudaDeviceSynchronize();
         audioRecorder.saveBuffer(buffer);
     } catch (std::exception& e){
         std::fprintf(stderr, "ERR pipeline::Output::play: %s\n", e.what());
@@ -102,7 +101,6 @@ void Output::onlyRecord(pipelineAudioBuffer_CUDA* pipelineBuffer){
 void Output::onlyRecord(pipelineAudioBuffer_CUDA* pipelineBuffer, std::chrono::_V2::system_clock::time_point& timeEnd){
     try {
         bufferConverter->toPCM(pipelineBuffer, buffer);
-        cudaDeviceSynchronize();
         timeEnd = std::chrono::system_clock::now();
         audioRecorder.saveBuffer(buffer);
     } catch (std::exception& e){
