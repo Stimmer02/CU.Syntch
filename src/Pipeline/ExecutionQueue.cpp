@@ -7,7 +7,7 @@ bool compareFunction(audioBufferQueue*& a, audioBufferQueue*& b){
     return a->getParentID() == b->getParentID() && a->parentType == b->parentType;
 }
 
-void ExecutionQueue::build(std::vector<audioBufferQueue*>& componentQueues, audioBufferQueue*& outputQueue, IDManager<AComponent, short>& components){
+void ExecutionQueue::build(std::vector<audioBufferQueue*>& componentQueues, audioBufferQueue*& outputQueue, IDManager<AComponent_CUDA, short>& components){
     operations.clear();
     connectedSynthIDs.clear();
     invalidAdvancedComponents.clear();
@@ -41,7 +41,7 @@ void ExecutionQueue::build(std::vector<audioBufferQueue*>& componentQueues, audi
                     connectedSynthIDs.push_back(currentElement->getParentID());
                 }
             } else {
-                AAdvancedComponent* advComp = reinterpret_cast<AAdvancedComponent*>(components.getElement(currentElement->getParentID()));
+                AAdvancedComponent_CUDA* advComp = reinterpret_cast<AAdvancedComponent_CUDA*>(components.getElement(currentElement->getParentID()));
                 if (advComp->allNeededConnections() == false && uniqueElement){
                     invalidAdvancedComponents.push_back(currentElement->getParentID());
                 }

@@ -1,13 +1,13 @@
-#ifndef ADVANCEDCOMPONENT_SUM7_H
-#define ADVANCEDCOMPONENT_SUM7_H
+#ifndef ADVANCEDCOMPONENT_SUM7_CUDA_H
+#define ADVANCEDCOMPONENT_SUM7_CUDA_H
 
-#include "AAdvancedComponent.h"
+#include "AAdvancedComponent_CUDA.h"
 
 namespace pipeline{
-    class AdvancedComponent_Sum7: public AAdvancedComponent{
+    class AdvancedComponent_Sum7_CUDA: public AAdvancedComponent_CUDA{
     public:
-        AdvancedComponent_Sum7(const audioFormatInfo* audioInfo, audioBufferQueue* boundBuffer);
-        ~AdvancedComponent_Sum7();
+        AdvancedComponent_Sum7_CUDA(const audioFormatInfo* audioInfo, audioBufferQueue* boundBuffer);
+        ~AdvancedComponent_Sum7_CUDA();
 
         void apply(pipelineAudioBuffer_CUDA* buffer) override;
         void clear() override;

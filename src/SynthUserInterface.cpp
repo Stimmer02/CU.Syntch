@@ -1308,7 +1308,7 @@ void SynthUserInterface::commandComponentModify(){
         return;
     }
 
-    const componentSettings* settings = audioPipeline->getComopnentSettings(componentID);
+    const componentSettings_CUDA* settings = audioPipeline->getComopnentSettings(componentID);
     if (settings == nullptr){
         std::printf("Something went wrong!\n");
         error = true;
@@ -1332,7 +1332,7 @@ void SynthUserInterface::commandComponentModify(){
             if (audioPipeline->setComponentSetting(componentID, j, settingValue)){
                 std::printf("Could not set setting %s: %f\n", inputTokens[i], settingValue);
             } else {
-                const componentSettings* settings = audioPipeline->getComopnentSettings(componentID);
+                const componentSettings_CUDA* settings = audioPipeline->getComopnentSettings(componentID);
                 if (settings == nullptr){
                     std::printf("Something went wrong!\n");
                     error = true;
@@ -1364,7 +1364,7 @@ void SynthUserInterface::commandComponentSettings(){
         return;
     }
 
-    const componentSettings* settings = audioPipeline->getComopnentSettings(componentID);
+    const componentSettings_CUDA* settings = audioPipeline->getComopnentSettings(componentID);
     if (settings == nullptr){
         std::printf("Something went wrong!\n");
         error = true;

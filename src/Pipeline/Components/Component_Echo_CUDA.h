@@ -1,13 +1,13 @@
-#ifndef COMPONENT_ECHO_H
-#define COMPONENT_ECHO_H
+#ifndef COMPONENT_ECHO_CUDA_H
+#define COMPONENT_ECHO_CUDA_H
 
-#include "AComponent.h"
+#include "AComponent_CUDA.h"
 
 namespace pipeline{
-    class Component_Echo: public AComponent{
+    class Component_Echo_CUDA: public AComponent_CUDA{
     public:
-        Component_Echo(const audioFormatInfo* audioInfo);
-        ~Component_Echo();
+        Component_Echo_CUDA(const audioFormatInfo* audioInfo);
+        ~Component_Echo_CUDA();
 
         void apply(pipelineAudioBuffer_CUDA* buffer) override;
         void clear() override;
@@ -17,8 +17,8 @@ namespace pipeline{
     private:
         static const std::string privateNames[];
 
-        float** lMemory;
-        float** rMemory;
+        float* d_lMemory;
+        float* d_rMemory;
 
         int currentSample;
         int sampleCount;

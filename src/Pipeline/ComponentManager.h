@@ -5,19 +5,19 @@
 #include "../AudioOutput/audioFormatInfo.h"
 #include "audioBufferQueue.h"
 
-#include "Components/AComponent.h"
-#include "Components/Component_Volume.h"
-#include "Components/Component_Pan.h"
-#include "Components/Component_Echo.h"
-#include "Components/Component_Distortion.h"
-#include "Components/Component_Compressor.h"
-#include "Components/Component_Destroy.h"
+#include "Components/AComponent_CUDA.h"
+#include "Components/Component_Volume_CUDA.h"
+#include "Components/Component_Pan_CUDA.h"
+#include "Components/Component_Echo_CUDA.h"
+#include "Components/Component_Distortion_CUDA.h"
+#include "Components/Component_SimpleCompressor_CUDA.h"
+#include "Components/Component_Destroy_CUDA.h"
 
 
-#include "Components/AAdvancedComponent.h"
-#include "Components/AdvancedComponent_Sum2.h"
-#include "Components/AdvancedComponent_Sum7.h"
-#include "Components/AdvancedComponent_Copy.h"
+#include "Components/AAdvancedComponent_CUDA.h"
+#include "Components/AdvancedComponent_Sum2_CUDA.h"
+#include "Components/AdvancedComponent_Sum7_CUDA.h"
+#include "Components/AdvancedComponent_Copy_CUDA.h"
 
 #include <set>
 
@@ -34,12 +34,12 @@ namespace pipeline{
         char addComonentToQueue(short componentID, short queueParentID, ID_type queueParentType);
         char applyEffects(audioBufferQueue* queue);
         void printTrace(short ID);//TODO
-        AAdvancedComponent* getAdvancedComponent(short componentID);
+        AAdvancedComponent_CUDA* getAdvancedComponent(short componentID);
         void clearBuffers();
 
         const audioFormatInfo* audioInfo;
 
-        IDManager<AComponent, short> components;
+        IDManager<AComponent_CUDA, short> components;
         std::set<short> advancedIDs;
     };
 }

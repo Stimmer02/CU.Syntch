@@ -1,8 +1,9 @@
-#ifndef AADVANCEDCOMPONENT_H
-#define AADVANCEDCOMPONENT_H
+#ifndef AADVANCEDCOMPONENT_CUDA_H
+#define AADVANCEDCOMPONENT_CUDA_H
 
-#include "AComponent.h"
+#include "AComponent_CUDA.h"
 #include "../audioBufferQueue.h"
+#include "advancedComponentConnection_CUDA.h"
 
 namespace pipeline{
     enum advanced_component_type{
@@ -12,10 +13,10 @@ namespace pipeline{
         ACOMP_COPY,
     };
 
-    class AAdvancedComponent: public AComponent{
+    class AAdvancedComponent_CUDA: public AComponent_CUDA{
     public:
-        AAdvancedComponent(const audioFormatInfo* audioInfo, uint settingCount, const std::string* settingNames, short maxConnections, audioBufferQueue* boundBuffer);
-        ~AAdvancedComponent();
+        AAdvancedComponent_CUDA(const audioFormatInfo* audioInfo, uint settingCount, const std::string* settingNames, short maxConnections, audioBufferQueue* boundBuffer);
+        ~AAdvancedComponent_CUDA();
 
         virtual bool allNeededConnections() = 0;
 
@@ -30,6 +31,7 @@ namespace pipeline{
     protected:
         short connectionsCount;
         audioBufferQueue** connections;
+        advancedComponentConnection_CUDA* d_connections;
     };
 }
 

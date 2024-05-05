@@ -2,7 +2,7 @@
 #define AUDIOPIPELINEMANAGER_H
 
 #include "Pipeline/ComponentManager.h"
-#include "Pipeline/Components/componentSettings.h"
+#include "Pipeline/Components/componentSettings_CUDA.h"
 #include "Pipeline/IDManager.h"
 #include "Pipeline/Input.h"
 #include "Pipeline/Output.h"
@@ -96,7 +96,7 @@ namespace pipeline{
         char setAdvancedComponentInput(short componentID, short inputIndex, ID_type IDType, short connectToID);
         char getComponentConnection(short componentID, ID_type& parentType, short& parentID);
         char setComponentSetting(short componentID, uint settingIndex, float value);
-        const componentSettings* getComopnentSettings(short componentID);
+        const componentSettings_CUDA* getComopnentSettings(short componentID);
 
         bool isAdvancedComponent(short ID);
 
