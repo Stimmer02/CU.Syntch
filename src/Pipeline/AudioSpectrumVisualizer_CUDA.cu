@@ -1,18 +1,28 @@
-#include "AudioSpectrumVisualizer.h"
+#include "AudioSpectrumVisualizer_CUDA.h"
 
-AudioSpectrumVisualizer::AudioSpectrumVisualizer(const audioFormatInfo* audioInfo, uint audioWindowSize, float fps): audioInfo(audioInfo){
+__global__ void kernel_createVisualizerInputBuffer(cufftReal* workBuffer, float* bufferR, float* bufferL, uint sampleSize, uint sampleCounter, uint count){
+    uint i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < count){
+        workBuffer[sampleCounter * sampleSize + i] = bufferL[i] + bufferR[i];
+    }
+}
+
+
+AudioSpectrumVisualizer_CUDA::AudioSpectrumVisualizer_CUDA(const audioFormatInfo* audioInfo, uint audioWindowSize, float fps): audioInfo(audioInfo){
     this->audioWindowSize = audioWindowSize;
-    this->workBuffer = new double[audioWindowSize];
     this->samplesPerFrame = std::ceil(audioWindowSize / audioInfo->sampleSize);
     this->setFps(fps);
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
     height = w.ws_row;
     width = w.ws_col;
-    fftwOutput = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * (audioWindowSize/2 + 1));
+
+    cudaMalloc((void**)&d_workBuffer, audioWindowSize * sizeof(cufftReal));
+    cudaMalloc((void**)&d_cufftOutput, (audioWindowSize / 2 + 1) * sizeof(cufftComplex));
+    cufftOutput = new cufftComplex[audioWindowSize / 2 + 1];
     bandsState = new float[width];
 
-    fftw = fftw_plan_dft_r2c_1d(audioWindowSize, workBuffer, fftwOutput, FFTW_ESTIMATE);
+    cufftPlan1d(&cufftPlan, audioWindowSize, CUFFT_R2C, 1);
 
     highScope = 3000;
     lowScope = 20;
@@ -22,14 +32,15 @@ AudioSpectrumVisualizer::AudioSpectrumVisualizer(const audioFormatInfo* audioInf
     lastWidth = 0;
 }
 
-AudioSpectrumVisualizer::~AudioSpectrumVisualizer(){
-    delete[] workBuffer;
+AudioSpectrumVisualizer_CUDA::~AudioSpectrumVisualizer_CUDA(){
     delete[] bandsState;
-    fftw_destroy_plan(fftw);
-    fftw_free(fftwOutput);
+    delete[] cufftOutput;
+    cufftDestroy(cufftPlan);
+    cudaFree(d_workBuffer);
+    cudaFree(d_cufftOutput);
 }
 
-void AudioSpectrumVisualizer::start(){
+void AudioSpectrumVisualizer_CUDA::start(){
     readTerminalDimensions();
     sampleCounter = 0;
     for (uint i = 0; i < width; i++){
@@ -39,12 +50,12 @@ void AudioSpectrumVisualizer::start(){
     running = true;
 }
 
-void AudioSpectrumVisualizer::stop(){
+void AudioSpectrumVisualizer_CUDA::stop(){
     running = false;
     std::printf("\033[2J\033[H");
 }
 
-void AudioSpectrumVisualizer::readTerminalDimensions(){
+void AudioSpectrumVisualizer_CUDA::readTerminalDimensions(){
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
     height = w.ws_row;
@@ -69,20 +80,21 @@ void AudioSpectrumVisualizer::readTerminalDimensions(){
     delete[] oldBandsState;
 }
 
-void AudioSpectrumVisualizer::displayBuffer(pipelineAudioBuffer_CUDA* buffer){
+void AudioSpectrumVisualizer_CUDA::displayBuffer(pipelineAudioBuffer_CUDA* buffer){
+    static const uint blockSize = 256;
+    uint blockCount = (audioInfo->sampleSize + blockSize - 1) / blockSize;
+
     if (running == false){
         return;
     }
     if (sampleCounter < samplesPerFrame - 1){
-        for (uint i = 0; i < audioInfo->sampleSize; i++){
-            workBuffer[sampleCounter * audioInfo->sampleSize + i] = buffer->d_bufferL[i] + buffer->d_bufferR[i];
-        }
+        kernel_createVisualizerInputBuffer<<<blockCount, blockSize>>>(d_workBuffer, buffer->d_bufferR, buffer->d_bufferL, audioInfo->sampleSize, sampleCounter, audioInfo->sampleSize);
     } else if (sampleCounter == samplesPerFrame - 1){
         uint rest = audioWindowSize - (samplesPerFrame - 1) * audioInfo->sampleSize;
-        for (uint i = 0; i < rest; i++){
-            workBuffer[sampleCounter * audioInfo->sampleSize + i] = buffer->d_bufferL[i] + buffer->d_bufferR[i];
-        }
+        kernel_createVisualizerInputBuffer<<<blockCount, blockSize>>>(d_workBuffer, buffer->d_bufferR, buffer->d_bufferL, audioInfo->sampleSize, sampleCounter, rest);
+
         computeFFT();
+        cudaMemcpy(cufftOutput, d_cufftOutput, (audioWindowSize / 2 + 1) * sizeof(cufftComplex), cudaMemcpyDeviceToHost);
         draw("█");
     } else if (sampleCounter >= samplesPerFrame + skipSamples){
         sampleCounter = 0;
@@ -90,7 +102,7 @@ void AudioSpectrumVisualizer::displayBuffer(pipelineAudioBuffer_CUDA* buffer){
     sampleCounter++;
 }
 
-float AudioSpectrumVisualizer::setFps(float fps){
+float AudioSpectrumVisualizer_CUDA::setFps(float fps){
     sampleCounter = 0;
     float samplesPerSecond = audioInfo->sampleRate / audioInfo->sampleSize;
     float maxFps = samplesPerSecond / samplesPerFrame;
@@ -104,57 +116,65 @@ float AudioSpectrumVisualizer::setFps(float fps){
     return fps;
 }
 
-float AudioSpectrumVisualizer::getFps(){
+float AudioSpectrumVisualizer_CUDA::getFps(){
     return audioInfo->sampleRate / audioInfo->sampleSize / (samplesPerFrame + skipSamples);
 }
 
-void AudioSpectrumVisualizer::setAudioWindowSize(uint size){
+void AudioSpectrumVisualizer_CUDA::setAudioWindowSize(uint size){
     if (size == audioWindowSize){
         return;
     }
 
-    double* newWorkBuffer = new double[size];
-    double* oldWorkBuffer = workBuffer;
+    cufftReal* d_newWorkBuffer;
+    cudaMalloc((void**)&d_newWorkBuffer, audioWindowSize * sizeof(cufftReal));
+    cufftReal* d_oldWorkBuffer = d_workBuffer;
 
-    fftw_complex* newFftwOutput = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * (size/2 + 1));
-    fftw_complex* oldFftwOutput = fftwOutput;
+    cufftComplex* d_newCufftwOutput;
+    cudaMalloc((void**)&d_newCufftwOutput, (audioWindowSize / 2 + 1) * sizeof(cufftComplex));
+    cufftComplex* d_oldFftwOutput = d_cufftOutput;
+
+    cufftComplex* newCufftOutput = new cufftComplex[audioWindowSize / 2 + 1];
+    cufftComplex* oldCufftOutput = cufftOutput;
 
     if (audioWindowSize > size){ //to prevent segmentation fault in case of execution on multiple threads
-        workBuffer = newWorkBuffer;
-        fftwOutput = newFftwOutput;
+        d_workBuffer = d_newWorkBuffer;
+        d_cufftOutput = d_newCufftwOutput;
+        cufftOutput = newCufftOutput;
         audioWindowSize = size;
         samplesPerFrame = std::ceil(audioWindowSize / audioInfo->sampleSize);
     } else {
         audioWindowSize = size;
         samplesPerFrame = std::ceil(audioWindowSize / audioInfo->sampleSize);
-        workBuffer = newWorkBuffer;
-        fftwOutput = newFftwOutput;
+        d_workBuffer = d_newWorkBuffer;
+        d_cufftOutput = d_newCufftwOutput;
+        cufftOutput = newCufftOutput;
     }
-    delete[] oldWorkBuffer;
-    fftw_free(oldFftwOutput);
+    cudaFree(d_oldWorkBuffer);
+    cudaFree(d_oldFftwOutput);
+    delete[] oldCufftOutput;
 }
 
-uint AudioSpectrumVisualizer::getAudioWindowSize(){
+uint AudioSpectrumVisualizer_CUDA::getAudioWindowSize(){
     return audioWindowSize;
 }
 
-float AudioSpectrumVisualizer::getMinFrequency(){
+float AudioSpectrumVisualizer_CUDA::getMinFrequency(){
     return audioInfo->sampleRate / audioWindowSize;
 }
 
-float AudioSpectrumVisualizer::getMaxFrequency(){
+float AudioSpectrumVisualizer_CUDA::getMaxFrequency(){
     return audioInfo->sampleRate / 2;
 }
 
-void AudioSpectrumVisualizer::setVolume(float volume){
+void AudioSpectrumVisualizer_CUDA::setVolume(float volume){
     this->volume = volume;
 }
 
-float AudioSpectrumVisualizer::getVolume(){
+float AudioSpectrumVisualizer_CUDA::getVolume(){
     return volume;
 }
 
-float AudioSpectrumVisualizer::setHighScope(float highScope){
+float AudioSpectrumVisualizer_CUDA::setHighScope(float highScope){
     if (highScope < lowScope){
         return this->highScope;
     }
@@ -165,11 +185,11 @@ float AudioSpectrumVisualizer::setHighScope(float highScope){
     this->highScope = highScope;
     return highScope;
 }
-float AudioSpectrumVisualizer::getHighScope(){
+float AudioSpectrumVisualizer_CUDA::getHighScope(){
     return highScope;
 }
 
-float AudioSpectrumVisualizer::setLowScope(float lowScope){
+float AudioSpectrumVisualizer_CUDA::setLowScope(float lowScope){
     if (lowScope > highScope){
         return this->lowScope;
     }
@@ -181,11 +201,13 @@ float AudioSpectrumVisualizer::setLowScope(float lowScope){
     return lowScope;
 }
 
-float AudioSpectrumVisualizer::getLowScope(){
+float AudioSpectrumVisualizer_CUDA::getLowScope(){
     return lowScope;
 }
 
-void AudioSpectrumVisualizer::draw(const char* c){
+
+void AudioSpectrumVisualizer_CUDA::draw(const char* c){
+    //for better efficeincy, the following code should be executed on the GPU
     uint lowScopeIndex = std::ceil(lowScope / audioInfo->sampleRate * audioWindowSize);
     uint highScopeIndex = std::ceil(highScope / audioInfo->sampleRate * audioWindowSize);
 
@@ -201,8 +223,8 @@ void AudioSpectrumVisualizer::draw(const char* c){
     }
 
     for (uint i = lowScopeIndex; i < bandChangeIndex; i++){
-        double& real = fftwOutput[i][0];
-        double& imag = fftwOutput[i][1];
+        float& real = cufftOutput[i].x;
+        float& imag = cufftOutput[i].y;
         float magnitude = sqrt(real * real + imag * imag)/audioWindowSize*volume;
         float frequency = i * audioInfo->sampleRate / audioWindowSize;
 
@@ -213,8 +235,8 @@ void AudioSpectrumVisualizer::draw(const char* c){
         float previusBandChangeIndex = bandChangeIndex;
         bandChangeIndex = std::ceil(currentHighBand / audioInfo->sampleRate * audioWindowSize);
         for (uint i = previusBandChangeIndex; i < bandChangeIndex; i++){
-            double& real = fftwOutput[i][0];
-            double& imag = fftwOutput[i][1];
+            float& real = cufftOutput[i].x;
+            float& imag = cufftOutput[i].y;
             float magnitude = sqrt(real * real + imag * imag)/audioWindowSize*volume;
             float frequency = i * audioInfo->sampleRate / audioWindowSize;
 
@@ -226,8 +248,8 @@ void AudioSpectrumVisualizer::draw(const char* c){
     }
 
     for (uint i = bandChangeIndex; i < highScopeIndex; i++){
-        double& real = fftwOutput[i][0];
-        double& imag = fftwOutput[i][1];
+        float& real = cufftOutput[i].x;
+        float& imag = cufftOutput[i].y;
         float magnitude = sqrt(real * real + imag * imag)/audioWindowSize*volume;
         float frequency = i * audioInfo->sampleRate / audioWindowSize;
 
@@ -258,8 +280,9 @@ void AudioSpectrumVisualizer::draw(const char* c){
     }
 }
 
-void AudioSpectrumVisualizer::computeFFT(){
-    fftw_execute(fftw);
+void AudioSpectrumVisualizer_CUDA::computeFFT(){
+    cufftExecR2C(cufftPlan, d_workBuffer, d_cufftOutput);
+    cudaDeviceSynchronize();
 }
 
 

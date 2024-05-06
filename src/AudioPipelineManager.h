@@ -15,7 +15,7 @@
 #include "UserInput/MIDI/MidiFileReader.h"
 #include "enumConversion.h"
 #include "UserInput/MIDI/MidiReaderManager.h"
-#include "Pipeline/AudioSpectrumVisualizer.h"
+#include "Pipeline/AudioSpectrumVisualizer_CUDA.h"
 
 
 
@@ -156,7 +156,7 @@ namespace pipeline{
         audioBufferQueue* outputBuffer;//the last componentQueue to be executed
         ExecutionQueue executionQueue;//processing order of componentQueues
 
-        AudioSpectrumVisualizer visualizer;//allows to display audio spectrum
+        AudioSpectrumVisualizer_CUDA visualizer;//allows to display audio spectrum
 
         // statistics::PipelineStatisticsService* statisticsService;
 

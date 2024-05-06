@@ -1,19 +1,21 @@
-#ifndef AUDIOSPECTRUMVISUALIZER_H
-#define AUDIOSPECTRUMVISUALIZER_H
+#ifndef AUDIOSPECTRUMVISUALIZER_CUDA_H
+#define AUDIOSPECTRUMVISUALIZER_CUDA_H
 
 #include "./pipelineAudioBuffer_CUDA.h"
 #include "../AudioOutput/audioFormatInfo.h"
 
-#include <fftw3.h>
+#include <cufft.h>
+#include <cuda_runtime_api.h>
+#include <cuda.h>
 #include <cmath>
 #include <sys/ioctl.h>
 #include <stdio.h>
 #include <unistd.h>
 
-class AudioSpectrumVisualizer{
+class AudioSpectrumVisualizer_CUDA{
 public:
-    AudioSpectrumVisualizer(const audioFormatInfo* audioInfo, uint audioWindowSize, float fps);
-    ~AudioSpectrumVisualizer();
+    AudioSpectrumVisualizer_CUDA(const audioFormatInfo* audioInfo, uint audioWindowSize, float fps);
+    ~AudioSpectrumVisualizer_CUDA();
 
     void start();
     void stop();
@@ -36,7 +38,7 @@ public:
 
 private:
     void draw(const char* c = "#");
-    void computeFFT(); //TODO: use CUDA to compute FFT
+    void computeFFT();
     
     bool running;
     uint width;
@@ -49,9 +51,10 @@ private:
 
     uint audioWindowSize;
     uint samplesPerFrame; //how many times displayBuffer() has to be called to execute computeFFT()
-    double* workBuffer;
-    fftw_complex* fftwOutput;
-    fftw_plan fftw;
+    cufftReal* d_workBuffer;
+    cufftComplex* d_cufftOutput;
+    cufftComplex* cufftOutput;
+    cufftHandle cufftPlan;
 
     float highScope;
     float lowScope;
