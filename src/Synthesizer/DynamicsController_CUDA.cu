@@ -28,7 +28,7 @@ __global__ void kernel_calculateReleaseProfileAndMap(uint newReleaseDuration, se
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < newReleaseDuration){
         noteReleaseProfile[i] = 1 - i/float(newReleaseDuration);
-        float ratio = settings->attack.duration / newReleaseDuration;
+        float ratio = float(settings->attack.duration) / newReleaseDuration;
         releaseToAttackIndexMap[i] = (newReleaseDuration - 1 - i) * ratio;
     }
 }
