@@ -215,6 +215,30 @@ void Input::cycleBuffers(){
     }
 }
 
+void Input::cycleBuffers(double& swapTime, double& conversionTime){
+    AKeyboardRecorder** allInputs = midiInput.getAll();
+    keyboardTransferBuffer_CUDA** allBuffers = midiInput.getAllBuffers();
+
+    std::chrono::_V2::system_clock::time_point timeStart;
+    std::chrono::_V2::system_clock::time_point timeEnd;
+
+    timeStart = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < midiInput.getElementCount(); i++){
+        allInputs[i]->buffer->swapActiveBuffer();
+    }
+    timeEnd = std::chrono::high_resolution_clock::now();
+    swapTime = std::chrono::duration_cast<std::chrono::microseconds>(timeEnd - timeStart).count()/1000000;
+
+    timeStart = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < midiInput.getElementCount(); i++){
+        allBuffers[i]->convertBuffer(allInputs[i]->buffer);
+        allInputs[i]->buffer->clearInactiveBuffer();
+    }
+    timeEnd = std::chrono::high_resolution_clock::now();
+    conversionTime = std::chrono::duration_cast<std::chrono::microseconds>(timeEnd - timeStart).count()/1000000;
+
+}
+
 void Input::generateSampleWith(short synthID, pipelineAudioBuffer_CUDA* buffer, keyboardTransferBuffer_CUDA* keyboardState){
     synths.getElement(synthID)->synth.generateSample(buffer, keyboardState);
 }

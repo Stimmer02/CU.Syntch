@@ -16,7 +16,7 @@
 #include "BufferConverter/BufferConverter_Stereo32_CUDA.h"
 
 #include <chrono>
-
+#include <functional>
 
 namespace pipeline{
     class Output{
@@ -28,6 +28,7 @@ namespace pipeline{
         bool isReady();
 
         void play(pipelineAudioBuffer_CUDA* pipelineBuffer);
+        void play(pipelineAudioBuffer_CUDA* pipelineBuffer, std::function<void()> executeBefroePlay);
         void onlyRecord(pipelineAudioBuffer_CUDA* pipelineBuffer);
         void onlyRecord(pipelineAudioBuffer_CUDA* pipelineBuffer, std::chrono::_V2::system_clock::time_point& timeEnd);
 

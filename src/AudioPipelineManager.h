@@ -30,7 +30,6 @@ namespace pipeline{
         bool isRuning();
         bool isUsingVisualizer();
 
-        // const statistics::pipelineStatistics* getStatistics();
         const audioFormatInfo* getAudioInfo();
 
         char recordUntilStreamEmpty(MIDI::MidiFileReader& midi, short synthID, std::string filename = "");//DEPRECATED
@@ -38,6 +37,11 @@ namespace pipeline{
         void reorganizeIDs();
 
         void emptyQueueBuffer(ID_type IDType, short ID);
+
+        //STATISTICS
+        const statistics::pipelineStatistics* getStatistics();
+        char recordStatistics(std::string filePath, float updateTimeInterval);
+        char stopRecordingStatistics();
 
         //OUTPUT CONTROL
         char startRecording();
@@ -158,7 +162,7 @@ namespace pipeline{
 
         AudioSpectrumVisualizer_CUDA visualizer;//allows to display audio spectrum
 
-        // statistics::PipelineStatisticsService* statisticsService;
+        statistics::PipelineStatisticsService* statisticsService;
 
         bool running;
         bool usingVisualizer;

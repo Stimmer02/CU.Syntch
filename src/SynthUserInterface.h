@@ -133,6 +133,9 @@ namespace pipeline{
         void commandAdvComponentDisconnect();
         void commandAdvComponentInfo();
 
+        void commandRecordStatistics();
+        void commandStopRecordStatistics();
+
         void commandPrintQueues();//TODO
     };
 }

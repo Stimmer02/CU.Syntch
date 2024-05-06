@@ -43,6 +43,7 @@ namespace pipeline{
 
         void swapActiveBuffers();
         void cycleBuffers();
+        void cycleBuffers(double& swapTime, double& conversionTime);
 
         short addSynthesizer(pipelineAudioBuffer_CUDA* buffer);
         char removeSynthesizer(short ID);

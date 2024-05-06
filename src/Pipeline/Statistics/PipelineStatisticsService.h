@@ -6,20 +6,28 @@
 #include "../../AudioOutput/audioFormatInfo.h"
 
 #include <chrono>
+#include <fstream>
 
 namespace statistics{
     class PipelineStatisticsService{
     public:
-        PipelineStatisticsService(ulong LoopLength, uint bufferSize, audioFormatInfo audioFormat, uint pulseAudioLatency);
+        PipelineStatisticsService(ulong LoopLength, uint bufferSize, const audioFormatInfo* audioFormat, uint pulseAudioLatency);
         ~PipelineStatisticsService();
 
         void firstInvocation();
         void loopStart();
         void loopWorkEnd();
 
+        char record(std::string filePath, float updateTimeInterval);
+        char stopRecording();
+
         const pipelineStatistics* getStatistics();
 
     private:
+        void writeStatistics();
+
+        const audioFormatInfo* audioFormat;
+
         const uint buffersSize;
         pipelineStatistics pStatistics;
 
@@ -31,6 +39,11 @@ namespace statistics{
         ulong loopEndPoint;
 
         ulong workLength;
+
+        bool recording;
+        std::ofstream file;
+        uint sampleInterval;
+        uint sampleCounter;
     };
 }
 
