@@ -305,6 +305,8 @@ void SynthUserInterface::initializeCommandMap(){
         {"aCompDisconnect", &SynthUserInterface::commandAdvComponentDisconnect},
         {"aCompInfo",       &SynthUserInterface::commandAdvComponentInfo},
 
+        {"statRecord", &SynthUserInterface::commandRecordStatistics},
+        {"statStop",   &SynthUserInterface::commandStopRecordStatistics}
     };
 }
 
@@ -411,6 +413,10 @@ void SynthUserInterface::commandHelp(){
     "   aCompConnect\n"
     "   aCompDisconnect\n"
     "   aCompInfo\n"
+    "\n"
+    "STATISTICS\n"
+    "   statRecord\n"
+    "   statStop\n"
     "\n";
 
     static const std::string help =
@@ -479,6 +485,10 @@ void SynthUserInterface::commandHelp(){
     "   aCompConnect    <component ID> <input index> <ID type> <ID> - connects advanced component input (specified by \"input index\") to another advanced component or synthesizer, extending pipeline, possibly creating branches or merging them\n"
     "   aCompDisconnect <component ID> <input index> - disconnect advanced component input from source\n"
     "   aCompInfo       <component ID> - returns information about queue of specified advanced component\n"
+    "\n"
+    "STATISTICS\n"
+    "   statRecord <update time interval> <file path>- records statistics to specified file with specified update time interval in seconds\n"
+    "   statStop - stops recording statistics\n"
     "\n";
 
 
@@ -976,7 +986,7 @@ void SynthUserInterface::commandSynthSettings(){
         }
 
     } else {
-        const synthesizer::settings& settings = *audioPipeline->getSynthSettings(synthID);
+        const synthesizer::settings_CUDA& settings = *audioPipeline->getSynthSettings(synthID);
         synthesizer::generator_type generatorType = audioPipeline->getSynthType(synthID);
         switch (generatorType) {
             case synthesizer::SINE:
@@ -1308,7 +1318,7 @@ void SynthUserInterface::commandComponentModify(){
         return;
     }
 
-    const componentSettings* settings = audioPipeline->getComopnentSettings(componentID);
+    const componentSettings_CUDA* settings = audioPipeline->getComopnentSettings(componentID);
     if (settings == nullptr){
         std::printf("Something went wrong!\n");
         error = true;
@@ -1332,7 +1342,7 @@ void SynthUserInterface::commandComponentModify(){
             if (audioPipeline->setComponentSetting(componentID, j, settingValue)){
                 std::printf("Could not set setting %s: %f\n", inputTokens[i], settingValue);
             } else {
-                const componentSettings* settings = audioPipeline->getComopnentSettings(componentID);
+                const componentSettings_CUDA* settings = audioPipeline->getComopnentSettings(componentID);
                 if (settings == nullptr){
                     std::printf("Something went wrong!\n");
                     error = true;
@@ -1364,7 +1374,7 @@ void SynthUserInterface::commandComponentSettings(){
         return;
     }
 
-    const componentSettings* settings = audioPipeline->getComopnentSettings(componentID);
+    const componentSettings_CUDA* settings = audioPipeline->getComopnentSettings(componentID);
     if (settings == nullptr){
         std::printf("Something went wrong!\n");
         error = true;
@@ -1653,3 +1663,33 @@ void SynthUserInterface::commandMidiReaderList(){
     printf("MIDI readers:\n");
     audioPipeline->printMidiReaders();
 }
+
+
+void SynthUserInterface::commandRecordStatistics(){
+    if (inputTokenCount < 2){
+        std::printf("Usage: statRecord <update time interval> <file path>\n");
+        error = true;
+        return;
+    }
+    float timeInterval;
+    if (numberFromToken(1, timeInterval)){
+        error = true;
+        return;
+    }
+    if (audioPipeline->recordStatistics(concatenateTokens(2), timeInterval)){
+        std::printf("Something went wrong!\n");
+        error = true;
+        return;
+    }
+    std::printf("Statistics will be saved under %s\n", concatenateTokens(2).c_str());
+}
+
+void SynthUserInterface::commandStopRecordStatistics(){
+    if (audioPipeline->stopRecordingStatistics()){
+        std::printf("Something went wrong!\n");
+        error = true;
+        return;
+    }
+    std::printf("Statistics recording stopped\n");
+}
+

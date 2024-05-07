@@ -124,7 +124,7 @@ void MidiFileReader::fillBuffer(ushort chunkNumber){
     chunks[chunkNumber].lastPosition = file->tellg();
 }
 
-void MidiFileReader::fillBuffer(keyboardTransferBuffer* buffer, ushort chunkNumber){
+void MidiFileReader::fillBuffer(keyboardTransferBuffer_CUDA* buffer, ushort chunkNumber){
     fillBuffer(chunkNumber);
     buffer->convertBuffer(tempNoteBuffer);
 }

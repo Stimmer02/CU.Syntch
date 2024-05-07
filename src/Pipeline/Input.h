@@ -1,9 +1,9 @@
 #ifndef PIPELINEINPUT_H
 #define PIPELINEINPUT_H
 
-#include "../Synthesizer.h"
+#include "../Synthesizer_CUDA.h"
 #include "KeyboardManager.h"
-#include "pipelineAudioBuffer.h"
+#include "pipelineAudioBuffer_CUDA.h"
 #include <vector>
 
 namespace pipeline{
@@ -43,13 +43,14 @@ namespace pipeline{
 
         void swapActiveBuffers();
         void cycleBuffers();
+        void cycleBuffers(double& swapTime, double& conversionTime);
 
-        short addSynthesizer(pipelineAudioBuffer* buffer);
+        short addSynthesizer(pipelineAudioBuffer_CUDA* buffer);
         char removeSynthesizer(short ID);
         short getSynthesizerCount();
         void setSynthetiserSetting(short ID, synthesizer::settings_name settingsName, float value);
         void setSynthetiserSetting(short ID, synthesizer::generator_type type);
-        const synthesizer::settings* getSynthetiserSettings(short ID);
+        const synthesizer::settings_CUDA* getSynthetiserSettings(short ID);
         synthesizer::generator_type getSynthetiserType(const ushort& ID);
         float getSynthetiserSetting(short ID, synthesizer::settings_name settingName);
 
@@ -59,7 +60,7 @@ namespace pipeline{
         void generateSamples();
         void generateSamples(const std::vector<short>& synthIDs);
         void generateSampleWith(short SynthID);
-        void generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keyboardTransferBuffer* keyboardState);
+        void generateSampleWith(short synthID, pipelineAudioBuffer_CUDA* buffer, keyboardTransferBuffer_CUDA* keyboardState);
 
         char saveSynthConfig(std::string path, short ID);
         char loadSynthConfig(std::string path, short ID);
@@ -71,13 +72,13 @@ namespace pipeline{
 
     private:
         struct synthWithConnection{
-            synthWithConnection(pipelineAudioBuffer* buffer, audioFormatInfo audioInfo, ushort keyCount):synth(audioInfo, keyCount){
+            synthWithConnection(pipelineAudioBuffer_CUDA* buffer, audioFormatInfo audioInfo, ushort keyCount):synth(audioInfo, keyCount){
                 midiInputID = -2;
                 this->buffer = buffer;
             };
-            synthesizer::Synthesizer synth;
+            synthesizer::Synthesizer_CUDA synth;
             short midiInputID;
-            pipelineAudioBuffer* buffer;
+            pipelineAudioBuffer_CUDA* buffer;
         };
 
         void cleanup();

@@ -1,7 +1,7 @@
 #ifndef AUDIOBUFFERQUEUE_H
 #define AUDIOBUFFERQUEUE_H
 
-#include "pipelineAudioBuffer.h"
+#include "pipelineAudioBuffer_CUDA.h"
 #include "IDManager.h"
 #include <string>
 #include <vector>
@@ -17,7 +17,7 @@ namespace pipeline{
 
         short getParentID();
 
-        pipelineAudioBuffer buffer;
+        pipelineAudioBuffer_CUDA buffer;
         const ID_type parentType;
         std::vector<short> componentIDQueue;
 

@@ -1,7 +1,7 @@
 #ifndef MIDIFILEREADR_H
 #define MIDIFILEREADR_H
 
-#include "../keyboardTransferBuffer.h"
+#include "../keyboardTransferBuffer_CUDA.h"
 #include "MidiMessageInterpreter.h"
 #include "midiEvent.h"
 #include "midiHeaderChunk.h"
@@ -22,7 +22,7 @@ namespace MIDI{
         char rewindChunk(ushort chunkNumber);
         bool eofChunk(ushort chunkNumber);
         bool isFileReady();
-        void fillBuffer(keyboardTransferBuffer* buffer, ushort chunkNumber);
+        void fillBuffer(keyboardTransferBuffer_CUDA* buffer, ushort chunkNumber);
         void fillBuffer(ushort chunkNumber);
         uint16_t getChunkCount();
         uchar** getTempBuffer();

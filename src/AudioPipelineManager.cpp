@@ -1,9 +1,4 @@
 #include "AudioPipelineManager.h"
-#include "Pipeline/Components/componentSettings.h"
-#include "Pipeline/IDManager.h"
-#include "Pipeline/audioBufferQueue.h"
-#include "enumConversion.h"
-#include <vector>
 
 
 using namespace pipeline;
@@ -13,7 +8,7 @@ AudioPipelineManager::AudioPipelineManager(audioFormatInfo audioInfo, ushort key
     usingVisualizer = false;
     pipelineThread = nullptr;
 
-    statisticsService = new statistics::PipelineStatisticsService(audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate, 64, audioInfo, 0);
+    statisticsService = new statistics::PipelineStatisticsService(audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate, 64, &audioInfo, 0);
 
     input.init(audioInfo, keyCount);
     output.init(audioInfo);
@@ -102,11 +97,6 @@ bool AudioPipelineManager::isUsingVisualizer(){
     return usingVisualizer;
 }
 
-
-const statistics::pipelineStatistics* AudioPipelineManager::getStatistics(){
-    return statisticsService->getStatistics();
-}
-
 const audioFormatInfo* AudioPipelineManager::getAudioInfo(){
     return &audioInfo;
 }
@@ -122,6 +112,8 @@ void AudioPipelineManager::pipelineThreadFunction(){
 
     statisticsService->firstInvocation();
 
+    std::function<void()> loopWorkEnd = [this]() { this->statisticsService->loopWorkEnd(); };
+
     while (running){
         std::this_thread::sleep_until(std::chrono::time_point<std::chrono::system_clock>(std::chrono::nanoseconds((nextLoop)*1000)));
         statisticsService->loopStart();
@@ -134,9 +126,7 @@ void AudioPipelineManager::pipelineThreadFunction(){
             component.applyEffects(backwardsExecution[i]);
         }
 
-        statisticsService->loopWorkEnd();
-
-        output.play(&outputBuffer->buffer);
+        output.play(&outputBuffer->buffer, loopWorkEnd);
     }
 }
 
@@ -152,6 +142,8 @@ void AudioPipelineManager::pipelineThreadFunctionWithVisualizer(){
 
     statisticsService->firstInvocation();
 
+    std::function<void()> loopWorkEnd = [this]() { this->statisticsService->loopWorkEnd(); };
+
     while (running){
         std::this_thread::sleep_until(std::chrono::time_point<std::chrono::system_clock>(std::chrono::nanoseconds((nextLoop)*1000)));
         statisticsService->loopStart();
@@ -166,9 +158,7 @@ void AudioPipelineManager::pipelineThreadFunctionWithVisualizer(){
         
         visualizer.displayBuffer(&outputBuffer->buffer);
 
-        statisticsService->loopWorkEnd();
-
-        output.play(&outputBuffer->buffer);
+        output.play(&outputBuffer->buffer, loopWorkEnd);
     }
     usingVisualizer = false;
 }
@@ -182,8 +172,8 @@ char AudioPipelineManager::recordUntilStreamEmpty(MIDI::MidiFileReader& midi, sh
         return 3;
     }
 
-    keyboardTransferBuffer* keyboardState = new keyboardTransferBuffer(audioInfo.sampleSize, keyCount);
-    pipelineAudioBuffer* pipelineBuffer = new pipelineAudioBuffer(audioInfo.sampleSize);
+    keyboardTransferBuffer_CUDA* keyboardState = new keyboardTransferBuffer_CUDA(audioInfo.sampleSize, keyCount);
+    pipelineAudioBuffer_CUDA* pipelineBuffer = new pipelineAudioBuffer_CUDA(audioInfo.sampleSize);
 
     midi.rewindFile();
     if (filename.empty()){
@@ -234,6 +224,19 @@ void AudioPipelineManager::emptyQueueBuffer(ID_type IDType, short ID){
         component.components.getElement(toEmpty.componentIDQueue.at(i))->includedIn = nullptr;
     }
     toEmpty.componentIDQueue.clear();
+}
+
+//STATISTICS
+const statistics::pipelineStatistics* AudioPipelineManager::getStatistics(){
+    return statisticsService->getStatistics();
+}
+
+char AudioPipelineManager::recordStatistics(std::string filePath, float updateTimeInterval){
+    return statisticsService->record(filePath, updateTimeInterval);
+}
+
+char AudioPipelineManager::stopRecordingStatistics(){
+    return statisticsService->stopRecording();
 }
 
 
@@ -325,7 +328,7 @@ char AudioPipelineManager::disconnectSynth(short synthID){
     return input.disconnectSynth(synthID);
 }
 
-const synthesizer::settings* AudioPipelineManager::getSynthSettings(const ushort& ID){
+const synthesizer::settings_CUDA* AudioPipelineManager::getSynthSettings(const ushort& ID){
     return input.getSynthetiserSettings(ID);
 }
 
@@ -456,7 +459,7 @@ char AudioPipelineManager::removeAdvancedComponent(short ID){
         outputBuffer = nullptr;
     }
     for (short potentialConnectionID : component.advancedIDs){//disconnecting those attached to it
-        AAdvancedComponent* potentialConnection = reinterpret_cast<AAdvancedComponent*>(component.components.getElement(potentialConnectionID));
+        AAdvancedComponent_CUDA* potentialConnection = reinterpret_cast<AAdvancedComponent_CUDA*>(component.components.getElement(potentialConnectionID));
         for (int i = 0; i < potentialConnection->maxConnections; i++){
             ID_type paretType;
             short paretID;
@@ -489,7 +492,7 @@ char AudioPipelineManager::connectComponent(short componentID, ID_type parentTyp
         return -3;
     }
 
-    AComponent& tempComponent = *component.components.getElement(componentID);
+    AComponent_CUDA& tempComponent = *component.components.getElement(componentID);
     disconnectSimpleCommponent(componentID);
     queue->componentIDQueue.push_back(componentID);
     tempComponent.includedIn = queue;
@@ -498,7 +501,7 @@ char AudioPipelineManager::connectComponent(short componentID, ID_type parentTyp
 }
 
 char AudioPipelineManager::setAdvancedComponentInput(short componentID, short inputIndex, ID_type IDType, short connectToID){
-    AAdvancedComponent* toConnect = component.getAdvancedComponent(componentID);
+    AAdvancedComponent_CUDA* toConnect = component.getAdvancedComponent(componentID);
     if (toConnect == nullptr){
         return -1;
     }
@@ -519,7 +522,7 @@ char AudioPipelineManager::setAdvancedComponentInput(short componentID, short in
             if (component.components.IDValid(connectToID) == false){
                 return -3;
             }
-            AAdvancedComponent* potentialAdvComponent = component.getAdvancedComponent(connectToID);
+            AAdvancedComponent_CUDA* potentialAdvComponent = component.getAdvancedComponent(connectToID);
             if (potentialAdvComponent == nullptr){
                 return -4;
             }
@@ -550,7 +553,7 @@ char AudioPipelineManager::disconnectCommponent(short componentID){
 }
 
 void AudioPipelineManager::disconnectSimpleCommponent(short componentID){
-    AComponent& tempComponent = *component.components.getElement(componentID);
+    AComponent_CUDA& tempComponent = *component.components.getElement(componentID);
     if (tempComponent.includedIn != nullptr){
         audioBufferQueue& oldQueue = *tempComponent.includedIn;
         for (uint i = 0; i < oldQueue.componentIDQueue.size(); i++){//TODO: (i < oldQueue.componentIDQueue.size()) changed to if statement below will detect system bugs
@@ -564,24 +567,24 @@ void AudioPipelineManager::disconnectSimpleCommponent(short componentID){
 }
 
 void AudioPipelineManager::disconnectAdvancedCommponentFromAll(short componentID){
-    AAdvancedComponent* toBeDisconnected = component.getAdvancedComponent(componentID);
+    AAdvancedComponent_CUDA* toBeDisconnected = component.getAdvancedComponent(componentID);
     for (int i = 0; i < toBeDisconnected->maxConnections; i++){
         toBeDisconnected->disconnect(i);
     }
 }
 
 void AudioPipelineManager::disconnectAdvancedCommponent(short componentID, ID_type parentType, short parentID){
-    AAdvancedComponent* toBeDisconnected = component.getAdvancedComponent(componentID);
+    AAdvancedComponent_CUDA* toBeDisconnected = component.getAdvancedComponent(componentID);
     toBeDisconnected->disconnect(parentType, parentID);
 }
 
 void AudioPipelineManager::disconnectAdvancedCommponent(short componentID, uint index){
-    AAdvancedComponent* toBeDisconnected = component.getAdvancedComponent(componentID);
+    AAdvancedComponent_CUDA* toBeDisconnected = component.getAdvancedComponent(componentID);
     toBeDisconnected->disconnect(index);
 }
 
 char AudioPipelineManager::tryDisconnectAdvancedCommponent(short componentID, short index){
-    AAdvancedComponent* toBeDisconnected = component.getAdvancedComponent(componentID);
+    AAdvancedComponent_CUDA* toBeDisconnected = component.getAdvancedComponent(componentID);
     if (toBeDisconnected == nullptr){
         return -1;
     }
@@ -599,7 +602,7 @@ char AudioPipelineManager::getComponentConnection(short componentID, ID_type& pa
         return -1;
     }
 
-    AComponent& tempComponent = *component.components.getElement(componentID);
+    AComponent_CUDA& tempComponent = *component.components.getElement(componentID);
 
     if (tempComponent.includedIn == nullptr){
         parentType = pipeline::INVALID;
@@ -616,7 +619,7 @@ char AudioPipelineManager::setComponentSetting(short componentID, uint settingIn
     if (component.components.IDValid(componentID) == false){
         return -1;
     }
-    AComponent& tempComponent = *component.components.getElement(componentID);
+    AComponent_CUDA& tempComponent = *component.components.getElement(componentID);
 
     if (tempComponent.getSettings()->count <= settingIndex){
         return -2;
@@ -627,7 +630,7 @@ char AudioPipelineManager::setComponentSetting(short componentID, uint settingIn
     return 0;
 }
 
-const componentSettings* AudioPipelineManager::getComopnentSettings(short componentID){
+const componentSettings_CUDA* AudioPipelineManager::getComopnentSettings(short componentID){
     if (component.components.IDValid(componentID) == false){
         return nullptr;
     }
@@ -637,7 +640,7 @@ const componentSettings* AudioPipelineManager::getComopnentSettings(short compon
 
 
 char AudioPipelineManager::printAdvancedComponentInfo(short ID){
-    AAdvancedComponent* toPrint = component.getAdvancedComponent(ID);
+    AAdvancedComponent_CUDA* toPrint = component.getAdvancedComponent(ID);
     if (toPrint == nullptr){
         return -1;
     }
@@ -652,7 +655,7 @@ char AudioPipelineManager::printAdvancedComponentInfo(short ID){
         }
     }
     std::printf("\n");
-    const componentSettings& settings = *toPrint->getSettings();
+    const componentSettings_CUDA& settings = *toPrint->getSettings();
     if (settings.count > 0){
         for (uint i = 0; i < settings.count; i++){
             std::printf("   %s: %f\n", settings.names[i].c_str(), settings.values[i]);
@@ -678,7 +681,7 @@ char AudioPipelineManager::printAdvancedComponentInfo(short ID){
 }
 
 bool AudioPipelineManager::isAdvancedComponent(short ID){
-    AAdvancedComponent* toCheck = component.getAdvancedComponent(ID);
+    AAdvancedComponent_CUDA* toCheck = component.getAdvancedComponent(ID);
     if (toCheck == nullptr){
         return false;
     }
@@ -772,10 +775,15 @@ char AudioPipelineManager::recordMidiFilesOffline(std::string fileName, double& 
     std::chrono::_V2::system_clock::time_point timeStart;
     std::chrono::_V2::system_clock::time_point timeEnd;
     time = 0.0;
+
+    double swapTime;
+    double conversionTime;
+
     midiReaderManager.rewind();
     midiReaderManager.play();
     while (midiReaderManager.getPlayCounter() > 0){
-        input.cycleBuffers();
+        input.cycleBuffers(swapTime, conversionTime);
+        time += conversionTime;
         timeStart = std::chrono::system_clock::now();
         input.generateSamples(executionQueue.getConnectedSynthIDs());
         for (int i = backwardsExecution.size() - 1; i >= 0; i--){

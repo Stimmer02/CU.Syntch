@@ -2,9 +2,9 @@
 #define STRINGTOENUM_H
 
 #include "Pipeline/ComponentManager.h"
-#include "Pipeline/Components/AAdvancedComponent.h"
+#include "Pipeline/Components/AAdvancedComponent_CUDA.h"
 #include "Pipeline/IDManager.h"
-#include "Synthesizer.h"
+#include "Synthesizer_CUDA.h"
 
 #include <stdexcept>
 #include <cstring>

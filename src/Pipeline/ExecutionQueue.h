@@ -3,13 +3,13 @@
 
 #include "audioBufferQueue.h"
 #include "UniqueShiftBuffer.h"
-#include "Components/AAdvancedComponent.h"
+#include "Components/AAdvancedComponent_CUDA.h"
 #include <vector>
 
 namespace pipeline{
     class ExecutionQueue{
     public:
-        void build(std::vector<audioBufferQueue*>& componentQueues, audioBufferQueue*& outputQueue, IDManager<AComponent, short>& components);
+        void build(std::vector<audioBufferQueue*>& componentQueues, audioBufferQueue*& outputQueue, IDManager<AComponent_CUDA, short>& components);
         const std::vector<audioBufferQueue*>& getQueue();
         const std::vector<short>& getConnectedSynthIDs();
         char error();

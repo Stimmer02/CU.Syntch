@@ -1,5 +1,4 @@
 #include "enumConversion.h"
-#include "Pipeline/Components/AComponent.h"
 
 pipeline::ID_type pipeline::stringToIDType(const char*& IDTypeString){
     struct cmp_str{

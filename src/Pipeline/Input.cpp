@@ -88,7 +88,7 @@ char Input::init(audioFormatInfo audioInfo, ushort keyCount){
     this->audioInfo = audioInfo;
     this->keyCount = keyCount;
     if (midiInput.getElementCount() > 0 || synths.getElementCount() > 0){
-        std::fprintf(stderr, "WARNING pipeline::Input::init: OBJECT CONTAINED COMPONENTS (Synthesizer/AKeyborRecorder) BEFORE INITIALIZATION (ALL DELETED)");
+        std::fprintf(stderr, "WARNING pipeline::Input::init: OBJECT CONTAINED COMPONENTS (Synthesizer_CUDA/AKeyborRecorder) BEFORE INITIALIZATION (ALL DELETED)");
         cleanup();
     }
 
@@ -123,7 +123,7 @@ short Input::getInputCount(){
     return midiInput.getElementCount();
 }
 
-short Input::addSynthesizer(pipelineAudioBuffer* buffer){
+short Input::addSynthesizer(pipelineAudioBuffer_CUDA* buffer){
     synthWithConnection* newSynth = new synthWithConnection(buffer, audioInfo, keyCount);
     return synths.add(newSynth);
 }
@@ -145,12 +145,12 @@ void Input::setSynthetiserSetting(short ID, synthesizer::generator_type type){
 }
 
 
-const synthesizer::settings* Input::getSynthetiserSettings(short ID){
+const synthesizer::settings_CUDA* Input::getSynthetiserSettings(short ID){
     return synths.getElement(ID)->synth.getSettings();
 }
 
 float Input::getSynthetiserSetting(short ID, synthesizer::settings_name settingName){
-    const synthesizer::settings& settings = *synths.getElement(ID)->synth.getSettings();
+    const synthesizer::settings_CUDA& settings = *synths.getElement(ID)->synth.getSettings();
     switch (settingName) {
         case synthesizer::PITCH:
             return settings.pitch;
@@ -206,7 +206,7 @@ void Input::swapActiveBuffers(){
 
 void Input::cycleBuffers(){
     AKeyboardRecorder** allInputs = midiInput.getAll();
-    keyboardTransferBuffer** allBuffers = midiInput.getAllBuffers();
+    keyboardTransferBuffer_CUDA** allBuffers = midiInput.getAllBuffers();
 
     for (int i = 0; i < midiInput.getElementCount(); i++){
         allInputs[i]->buffer->swapActiveBuffer();
@@ -215,7 +215,31 @@ void Input::cycleBuffers(){
     }
 }
 
-void Input::generateSampleWith(short synthID, pipelineAudioBuffer* buffer, keyboardTransferBuffer* keyboardState){
+void Input::cycleBuffers(double& swapTime, double& conversionTime){
+    AKeyboardRecorder** allInputs = midiInput.getAll();
+    keyboardTransferBuffer_CUDA** allBuffers = midiInput.getAllBuffers();
+
+    std::chrono::_V2::system_clock::time_point timeStart;
+    std::chrono::_V2::system_clock::time_point timeEnd;
+
+    timeStart = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < midiInput.getElementCount(); i++){
+        allInputs[i]->buffer->swapActiveBuffer();
+    }
+    timeEnd = std::chrono::high_resolution_clock::now();
+    swapTime = std::chrono::duration_cast<std::chrono::microseconds>(timeEnd - timeStart).count()/1000000;
+
+    timeStart = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < midiInput.getElementCount(); i++){
+        allBuffers[i]->convertBuffer(allInputs[i]->buffer);
+        allInputs[i]->buffer->clearInactiveBuffer();
+    }
+    timeEnd = std::chrono::high_resolution_clock::now();
+    conversionTime = std::chrono::duration_cast<std::chrono::microseconds>(timeEnd - timeStart).count()/1000000;
+
+}
+
+void Input::generateSampleWith(short synthID, pipelineAudioBuffer_CUDA* buffer, keyboardTransferBuffer_CUDA* keyboardState){
     synths.getElement(synthID)->synth.generateSample(buffer, keyboardState);
 }
 

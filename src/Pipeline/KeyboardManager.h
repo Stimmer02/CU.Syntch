@@ -2,7 +2,7 @@
 #define KEYBOARDMANAGER_H
 
 #include "../UserInput/AKeyboardRecorder.h"
-#include "../UserInput/keyboardTransferBuffer.h"
+#include "../UserInput/keyboardTransferBuffer_CUDA.h"
 #include "IDManager.h"
 
 #include <cstring>
@@ -19,10 +19,10 @@ namespace pipeline{
         void removeAll() override;
 
         void swapActiveBuffers();
-        keyboardTransferBuffer* getBuffer(CAPACITY ID);
-        keyboardTransferBuffer** getAllBuffers();
+        keyboardTransferBuffer_CUDA* getBuffer(CAPACITY ID);
+        keyboardTransferBuffer_CUDA** getAllBuffers();
 
-        typedef void (keyboardTransferBuffer::*methodPtr)();
+        typedef void (keyboardTransferBuffer_CUDA::*methodPtr)();
         void doForAllBuffers(methodPtr method);
 
         using IDManager<AKeyboardRecorder, CAPACITY>::getElement;
@@ -35,7 +35,7 @@ namespace pipeline{
     private:
         void resizeElements(CAPACITY increment) override;
 
-        keyboardTransferBuffer** keyboardsState;
+        keyboardTransferBuffer_CUDA** keyboardsState;
 
         using IDManager<AKeyboardRecorder, CAPACITY>::resizeMap;
         using IDManager<AKeyboardRecorder, CAPACITY>::elements;
@@ -50,7 +50,7 @@ namespace pipeline{
 
     template <typename CAPACITY>
     KeyboardManager<CAPACITY>::KeyboardManager(CAPACITY defaultIncrement): IDManager<AKeyboardRecorder, CAPACITY>(defaultIncrement){
-        keyboardsState = new keyboardTransferBuffer*[elementsTotal];
+        keyboardsState = new keyboardTransferBuffer_CUDA*[elementsTotal];
     }
 
     template <typename CAPACITY>
@@ -66,11 +66,11 @@ namespace pipeline{
         elementsTotal += increment;
         AKeyboardRecorder** newElements = new AKeyboardRecorder*[elementsTotal];
         CAPACITY* newElementsID = new CAPACITY[elementsTotal];
-        keyboardTransferBuffer** newKeyboardsState = new keyboardTransferBuffer*[elementsTotal];
+        keyboardTransferBuffer_CUDA** newKeyboardsState = new keyboardTransferBuffer_CUDA*[elementsTotal];
 
         std::memcpy(newElements, elements, elementsUsed * sizeof(AKeyboardRecorder*));
         std::memcpy(newElementsID, elementsID, elementsUsed * sizeof(CAPACITY));
-        std::memcpy(newKeyboardsState, keyboardsState, elementsUsed * sizeof(keyboardTransferBuffer*));
+        std::memcpy(newKeyboardsState, keyboardsState, elementsUsed * sizeof(keyboardTransferBuffer_CUDA*));
 
 
         delete[] elements;
@@ -85,7 +85,7 @@ namespace pipeline{
     template <typename CAPACITY>
     CAPACITY KeyboardManager<CAPACITY>::add(AKeyboardRecorder*& newInput){
         elements[elementsUsed] = newInput;
-        keyboardsState[elementsUsed] = new keyboardTransferBuffer(newInput->buffer->getSampleSize(), newInput->buffer->getKeyCount());
+        keyboardsState[elementsUsed] = new keyboardTransferBuffer_CUDA(newInput->buffer->getSampleSize(), newInput->buffer->getKeyCount());
         newInput = nullptr;
 
         IDMap[IDMapUsed] = elementsUsed;
@@ -141,7 +141,7 @@ namespace pipeline{
     }
 
     template <typename CAPACITY>
-    keyboardTransferBuffer* KeyboardManager<CAPACITY>::getBuffer(CAPACITY ID){
+    keyboardTransferBuffer_CUDA* KeyboardManager<CAPACITY>::getBuffer(CAPACITY ID){
         return keyboardsState[IDMap[ID]];
     }
 
@@ -160,7 +160,7 @@ namespace pipeline{
     }
 
     template <typename CAPACITY>
-    keyboardTransferBuffer** KeyboardManager<CAPACITY>::getAllBuffers(){
+    keyboardTransferBuffer_CUDA** KeyboardManager<CAPACITY>::getAllBuffers(){
         return keyboardsState;
     }
 }

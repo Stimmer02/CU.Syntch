@@ -2,7 +2,7 @@
 #define AUDIOPIPELINEMANAGER_H
 
 #include "Pipeline/ComponentManager.h"
-#include "Pipeline/Components/componentSettings.h"
+#include "Pipeline/Components/componentSettings_CUDA.h"
 #include "Pipeline/IDManager.h"
 #include "Pipeline/Input.h"
 #include "Pipeline/Output.h"
@@ -10,12 +10,12 @@
 #include "Pipeline/Statistics/pipelineStatistics.h"
 #include "Pipeline/ExecutionQueue.h"
 #include "Pipeline/audioBufferQueue.h"
-#include "Pipeline/pipelineAudioBuffer.h"
-#include "Synthesizer.h"
+#include "Pipeline/pipelineAudioBuffer_CUDA.h"
+#include "Synthesizer_CUDA.h"
 #include "UserInput/MIDI/MidiFileReader.h"
 #include "enumConversion.h"
 #include "UserInput/MIDI/MidiReaderManager.h"
-#include "Pipeline/AudioSpectrumVisualizer.h"
+#include "Pipeline/AudioSpectrumVisualizer_CUDA.h"
 
 
 
@@ -30,7 +30,6 @@ namespace pipeline{
         bool isRuning();
         bool isUsingVisualizer();
 
-        const statistics::pipelineStatistics* getStatistics();
         const audioFormatInfo* getAudioInfo();
 
         char recordUntilStreamEmpty(MIDI::MidiFileReader& midi, short synthID, std::string filename = "");//DEPRECATED
@@ -38,6 +37,11 @@ namespace pipeline{
         void reorganizeIDs();
 
         void emptyQueueBuffer(ID_type IDType, short ID);
+
+        //STATISTICS
+        const statistics::pipelineStatistics* getStatistics();
+        char recordStatistics(std::string filePath, float updateTimeInterval);
+        char stopRecordingStatistics();
 
         //OUTPUT CONTROL
         char startRecording();
@@ -62,7 +66,7 @@ namespace pipeline{
         char connectInputToSynth(short inputID, short synthID);
         char disconnectSynth(short synthID);
 
-        const synthesizer::settings* getSynthSettings(const ushort& synthID);
+        const synthesizer::settings_CUDA* getSynthSettings(const ushort& synthID);
         synthesizer::generator_type getSynthType(const ushort& synthID);
         float getSynthSetting(const ushort& synthID, synthesizer::settings_name settingName);
         void setSynthSetting(const ushort& synthID, const synthesizer::settings_name& settingsName, const float& value);
@@ -96,7 +100,7 @@ namespace pipeline{
         char setAdvancedComponentInput(short componentID, short inputIndex, ID_type IDType, short connectToID);
         char getComponentConnection(short componentID, ID_type& parentType, short& parentID);
         char setComponentSetting(short componentID, uint settingIndex, float value);
-        const componentSettings* getComopnentSettings(short componentID);
+        const componentSettings_CUDA* getComopnentSettings(short componentID);
 
         bool isAdvancedComponent(short ID);
 
@@ -156,7 +160,7 @@ namespace pipeline{
         audioBufferQueue* outputBuffer;//the last componentQueue to be executed
         ExecutionQueue executionQueue;//processing order of componentQueues
 
-        AudioSpectrumVisualizer visualizer;//allows to display audio spectrum
+        AudioSpectrumVisualizer_CUDA visualizer;//allows to display audio spectrum
 
         statistics::PipelineStatisticsService* statisticsService;
 
