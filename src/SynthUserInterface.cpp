@@ -1594,7 +1594,7 @@ void SynthUserInterface::commandMidiReaderRecord(){
     auto timeStart = std::chrono::system_clock::now();
     std::fstream outputFile;
     if (timeFlag){
-        outputFile.open(saveFilePath, std::ios::out);
+        outputFile.open(saveFilePath, std::ios::out | std::ios::app);
         if (outputFile.is_open() == false){
             std::printf("Could not open file: %s\n", saveFilePath.c_str());
             error = true;
@@ -1615,8 +1615,7 @@ void SynthUserInterface::commandMidiReaderRecord(){
         }
         std::printf("Calculations time: %fs\n", calculationTime);
         if (timeFlag){
-            outputFile << calculationTime;
-            outputFile.close();
+            outputFile << calculationTime << ",";
         }
     } else {
         if (audioPipeline->recordMidiFiles(inputTokens[1])){
@@ -1627,8 +1626,8 @@ void SynthUserInterface::commandMidiReaderRecord(){
     }
     auto timeEnd = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = timeEnd-timeStart;
-    if (timeFlag && !offlineFlag){
-        outputFile << elapsed_seconds.count();
+    if (timeFlag){
+        outputFile << elapsed_seconds.count() << "\n";
         outputFile.close();
     }
     std::printf("Elapsed time: %fs\n", std::chrono::duration<double>(timeEnd-timeStart).count());
