@@ -13,7 +13,7 @@ AudioPipelineManager::AudioPipelineManager(audioFormatInfo audioInfo, ushort key
     usingVisualizer = false;
     pipelineThread = nullptr;
 
-    statisticsService = new statistics::PipelineStatisticsService(audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate, 64, audioInfo, 0);
+    statisticsService = new statistics::PipelineStatisticsService(audioInfo.sampleSize*long(1000000)/audioInfo.sampleRate, 64, &this->audioInfo, 0);
 
     input.init(audioInfo, keyCount);
     output.init(audioInfo);
@@ -102,11 +102,6 @@ bool AudioPipelineManager::isUsingVisualizer(){
     return usingVisualizer;
 }
 
-
-const statistics::pipelineStatistics* AudioPipelineManager::getStatistics(){
-    return statisticsService->getStatistics();
-}
-
 const audioFormatInfo* AudioPipelineManager::getAudioInfo(){
     return &audioInfo;
 }
@@ -122,6 +117,8 @@ void AudioPipelineManager::pipelineThreadFunction(){
 
     statisticsService->firstInvocation();
 
+    std::function<void()> loopWorkEnd = [this]() { this->statisticsService->loopWorkEnd(); };
+
     while (running){
         std::this_thread::sleep_until(std::chrono::time_point<std::chrono::system_clock>(std::chrono::nanoseconds((nextLoop)*1000)));
         statisticsService->loopStart();
@@ -134,9 +131,7 @@ void AudioPipelineManager::pipelineThreadFunction(){
             component.applyEffects(backwardsExecution[i]);
         }
 
-        statisticsService->loopWorkEnd();
-
-        output.play(&outputBuffer->buffer);
+        output.play(&outputBuffer->buffer, loopWorkEnd);
     }
 }
 
@@ -152,6 +147,8 @@ void AudioPipelineManager::pipelineThreadFunctionWithVisualizer(){
 
     statisticsService->firstInvocation();
 
+    std::function<void()> loopWorkEnd = [this]() { this->statisticsService->loopWorkEnd(); };
+
     while (running){
         std::this_thread::sleep_until(std::chrono::time_point<std::chrono::system_clock>(std::chrono::nanoseconds((nextLoop)*1000)));
         statisticsService->loopStart();
@@ -166,9 +163,7 @@ void AudioPipelineManager::pipelineThreadFunctionWithVisualizer(){
         
         visualizer.displayBuffer(&outputBuffer->buffer);
 
-        statisticsService->loopWorkEnd();
-
-        output.play(&outputBuffer->buffer);
+        output.play(&outputBuffer->buffer, loopWorkEnd);
     }
     usingVisualizer = false;
 }
@@ -234,6 +229,20 @@ void AudioPipelineManager::emptyQueueBuffer(ID_type IDType, short ID){
         component.components.getElement(toEmpty.componentIDQueue.at(i))->includedIn = nullptr;
     }
     toEmpty.componentIDQueue.clear();
+}
+
+
+//STATISTICS
+const statistics::pipelineStatistics* AudioPipelineManager::getStatistics(){
+    return statisticsService->getStatistics();
+}
+
+char AudioPipelineManager::recordStatistics(std::string filePath, float updateTimeInterval){
+    return statisticsService->record(filePath, updateTimeInterval);
+}
+
+char AudioPipelineManager::stopRecordingStatistics(){
+    return statisticsService->stopRecording();
 }
 
 
@@ -772,10 +781,15 @@ char AudioPipelineManager::recordMidiFilesOffline(std::string fileName, double& 
     std::chrono::_V2::system_clock::time_point timeStart;
     std::chrono::_V2::system_clock::time_point timeEnd;
     time = 0.0;
+
+    double swapTime;
+    double conversionTime;
+
     midiReaderManager.rewind();
     midiReaderManager.play();
     while (midiReaderManager.getPlayCounter() > 0){
-        input.cycleBuffers();
+        input.cycleBuffers(swapTime, conversionTime);
+        time += conversionTime;
         timeStart = std::chrono::system_clock::now();
         input.generateSamples(executionQueue.getConnectedSynthIDs());
         for (int i = backwardsExecution.size() - 1; i >= 0; i--){

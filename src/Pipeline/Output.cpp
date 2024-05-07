@@ -88,6 +88,21 @@ void Output::play(pipelineAudioBuffer* pipelineBuffer){
     }
 }
 
+void Output::play(pipelineAudioBuffer* pipelineBuffer, std::function<void()> executeBefroePlay){
+    try {
+        bufferConverter->toPCM(pipelineBuffer, buffer);
+
+        executeBefroePlay();
+        
+        audioOutput->playBuffer(buffer);
+        if (recording){
+            audioRecorder.saveBuffer(buffer);
+        }
+    } catch (std::exception& e){
+        std::fprintf(stderr, "ERR pipeline::Output::play: %s\n", e.what());
+    }
+}
+
 void Output::onlyRecord(pipelineAudioBuffer* pipelineBuffer){
     try {
         bufferConverter->toPCM(pipelineBuffer, buffer);

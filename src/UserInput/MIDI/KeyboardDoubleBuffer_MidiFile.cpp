@@ -11,14 +11,10 @@ KeyboardDoubleBuffer_MidiFile::~KeyboardDoubleBuffer_MidiFile(){
 }
 
 uchar** KeyboardDoubleBuffer_MidiFile::getInactiveBuffer(){
-    fileReader.fillBuffer(0);
-    fileReader.notifyObserver();
     return fileReader.getTempBuffer();
 }
 
 uchar** KeyboardDoubleBuffer_MidiFile::getActiveBuffer(){
-    fileReader.fillBuffer(0);
-    fileReader.notifyObserver();
     return fileReader.getTempBuffer();
 }
 
@@ -28,6 +24,8 @@ long KeyboardDoubleBuffer_MidiFile::getActivationTimestamp(){
 
 void KeyboardDoubleBuffer_MidiFile::swapActiveBuffer(){
     activationTimestamp = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
+    fileReader.fillBuffer(0);
+    fileReader.notifyObserver();
 }
 
 void KeyboardDoubleBuffer_MidiFile::clearInactiveBuffer(){}
