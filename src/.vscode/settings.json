@@ -85,7 +85,8 @@
         "cfenv": "cpp",
         "queue": "cpp",
         "stack": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "__bit_reference": "cpp"
     },
     "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
         "clang-analyzer-optin.cplusplus.VirtualCall"

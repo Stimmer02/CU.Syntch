@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/GPU-synth.out", //src/test.out",
-            // "args": ["user","/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/config/scripts/multipleDeviceTest.txt"],
+            // "args": ["user","/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/config/scripts/Vth_symphony2.txt"],
             "stopAtEntry": false,
             "cwd": "/home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/",
             "environment": [],

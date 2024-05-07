@@ -1,8 +1,0 @@
-setUserInput /dev/input/event3
-inputAdd keyboard /dev/input/event3 127 ./config/kMaps/incrementalKeyboardMap.txt
-midiAdd
-midiSet 1 /home/stimmer02/Documents/UMCS/SEMESTR_6/seminarium/CU.Synth/V_Bethoven/double_bass.mid
-synthAdd
-synthConnect 0 0
-setOut SYNTH 0
-pStart
