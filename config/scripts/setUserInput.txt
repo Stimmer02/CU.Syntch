@@ -1,2 +1,0 @@
-setUserInput /dev/input/event3
-inputAdd keyboard /dev/input/event3 127 ./config/kMaps/incrementalKeyboardMap.txt
