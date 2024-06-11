@@ -1,0 +1,22 @@
+{
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "james-yu.latex-workshop"
+            ]
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "configureZshAsDefaultShell": true,
+            "installOhMyZsh": true,
+            "upgradePackages": true,
+            "username": "automatic",
+            "userUid": "automatic",
+            "userGid": "automatic"
+        }
+    },
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y texlive-base texlive-lang-polish texlive-extra-utils texlive-latex-recommended chktex latexmk texlive-bibtex-extra biber"
+}

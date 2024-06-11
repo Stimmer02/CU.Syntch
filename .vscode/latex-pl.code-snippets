@@ -1,0 +1,50 @@
+{
+	// "Twarda spacja": {
+	// 	"scope": "latex",
+	// 	"prefix": "/^[aiow]$/",
+	// 	"body": [
+	// 		"a~"
+	// 	],
+	// 	"description": "Twarda spacja"
+	// },
+	"Twarda spacja a": {
+		"scope": "latex",
+		"prefix": "a",
+		"body": [
+			"a~"
+		],
+		"description": "Twarda spacja"
+	},
+	"Twarda spacja w": {
+		"scope": "latex",
+		"prefix": "w",
+		"body": [
+			"w~"
+		],
+		"description": "Przecinek"
+	},
+	"Twarda spacja o": {
+		"scope": "latex",
+		"prefix": "o",
+		"body": [
+			"o~"
+		],
+		"description": "Przecinek"
+	},
+	"Twarda spacja z": {
+		"scope": "latex",
+		"prefix": "z",
+		"body": [
+			"z~"
+		],
+		"description": "Przecinek"
+	},
+	"Twarda spacja i": {
+		"scope": "latex",
+		"prefix": "i",
+		"body": [
+			"i~"
+		],
+		"description": "Przecinek"
+	},
+}

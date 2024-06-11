@@ -1,0 +1,52 @@
+
+\chapter{Rozdział o czymś tam}
+
+\section{Sekcja A}
+
+W tabeli~\ref{tab:przyk} widzimy przykład tabeli z~nagłówkiem i~odnośnikiem. Tabele tworzymy z~nagłówkiem na górze oraz opcją \texttt{[t]}.
+Natomiast na rysunku~\ref{rys:przyk} --- widzimy przykład rysunku z nagłówkiem i~odnośnikiem.
+Rysunki tworzymy z nagłówkiem pod spodem oraz opcją \texttt{[b]}.
+Rysunki powinny być w formacie PDF; jeśli to niemożliwe, to PNG (w wysokiej rozdzielczości); a~ostatecznie JPG (jak tu). Jeśli chcemy sterować rozmiarem, to zwykle najwygodniej użyć \texttt{width=...}
+Ponadto możemy odwoływać się do bibliografii~\cite{a:doc, b:doc}.
+
+Jeśli chodzi o wzory, możemy złożyć je na kilka sposobów, w zależności od potrzeb --- w tekście: $e=\lim_{n\to\infty}\left(1+\frac{1}{n}\right)^n$, wyniesiony do osbnej linii
+(warto zwrócić uwagę, że ten i~kolejny są złożone nieco inaczej niż pierwszy):
+\[e=\lim_{n\to\infty}\left(1+\frac{1}{n}\right)^n,\] a także wyniesiony z numerem:
+\begin{equation}
+    e=\lim_{n\to\infty}\left(1+\frac{1}{n}\right)^n.
+    \label{wzor:e}
+\end{equation}
+Do tego oostatniego możemy się odwołać:~\eqref{wzor:e}.
+
+No i oczywiście listingi --- listing~\ref{lst:przyk} pokazuje, jak zrobić to w~miarę poprawnie\ldots{}
+
+\begin{table}[t]
+    \begin{center}
+        \caption{Przykładowa tabela}\label{tab:przyk}
+        \begin{tabular}{l|c|r}
+            slkdjfslj  & sdkskd               & s;lkdsdk          \\
+            \hline
+            slkjd      & skljdsldj            & skljdsjdsldj      \\
+            sljkdslkjd & woieupowiepoweiwiewp & weoiw eppowie wpo \\
+        \end{tabular}
+    \end{center}
+\end{table}
+
+\begin{figure}[b]
+    \begin{center}
+        \includegraphics[width=5cm]{fig/LogoUMCS}
+    \end{center}
+    \caption{Przykładowy rysunek}\label{rys:przyk}
+\end{figure}
+
+\begin{lstfloat}[b]
+    \lstset{language=C++}
+    \begin{lstlisting}[frame=single]
+tab[0:n] = dem[nRows][nCols]; //?
+#pragma acc data copy(tab [0:n], slope [0:n])
+\end{lstlisting}
+    \caption{Jakieś dwie linijki w~C++ (z~OpenACC)}\label{lst:przyk}
+\end{lstfloat}
+
+\subsection{Odnosnik do arytykułu}
+Artykuł~\cite{bib:art1}
