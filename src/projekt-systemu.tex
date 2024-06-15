@@ -1,0 +1,135 @@
+\chapter{Projekt systemu}
+
+\section{Założenia wstępne}
+Aby zrealizować projekt w sposób składny i efektywny, należy zdefiniować cele i wymagania, które system ma spełniać. Będą one stanowiły podstawę do dalszych prac projektowych.
+\\\\
+\textbf{System musi spełniać następujące wymagania:}
+\begin{enumerate}
+    \item Możliwość przetwarzania dźwięku w czasie rzeczywistym (online).
+    \item Możliwość przetwarzania dźwięku w trybie offline (możliwe najszybciej bez jednoczesnego odtwarzania).
+    \item Pierwsza wersja systemu ma przetwarzać dźwięk jedynie przy użyciu CPU.
+    \item Łatwy w rozbudowie o przetwarzanie dźwięku przy użyciu GPU, przy zachowaniu minimalnych zmian w kodzie.
+    \item Uniwersalny podsystem komponentów odpowiedzialnych za przetwarzanie dźwięku - komponent implementuje pojedynczy algorytm przetwarzania dźwięku.
+    \item Uniwersalny podsystem strumieni dźwięku - strumień może zostać przetworzony przez dowolną liczbę komponentów oraz dowolnie łączony z innymi strumieniami.
+    \item Możliwość odtwarzania strumienia wyjściowego.
+    \item Możliwość zapisu strumienia wyjściowego w przypadku przetwarzania offline.
+    \item Możliwość pełnej kontroli systemu, bez konieczności ingerencji w kod źródłowy.
+    \item Możliwość syntezy dźwięku - początek strumienia dźwięku.
+    \item Obsługa urządzeń wejścia, przy pomocy których są generowane dane potrzebne do syntezy dźwięku.
+    \item Obsługa plików wejściowych, stosowanych zamiennie z urządzeniami wejścia.
+    \item Podsystem zarządzania plikami wejściowymi - możliwość dodawania, usuwania, rozpoczęcia/wstrzymania odtwarzania, przewijania pliku.
+    \item Możliwość zmiany formatu strumieni dźwiękowych - zmiana częstotliwości próbkowania, rozmiaru bufora.
+    \item Podsystem gromadzenia danych statystycznych dotyczących wydajności systemu.
+    \item Funkcja rzetelnego testowania wydajności systemu - brak czynnika ludzkiego w procesie pomiaru.
+\end{enumerate}
+
+\section{Założenia implementacyjne}
+Przed rozpoczęciem procesu implementacji należy wpierw określić wykorzystane technologie oraz standardy.
+\\\\
+\textbf{Zbiór założeń implementacyjnych:}
+\begin{enumerate}
+    \item System zostanie zaimplementowany w języku C++.
+    \item Elementy systemu odpowiedzialne za przetwarzanie dźwięku zostaną ponownie zaimplementowane na GPU przy użyciu technologii CUDA.
+    \item Jako formatu przetwarzanego sygnału zostanie użyty format LPCM.
+    \item Próbki LPCM będą reprezentowane jako liczby zmiennoprzecinkowe 32-bitowe (typ float w języku C++).
+    \item Bufory audio będą zawsze grupowane po dwa - sygnał stereo.
+    \item Interfejs użytkownika zostanie zaimplementowany jako aplikacja konsolowa.
+    \item Jako urządzenia wejścia posłużą urządzenia MIDI oraz klawiatura komputerowa.
+    \item Jako format wejściowy zostaną użyte pliki .mid - pliki zapisane w formacie MIDI.
+    \item Jako format wyjściowy danych dźwiękowych zostaną użyte pliki .wav.
+    \item W celu odtwarzania dźwięku zostanie użyty system PulseAudio.
+    \item System nie będzie korzystał z wielowątkowości (w przypadku przetwarzania na CPU) lub asynchronicznych wywołań kerneli (w przypadku przetwarzania na GPU) w celu przetwarzania dźwięku.
+\end{enumerate}
+
+\section{Architektura systemu}
+System będzie się składał z wielu podsystemów, posiadających odmienne zbiory obowiązków, połączonych ze sobą klasą implementującą wzorzec mediatora oraz fasady.
+\\\\
+\textbf{Dziedziny jakimi będą zajmować się podsystemy:}
+\begin{enumerate}
+    \item Wejście:
+        \begin{itemize}
+            \item zarządza urządzeniami wejścia,
+            \item zarządza plikami wejściowymi,
+            \item interpretuje strumienie wejściowe,
+            \item zarządza zbiorem syntezatorów,
+            \item generuje strumienie dźwiękowe przy wykorzystaniu syntezatorów oraz strumieni wejściowych.
+        \end{itemize}
+    \item Wyjście:
+        \begin{itemize}
+            \item zarządza komunikacją programu z serwerem PulseAudio,
+            \item konwertuje otrzymany strumień dźwiękowy na wybrany przez użytkownika format,
+            \item odtwarza otrzymany strumień dźwiękowy,
+            \item pozwala na zapis otrzymanego strumienia dźwiękowego do pliku.
+        \end{itemize}
+    \item Przetwarzanie sygnału:
+        \begin{itemize}
+            \item zarządza komponentami implementującymi algorytmy przetwarzania sygnału dźwiękowego,
+            \item pozwala na łączenie strumieni audio,
+            \item pozwala na dodawanie komponentów do strumieni audio,
+            \item generuje listę instrukcji na bazie obecnej konfiguracji w kolejności, w której należy je wykonać w celu uzyskania zdefiniowanego przez użytkownika efektu.
+        \end{itemize}
+    \item Dane statystyczne:
+        \begin{itemize}
+            \item wykonuje i gromadzi pomiary czasu poszczególnych części pętli programowej,
+            \item pozwala na zapis zgromadzonych i wstępnie przetworzonych danych do pliku.
+        \end{itemize}
+    \item Interface użytkownika:
+        \begin{itemize}
+            \item zarządza operacjami wejścia-wyjścia w kontekście terminalu,
+            \item wykorzystuje fasadę systemu w celu wykonywania na nim operacji,
+            \item rozpoznaje słowa-klucze (komendy) podawane przez użytkownika i wywołuje odpowiednie metody systemu,
+            \item wykonuje pliki tekstowe zawierające zestawy komend, w roli automatyzacji procesu konfiguracji systemu.
+        \end{itemize}
+\end{enumerate}
+
+\section{Komunikacja podsystemów}
+W związku z koniecznością komunikacji pomiędzy podsystemami oraz wewnątrz klas wchodzących w ich skład, należy zdefiniować ustandaryzowany format dla każdego typu przekazywanych i przechowywanych informacji, z uwzględnieniem koniecznej w przyszłości reimplementacji znaczącej części systemu przy użyciu technologii CUDA.
+
+\begin{enumerate}
+    \item \textbf{audioFormatInfo} - struktura przechowująca informacje dotyczące formatu przetwarzanego i odtwarzanego/zapisanego dźwięku takie jak:
+    \begin{itemize}
+        \item częstotliwość próbkowania,
+        \item rozmiar bufora,
+        \item liczba kanałów wyjściowych,
+        \item głębia bitowa próbki.
+    \end{itemize}
+    \item \textbf{IDManager} - klasa-kontener przechowująca obiekty wskazanego typu i nadająca im unikalne identyfikatory, pomaga w zarządzaniu obiektami w systemie, nadając im możliwie najkrótsze identyfikatory, co ułatwia posługiwanie się nimi użytkownikowi.
+    \item Pozwala na operacje takie jak:
+    \begin{itemize}
+        \item dodawanie nowego obiektu i jednoczesne przydzielanie mu ID,
+        \item usuwanie obiektu o wskazanym ID,
+        \item pobieranie obiektu o wskazanym ID,
+        \item pobieranie tablicy wszystkich obiektów,
+        \item sprawdzanie czy obiekt o wskazanym ID istnieje.
+    \end{itemize}
+    \item \textbf{audioBuffer} - struktura przechowująca próbki dźwiękowe w postaci tablicy bajtów, wykorzystywana w komunikacji pomiędzy systemem a serwerem PulseAudio. Przechowuje:
+    \begin{itemize}
+        \item tablicę bajtów zawierającą próbki dźwiękowe,
+        \item ilość próbek w tablicy,
+        \item wielkość pojedynczej próbki w bajtach.
+    \end{itemize}
+    \item \textbf{pipelineAudioBuffer} - struktura przechowująca dwie tablice typu float próbek dźwiękowych, wykorzystywana w wewnętrznej komunikacji pomiędzy komponentami przetwarzania dźwięku, systemem wyjścia oraz systemem wejścia. Przechowuje:
+    \begin{itemize}
+        \item dwie tablice typu float zawierające próbki dźwiękowe,
+        \item ilość próbek w tablicach.
+    \end{itemize}
+    \item \textbf{audioBufferQueue} - struktura przechowująca pipelineAudioBuffer wraz z informacją o kolejności wykonywania na nim operacji oraz informacja o jego pochodzeniu. Przechowuje:
+    \begin{itemize}
+        \item obiekt pipelineAudioBuffer,
+        \item typ podsystemu, który utworzył buffer,
+        \item ID elementu podsystemu który utworzył buffer,
+        \item listę ID komponentów przetwarzania dźwięku, które mają zostać na nim wykonane.
+    \end{itemize}
+    \item \textbf{keyboardTransferBuffer} - struktura przechowująca informacje o stanie poszczególnych klawiszy, na osi czasu, urządzenia wejściowego. Przechowuje:
+    \begin{itemize}
+        \item dwuwymiarową tablicę bajtów (gdzie pierwszy wymiar stanowi indeks klawisza, a drugi oś czasu) zawierających informację o stanie klawiszy, wyróżniając 128 stanów zgodnie ze standardem MIDI,
+        \item jednowymiarową tablicę (wielkości równej ilości klawiszy) zawierającą informację o ostatnim stanie z poprzedniej zawartości bufora,
+        \item ilość obsługiwanych klawiszy,
+        \item wielkość bufora w dziedzinie czasu.
+    \end{itemize}
+\end{enumerate}
+
+
+% PulseAudio
+% PulseAudio simple
+% mediator, fasada

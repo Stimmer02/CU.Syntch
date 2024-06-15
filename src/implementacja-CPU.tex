@@ -1,0 +1,7 @@
+\chapter{Implementacja CPU}
+
+\section{Jądro systemu}
+Klasą z której można zarządzać całym systemem jest klasa \texttt{AudioPipelineManager}. Pełni ona rolę fasady dla całego systemu, udostępniając wszelkie jego funkcjonalności rozproszone w różnych podsystemach. Jako, że implementuje ona główną pętlę programową oraz zarządza wątkiem w którym się ta pętla wykonuje, klasa ta również pełni rolę jądra. 
+
+\section{Interfejs użytkownika}
+Interfejs użytkownika został zaimplementowany jako aplikacja konsolowa w klasie \texttt{SynthUserInterface}. Klasa ta wykorzystuje metody upublicznione w \texttt{AudioPipelineManager} w swoich metodach obsługujących poszczególne komendy. \texttt{SynthUserInterface} wykorzystuje klasę \texttt{std::map} z biblioteki standardowej w celu przechowywania par wartości: nazwy komendy (std::string) i wskaźnika na metodę (void (SynthUserInterface::*)()). 

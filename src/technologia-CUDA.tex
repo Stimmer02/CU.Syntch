@@ -17,12 +17,52 @@ W przeciwieństwie do programowania wielowatkowego na CPU, programowanie w techn
     \label{fig:Grid of Thread Blocks}
 \end{figure}
 
-\begin{figure}
-    \centering
-    % \includegraphics[scale=0.5]{./fig/grid-of-thread-blocks.png}
-    \caption{Przykładowe wywołanie kernela CUDA}
-    \label{fig:Przykładowe wywołanie kernela CUDA}
-\end{figure}
+
+
+
+\begin{lstfloat}[b]
+    \lstset{
+        language=C++,
+        literate={ę}{{\k{e}}}1 {ą}{{\k{a}}}1 {ł}{{\l{}}}1 {ó}{{\'o}}1
+    }
+    \begin{lstlisting}[frame=single]
+    
+// kernel sumujący dwie tablice
+__global__ void sum(float* arrayA, float* arrayB, int size){
+    // obliczenie indeksu wątku
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // sumowanie elementów tablicy
+    if (i < size){
+        arrayB[i] = arrayA[i] + arrayB[i];
+    }
+}
+
+int main(){
+    // alokacja pamięci na GPU
+    float* arrayA, *arrayB;
+    int size = 1000;
+    cudaMalloc(&arrayA, size * sizeof(float));
+    cudaMalloc(&arrayB, size * sizeof(float));
+
+    // ustawienie rozmiaru bloku i gridu
+    int blockSize = 256;
+    int numBlocks = (size + blockSize - 1) / blockSize;
+
+    // wywołanie kernela
+    sum<<<numBlocks, blockSize>>>(arrayA, arrayB, size);
+
+    // zwolnienie pamięci GPU
+    cudaFree(arrayA);
+    cudaFree(arrayB);
+
+    return 0;
+}
+\end{lstlisting}
+    \caption{Przykładowe wywołanie kernela CUDA sumującego dwie tablice w języku C++}
+    \label{lst:Przykładowe wywołanie kernela CUDA sumującego dwie tablice w języku C++}
+\end{lstfloat}
+
 
 \section{Host i Device}
 Urządzenie GPU można traktować jako oddzielny komputer, posiadający swoje własne podzespoły oraz zasoby. Technologia CUDA właśnie w ten sposób reprezentuje kompatybilną kartę graficzną. Interfejs programistyczny CUDA rozróżnia dwa środowiska: \textit{host} oraz \textit{device}. Host to komputer, na którym uruchamiany jest program, który wykorzystuje technologię CUDA. Device to karta graficzna, na której wykonywane są obliczenia. Najbardziej podstawowym schematem programu wykorzystującego tą technologię jest: przekazanie danych przygotowanych na urządzeniu host do urządzenia device, które wykonuje obliczenia. Po zakończeniu obliczeń, urządzenie host pobiera wyniki z GPU, gdzie możliwa jest ich interpretacja, zapis lub dalsze przetwarzanie. Można zauważyć, iż na moc obliczeniową, wynikającą z połączenia CPU oraz GPU, składa się również szybkość przesyłania danych między tymi dwoma urządzeniami. Tabela \ref{tab:Przepustowość przsyłu danych} przedstawia przeciętne możliwości w kategorii kopiowania danych zawartych w konkretnych typach pamięci urządzeń. Należy zauważyć ograniczenia jakie za sobą niesie wykorzystywanie szyny PCIE w przypadku intensywnej komunikacji pomiędzy CPU a GPU. Sugerowanym przez NVIDIA'e rozwiązaniem jest przekazanie jedynie niezbędnych danych w celu wykonania obliczeń na GPU, a następnie zwrócenie jedynie samego wyniku obliczeń. W ten sposób można przynajmniej częściowo zniwelować efekt wąskiego gardła, jaki może wynikać z przepustowości szyny PCIE. Alternatywnym rozwiązaniem jest wykonywanie obliczeń asynchronicznie względem przesyłu danych, co pozwala na wykonanie obu operacji w tym samym czasie i zlikwidowanie czasu oczekiwania na zakończenie przesyłu danych.
@@ -46,6 +86,7 @@ Urządzenie GPU można traktować jako oddzielny komputer, posiadający swoje w�
                        & L1 cache    & 1TB/s - 2TB/s    \\
             GPU        & L2 cache    & 500GB/s - 1TB/s  \\
                        & DRAM        & 200GB/s - 800GB/s\\
+            \hline
             \hline
                        & 3.0         & 1GB/s - 16GB/s   \\
             PCIE       & 4.0         & 2GB/s - 32GB/s   \\
