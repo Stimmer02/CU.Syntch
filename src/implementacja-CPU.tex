@@ -1,7 +1,230 @@
 \chapter{Implementacja CPU}
+Implementacja systemu CPU jest pierwszym etapem realizacji projektu. System ten spełnia wymagania postawione w założeniach wstępnych, implementując wiele podsystemów, które są odpowiedzialne za różne aspekty jego funkcjonowania. Poniżej zostaną omówione poszczególne podsystemy, ich zadania oraz najważniejsze klasy, które je implementują.
+
+\section{Podsystem wejścia}
+Klasa \texttt{pipeline::Input} zarządza urządzeniami wejścia, odtwarzaniem plików MIDI, zbiorem syntezatorów oraz generowaniem próbek dźwiękowych przy ich użyciu. Podsystem operuje między innymi na obiektach następujących klas:
+\begin{enumerate}
+    \item \texttt{AKeyboardRecorder} - klasa abstrakcyjna reprezentująca urządzenie wejścia, jej implementacje zapisują stan urządzenia na przestrzeni czasu wykorzystując obiekty klas implementujących interfejs \texttt{IKeyboardDoubleBuffer}. Klasami dziedziczącymi po \texttt{AKeyboardRecorder} są:
+    \begin{itemize}
+        \item \texttt{KeyboardRecorder\_MidiFile} - klasa implementująca odczyt plików MIDI przy wykorzystaniu klasy \texttt{MidiFileReader}.
+        \item \texttt{KeyboardRecorder\_DevInput} - klasa implementująca odczyt z klawiatury komputerowej przy wykorzystaniu strumieni systemowych znajdujących się w /dev/input/ w systemie Linux.
+        \item \texttt{KeyboardRecorder\_DevSnd} - klasa implementująca odczyt z urządzenia MIDI przy wykorzystaniu strumieni systemowych znajdujących się w /dev/snd/ w systemie Linux oraz klasy \texttt{MidiMessageInterpreter}.
+    \end{itemize}
+    \item \texttt{KeyboradManager} - klasa-kontener dziedzicząca po \texttt{IDManager}, przechowująca i zarządzająca obiektami klas implementujących \texttt{AKeyboardRecorder}.
+    \item \texttt{MidiReaderManager} - klasa zarządzająca odczytem plików MIDI, operuje na  obiektach klasy \texttt{KeyboardRecorder\_MidiFile}.
+    \item \texttt{Synthesizer} - klasa reprezentująca syntezator, przy wykorzystaniu wzorca strategii pozwala na wybór różnych algorytmów generowania dźwięku. Wypełnia bufor audio na podstawie ustawień użytkownika oraz struktur \texttt{keyboardTransferBuffer}. Każdy syntezator posiada unikalny identyfikator, nadawany przez obiekt klasy \texttt{IDManager}, dzięki któremu przyporządkowuje się mu strumień dźwiękowy w postaci struktury \texttt{pipelineAudioBuffer}.
+    \item \texttt{MidiFileReader} - klasa zarządzająca odczytem plików MIDI. Jej głównym zadaniem jest obliczenie konkretnego punktu w czasie w którym należy odczytać kolejną wiadomość MIDI na podstawie konfiguracji zawartej w pliku oraz ustawień systemowych. Klasa ta wykorzystuje obiekty klasy \texttt{MidiMessageInterpreter} do interpretacji odczytanych wiadomości.
+\end{enumerate}
+
+\section{Podsystem wyjścia}
+Klasa \texttt{pipeline::Output} zarządza komunikacją programu z serwerem PulseAudio, konwertuje otrzymany strumień dźwiękowy na wybrany przez użytkownika format oraz pozwala na zapis otrzymanego strumienia dźwiękowego do pliku. Podsystem ten operuje na obiektach następujących klas:
+\begin{enumerate}
+    \item \texttt{OutStreamPulseAudio} - klasa implementująca interfejs \texttt{IOutStream}. Klasa ta wykorzystuje bibliotekę \texttt{libpulse} do nawiązania połączenia z serwerem PulseAudio oraz przesyłania do niego buforów dźwiękowych.
+    \item \texttt{AudioRecorder} - klasa pozwalająca na zapis otrzymanego bufora dźwiękowego do pliku o wskazanej nazwie z rozszerzeniem .wav.
+    \item \texttt{AudioBuffer} - struktura reprezentująca bufor dźwiękowy. Przede wszystkim przechowuje próbki dźwiękowe w postaci tablicy bajtów.
+    \item \texttt{ABufferConverter} - klasa abstrakcyjna, której implementacje, dzięki zastosowaniu wzorca projetkowego stragegii, pozwalają na konwersję bufora dźwiękowego przedstawianego za pomocą struktury \texttt{pipelineAudioBuffer} do struktury \texttt{AudioBuffer} w wybrany formacie. 
+\end{enumerate}
+
+\section{Podsystem komponentów}
+Podsystem komponentów jest zarządzany równocześnie za pomocą klasy \texttt{pipeline::ComponentManager}, jak i klasy \texttt{pipeline::ExecutionQueue}. Obie klasy wykorzystują obiekty i zarządzają obiektami tych samych klas w różnych przypadkach. Klasa \texttt{pipeline::ComponentManager}, przy użyciu klasy \texttt{IDManager}, zarządza komponentami dziedziczącymi po klasie abstrakcyjnej \texttt{AComponent}, które implementują algorytmy przetwarzania sygnału dźwiękowego. Klasa \texttt{pipeline::ExecutionQueue} zarządza kolejnością wykonywania operacji na strumieniach audio, które są reprezentowane przez obiekty klasy \texttt{audioBufferQueue}. Podsystem komponentów operuje między innymi na obiektach następujących klas:
+\begin{enumerate}
+    \item \texttt{pipelineAudioBuffer} - struktura reprezentująca bufor dźwiękowy, który jest przetwarzany przez komponenty przetwarzania sygnału dźwiękowego.
+    \item \texttt{audioBufferQueue} - struktura reprezentująca strumień audio, który jest przetwarzany przez komponenty przetwarzania sygnału dźwiękowego. Klasa ta przechowuje referencje na obiekty klasy \texttt{pipelineAudioBuffer} oraz identyfikatory syntezatorów, które są podłączone do strumienia.
+    \item \texttt{AComponent} - klasa abstrakcyjna reprezentująca komponent przetwarzania sygnału dźwiękowego. Dziedziczą po niej klasy implementujące konkretne algorytmy przetwarzania sygnału dźwiękowego. Są one dokładniej omówione w następnym rozdziale.
+    \item \texttt{AAdvancedComponent} - klasa abstrakcyjna dziedzicząca po \texttt{AComponent}, reprezentująca komponent przetwarzania sygnału dźwiękowego, który posiada swój własny strumień wyjściowy w postaci obiektu klasy \texttt{audioBufferQueue}. 
+\end{enumerate}
+
+\section{Podsystem danych statystycznych}
 
 \section{Jądro systemu}
-Klasą z której można zarządzać całym systemem jest klasa \texttt{AudioPipelineManager}. Pełni ona rolę fasady dla całego systemu, udostępniając wszelkie jego funkcjonalności rozproszone w różnych podsystemach. Jako, że implementuje ona główną pętlę programową oraz zarządza wątkiem w którym się ta pętla wykonuje, klasa ta również pełni rolę jądra. 
+Klasą z której można zarządzać całym systemem jest klasa \texttt{AudioPipelineManager}. Pełni ona rolę fasady dla całego systemu, udostępniając wszelkie jego funkcjonalności rozproszone w różnych podsystemach. Jako, że implementuje ona główną pętlę programową oraz zarządza wątkiem, w którym się ta pętla wykonuje, klasa ta również pełni rolę jądra całego systemu. 
+
+\subsection{Główna pętla programowa dla czasu rzeczywistego}
+Główna pętla programowa systemu jest pętlą nieskończoną, w której wykonywane są wszystkie operacje związane z przetwarzaniem dźwięku. Pętla uruchamiana jest przy pomocy metody \texttt{pipelineThreadFunction(AudioPipelineManager::start)}, w której sprawdzane są warunki niezbędne do rozpoczęcia pracy systemu. Sprawdzane jest: obecny stan flagi \texttt{running}, obecność bufora wyjściowego, poprawność uruchomienia wszystkich wątków obsługujących urządzenia wejściowe. Następnie budowana jest kolejka operacji do wykonania, na podstawie grafu połączeń między komponentami przetwarzania dźwięku, a strumieniami audio oraz jednocześnie sprawdzana jest poprawność grafu. Na samym końcu wywoływana jest odpowiednia metoda, zawierająca pętlę programową, w zależności od ustawień systemu (możliwe jest uruchomienie pętli pozwalającej na wyświetlanie spektrum dźwięku, generowanego przy użyciu FFT - Fast Fourier Transform). Główna pętla programowa systemu dla czasu rzeczywistego została przedstawiona oraz dokładnie opisana na listingu \ref{lst:Główna pętla programowa systemu czasu rzeczywistego}. 
+
+% \clearpage
+\lstset{
+    language=C++,
+    caption={Główna pętla programowa systemu dla przetwarzania dźwięku w czasie rzeczywistym},
+    label=lst:Główna pętla programowa systemu czasu rzeczywistego,
+    literate={ę}{{\k{e}}}1 {ą}{{\k{a}}}1 {ł}{{\l{}}}1 {ó}{{\'o}}1 {ś}{{\'s}}1 {ć}{{\'c}}1 {ż}{{\.z}}1 {ź}{{\'z}}1 {ń}{{\'n}}1,
+    frame=single,
+    float,
+}
+\begin{lstlisting}
+void AudioPipelineManager::pipelineThreadFunction(){
+    // Ustawienie flagi określającej stan systemu
+    running = true;
+
+    // Ustawienie czasu trwania odtworzenia próbki w mikrosekundach
+    ulong sampleTimeLength = 
+        audioInfo.sampleSize
+        * long(1000000)
+        / audioInfo.sampleRate;
+
+    // Pobranie referencji na wektor zawierający listę operacji
+    // do wykonania na strumieniach audio
+    const std::vector<audioBufferQueue*>& backwardsExecution = 
+        executionQueue.getQueue();
+
+    // Podmiana buforów do których piszą wątki
+    // obsługujące urządzenia wejściowe
+    input.swapActiveBuffers();
+
+    // Ustawienie czasu następnego rozpoczęcia pętli
+    ulong nextLoop = 
+        input.getActivationTimestamp() 
+        + sampleTimeLength;
+
+    // Inicjalizacja systemu statystyk
+    statisticsService->firstInvocation();
+
+    // Utworzenie obiektu funkcji wywoływanego
+    // na końcu każdej iteracji pętli
+    std::function<void()> loopWorkEnd = [this]() { 
+        this->statisticsService->loopWorkEnd(); 
+    };
+
+    // Główna pętla programowa
+    while (running){
+        // Oczekiwanie na czas rozpoczęcia pętli
+        std::this_thread::sleep_until(
+            std::chrono::time_point<std::chrono::system_clock>
+            (std::chrono::nanoseconds((nextLoop)*1000)));
+
+        // Pomiar czasu rozpoczęcia iteracji pętli
+        statisticsService->loopStart();
+
+        // Obliczenie czasu rozpoczęcia następnej iteracji
+        nextLoop += sampleTimeLength;
+
+        // Skopiowanie oraz wstępne przetworzenie danych wejściowych
+        input.cycleBuffers();
+
+        // Wygenerowanie próbek dźwiękowych przy użyciu syntezatorów
+        // podłączonych do urządzeń wejściowych
+        input.generateSamples(executionQueue.getConnectedSynthIDs());
+
+        // Wykonanie operacji na strumieniach audio
+        for (int i = backwardsExecution.size() - 1; i >= 0; i--){
+            component.applyEffects(backwardsExecution[i]);
+        }
+
+        // Odtworzenie dźwięku i dokonanie pomiaru czasu przed
+        // przekazaniem bufora wyjściowego do serwera PulseAudio
+        output.play(&outputBuffer->buffer, loopWorkEnd);
+    }
+}
+\end{lstlisting}
+
+\subsection{Główna pętla programowa dla trybu offline}
+Główna pętla programowa systemu dla trybu offline różni się od pętli dla czasu rzeczywistego tym, że nie jest ona wykonywana w osobnym wątku, przez co jest to wywołanie blokujące. Pętla ta korzysta jedynie z plików MIDI zastępujących urządzenia wejściowe. Wygenerowany dźwięk nie jest odtwarzany, a zapisywany do pliku o wskazanej nazwie. Wynikiem tego jest brak instrukcji usypiającej wątek w celu oczekiwania na zakończenie odtwarzania wygenerowanego bufora wyjściowego. Pozwala to na pomiar czasu potrzebnego na wykonanie zadanych operacji. Główna pętla programowa systemu dla trybu offline została przedstawiona oraz dokładnie opisana na listingu \ref{lst:Główna pętla programowa systemu trybu offline}.
+
+\lstset{
+    language=C++,
+    caption={Główna pętla programowa systemu dla przetwarzania dźwięku w trybie offline},
+    label=lst:Główna pętla programowa systemu trybu offline,
+    literate={ę}{{\k{e}}}1 {ą}{{\k{a}}}1 {ł}{{\l{}}}1 {ó}{{\'o}}1 {ś}{{\'s}}1 {ć}{{\'c}}1 {ż}{{\.z}}1 {ź}{{\'z}}1 {ń}{{\'n}}1,
+    frame=single,
+    float,
+}
+\begin{lstlisting}
+char AudioPipelineManager::recordMidiFilesOffline(
+    std::string fileName, double& time){
+
+    // Sprawdzenie czy system jest uruchomiony
+    if (running == true){
+        std::fprintf(stderr, "ERR: AudioPipelineManager::
+            recordMidiFilesOffline PIPELINE IS RUNNING\n");
+        return -1;
+    }
+
+    // Budowanie kolejki operacji do wykonania
+    executionQueue.build(
+        componentQueues, outputBuffer, component.components);
+
+    // Sprawdzenie poprawności kolejki operacji
+    if (executionQueue.error() != 0){
+        std::fprintf(stderr, "ERR: AudioPipelineManager::
+            recordMidiFilesOffline PIPELINE IS NOT VALID\n");
+        return -2;
+    }
+    
+    // Pobranie referencji na wektor zawierający listę operacji
+    const std::vector<audioBufferQueue*>& backwardsExecution = 
+        executionQueue.getQueue();
+
+    // Wyczyszczenie buforów wejściowych oraz buforów komponentów
+    input.clearBuffers();
+    component.clearBuffers();
+
+    // Ustawienie stanu obiektu klasy pipeline::Output
+    // potrzebnego do zapisu wyniku do pliku
+    if (output.startRecording(fileName)){
+        std::fprintf(stderr, "ERR: AudioPipelineManager::
+            recordMidiFilesOffline COULD NOT START RECORDING\n");
+        return -3;
+    }
+
+    std::chrono::_V2::system_clock::time_point timeStart;
+    std::chrono::_V2::system_clock::time_point timeEnd;
+    time = 0.0;
+
+    double swapTime;
+    double conversionTime;
+
+    // Ustawienie strumieni plików MIDI na ich początek
+    midiReaderManager.rewind();
+
+    // Ustawienie stanu obiektów klasy KeyboardRecorder_MidiFile
+    // potrzebnego do odtworzenia plików MIDI
+    midiReaderManager.play();
+
+    // Główna pętla programowa, której warunkiem zakończenia
+    // jest wyzerowanie się licznika odtwarzanych plików MIDI
+    while (midiReaderManager.getPlayCounter() > 0){
+
+        // Skopiowanie, wstępne przetworzenie danych wejściowych
+        // oraz wykonanie pomiaru czasu trwania operacji
+        input.cycleBuffers(swapTime, conversionTime);
+
+        // Dodanie czasu trwania operacji do ogólnego czasu
+        // wykonania pętli programowej
+        // (zmienna swapTime przechowuje czas wynikający
+        // z operacji odczytu plików MIDI, nie jest on
+        // brany pod uwagę)
+        time += conversionTime;
+
+        // Pomiar czasu rozpoczęcia iteracji pętli
+        timeStart = std::chrono::system_clock::now();
+
+        // Wygenerowanie próbek dźwiękowych przy użyciu syntezatorów
+        // podłączonych do urządzeń wejściowych
+        input.generateSamples(executionQueue.getConnectedSynthIDs());
+
+        // Wykonanie operacji na strumieniach audio
+        for (int i = backwardsExecution.size() - 1; i >= 0; i--){
+            component.applyEffects(backwardsExecution[i]);
+        }
+
+        // Zapis wyniku do pliku .wav oraz wykonanie pomiaru czasu
+        // końca trwania iteracji pętli
+        output.onlyRecord(&outputBuffer->buffer, timeEnd);
+
+        // Dodanie czasu trwania iteracji do ogólnego czasu
+        time += std::chrono::duration<double>(
+            timeEnd - timeStart).count();
+    }
+
+    // Zakończenie zapisu wyniku do pliku .wav
+    output.stopRecording();
+
+    return 0;
+}
+\end{lstlisting}
+
 
 \section{Interfejs użytkownika}
-Interfejs użytkownika został zaimplementowany jako aplikacja konsolowa w klasie \texttt{SynthUserInterface}. Klasa ta wykorzystuje metody upublicznione w \texttt{AudioPipelineManager} w swoich metodach obsługujących poszczególne komendy. \texttt{SynthUserInterface} wykorzystuje klasę \texttt{std::map} z biblioteki standardowej w celu przechowywania par wartości: nazwy komendy (std::string) i wskaźnika na metodę (void (SynthUserInterface::*)()). 
+Interfejs użytkownika został zaimplementowany jako aplikacja konsolowa w klasie \texttt{SynthUserInterface}. Klasa ta wykorzystuje metody upublicznione w \texttt{AudioPipelineManager} w swoich metodach obsługujących poszczególne komendy. \texttt{SynthUserInterface} wykorzystuje kontener \texttt{std::map} z biblioteki standardowej w celu przechowywania par wartości: nazwy komendy (std::string) i wskaźnika na metodę (void (SynthUserInterface::*)()). Pozwala to w wydajny sposób na wywołanie odpowiedniej metody w zależności od wprowadzonej przez użytkownika komendy. Interfejs posiada swoją własną pętlę programową, której zadaniem jest oczekiwanie na wprowadzenie komendy przez użytkownika, parsowanie wprowadzonej komendy oraz wywołanie odpowiedniej metody. Klasa \texttt{SynthUserInterface} implementuje interfejs \texttt{IScriptReaderClient} dzięki czemu obiekt klasy \texttt{ScriptReader} może wywołać operacje na obiekcie klasy \texttt{SynthUserInterface} i jednocześnie jest on polem klasy na, której operuje. Pozwala to na wywołanie skryptów zarówno z poziomu implementacji systemu, jak i z poziomu interfejsu użytkownika, co automatyzuje proces testowania wydajności systemu, tym samym eliminując czynnik ludzki z procesu pomiaru.
+
+% dev/input, dev/snd
