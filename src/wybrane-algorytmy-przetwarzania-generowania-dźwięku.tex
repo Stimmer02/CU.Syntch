@@ -1,0 +1,150 @@
+\chapter{Wybrane algorytmy przetwarzania/generowania dźwięku}
+Przedstawione w pracy algorytmy należą do najprostszych i najbardziej popularnych. W każdym przypadku zostały one zaimplementowane w możliwie najprostszej formie, wystarczającej do ilustracji ich działania, jak i możliwości zastosowania. 
+
+\section{Generowanie sygnału}
+Sygnał dźwiękowy jest generowany przy pomocy syntezatora, który wykorzystuje jeden z poniżej przedstawionych algorytmów, by na podstawie informacji o wciśniętych klawiszach wygenerować odpowiednią sekwencję próbek. Każdemu z klawiszy koresponduje określona częstotliwość, która definiuje długość okresu funkcji sygnału. Algorytmy te są równoznaczne konkretnym funkcjom matematycznym, których dziedziną jest czas, a przeciwdziedziną amplitudy sygnału. Funkcja czasu jest dyskretna, co oznacza, że wartości sygnału są znane tylko w określonych momentach czasu - próbkach. Poniżej zostały przestawione wzory wykorzystane w implementacji poszczególnych funckcji. Dla $F(f, n, f_s)$ będącego funkcją sygnału: $f$ oznacza częstotliwość sygnału, $n$ numer próbki, a $f_s$ częstotliwość próbkowania.
+\\\\
+Przedstawione wzory są jedynie przykładami. Istnieją inne możliwości zapisu opisywanych sygnałów.
+
+\subsection{Sygnał sinusoidalny}
+\newcommand{\Fsin}{F_{\text{sin}}}
+\begin{equation}
+    \Fsin(f, n, f_s) = \sin\left(\frac{f \cdot 2\pi \cdot n}{f_s}\right)
+    \label{eq:sygnał sinusoidalny}
+\end{equation}
+Sygnał sinusoidalny jest najprostszym sygnałem dźwiękowym pod względem matematycznym. Jest to funkcja sinus, której argumentem jest iloczyn częstotliwości sygnału, czasu i $2\pi$. Sygnał sinusoidalny jest sygnałem o najczystszych właściwościach dźwiękowych, co oznacza, że jest to sygnał o najmniejszej zawartości harmonicznych. Te właściwości wyróżniają funkcję sinusoidalną na tle innych. Generując sinus o częstotliwości $f$ Hz, w widmie sygnału nie znajdziemy żadnych innych składowych niż $f$ Hz.
+
+\begin{figure}[H]
+    \centering
+    \scalebox{1.0}{\input{./fig/sygnal-sinusoidalny.pgf}}
+    \caption{Graficzna reprezentująca sygnału sinusoidalnego}
+    \label{fig:Graficzna reprezentująca sygnału sinusoidalego}
+\end{figure}
+
+
+\subsection{Sygnał prostokątny}
+\newcommand{\Fsquare}{F_{\text{sqr}}}
+\begin{equation}
+    \Fsquare(f, n, f_s) = \left(\left\lfloor \frac{f \cdot n}{f_s} \right\rfloor \mod 2\right) \cdot 2 - 1
+    \label{eq:sygnał prostokątny}
+\end{equation}
+Dziedzina sygnału prostokątnego składa się jedynie z dwóch wartości: -1 i 1. Łatwo zauważyć, że brak wartości pośrednich będzie generować duży przester, który jest przyczyną charakterystycznego brzmienia dla syntezatorów bazujących na sygnałach prostokątnych. W związku z obecnością przesteru, sygnał prostokątny jest sygnałem o najbogatszych harmonicznych, co oznacza, że w widmie sygnału znajdziemy wiele składowych o różnych częstotliwościach.
+
+\begin{figure}[H]
+    \centering
+    \scalebox{1.0}{\input{./fig/sygnal-prostokatny.pgf}}
+    \caption{Graficzna reprezentująca sygnał prostokątny}
+    \label{fig:Graficzna reprezentująca sygnał prostokątny}
+\end{figure}
+
+
+\subsection{Sygnał piłokształtny}
+\newcommand{\Fsaw}{F_{\text{saw}}}
+\newcommand{\Asaw}{A_{\text{saw}}}
+\newcommand{\Bsaw}{B_{\text{saw}}}
+
+\begin{equation}
+    \Asaw(f, n, f_s) = \frac{f \cdot n}{f_s}
+    \label{eq:sygnał piłokształtny a}
+\end{equation}
+\begin{equation}
+    \Bsaw(f, n, f_s) = \Asaw(f, n, f_s) - \left\lfloor \Asaw(f, n, f_s) \right\rfloor
+    \label{eq:sygnał piłokształtny b}
+\end{equation}
+\begin{equation}
+    \Fsaw(f, n, f_s) = \Bsaw(f, n, f_s) \cdot 2 - 1
+    \label{eq:sygnał piłokształtny}
+\end{equation}
+Sygnał piłokształtny w związku z obecnością przesteru jest sygnałem o bogatych harmonicznych, podobnie jak sygnał prostokątny. W przeciwieństwie do sygnału prostokątnego, sygnał piłokształtny jest sygnałem o bardziej naturalnym brzmieniu, co sprawia, że jest on często wykorzystywany w syntezatorach. Można wyróżnić dwa rodzaje sygnału piłokształtnego: rosnący i opadający. Sygnał rosnący jest generowany zgodnie z równaniem \ref{eq:sygnał piłokształtny}.
+
+\begin{figure}[H]
+    \centering
+    \scalebox{1.0}{\input{./fig/sygnal-piloksztaltny.pgf}}
+    \caption{Graficzna reprezentująca sygnału piłokształtnego}
+    \label{fig:Graficzna reprezentująca sygnału piłokształtnego}
+\end{figure}
+
+
+\subsection{Sygnał trójkątny}
+\newcommand{\Ftriangle}{F_{\text{tri}}}
+\newcommand{\Atriangle}{A_{\text{tri}}}
+\newcommand{\Btriangle}{B_{\text{tri}}}
+
+\begin{equation}
+    \Atriangle(f, n, f_s) = \frac{f \cdot n \cdot 2}{f_s}
+    \label{eq:sygnał trójkątny a}
+\end{equation}
+\begin{equation}
+    \Btriangle(f, n, f_s) = \Atriangle(f, n, f_s) - \left\lfloor \Atriangle(f, n, f_s) \right\rfloor
+    \label{eq:sygnał trójkątny b}
+\end{equation}
+\begin{equation}
+    \Ftriangle(f, n, f_s) = \left\{
+    \begin{array}{ll}
+        \Btriangle(f, n, f_s) \cdot 2 - 1 \text{;} & \text{dla } \Atriangle(f, n, f_s) \mod 2 = 1 \\
+        (1 - \Btriangle(f, n, f_s)) \cdot 2 - 1 \text{;} & \text{dla } \Atriangle(f, n, f_s) \mod 2 = 0
+    \end{array}
+    \right.
+    \label{eq:sygnał trójkątny}
+\end{equation}
+
+Sygnał trójkątny w brzmieniu przypomina sygnał sinusoidalny, jednakże w związku z jego gwałtownymi zmianami wartości, wprowadza on niewielką ilość przesteru. Efektem tego jest powstanie sygnału zauważalnie wzbogaconego harmonicznie, ale jednocześnie o bardziej naturalnym brzmieniu niż sygnał prostokątny czy piłokształtny. Przedstawiony wzór (\ref{eq:sygnał trójkątny}) generuje sygnał trójkątny przy wykorzystaniu na zmianę sygnału piłokształtnego rosnącego i malejącego.
+
+\begin{figure}[H]
+    \centering
+    \scalebox{1.0}{\input{./fig/sygnal-trojkatny.pgf}}
+    \caption{Graficzna reprezentująca sygnału trójkątny}
+    \label{fig:Graficzna reprezentująca sygnału trójkątny}
+\end{figure}
+
+
+\section{Komponenty podstawowe}
+Komponenty podstawowe reprezentowane poprzez klasy dziedziczące po klasie abstrakcyjnej \texttt{AComponent} modyfikują strumień audio do którego są przypisane. Każdy komponent posiada swoje parametry, które mogą być modyfikowane w trakcie działania programu. Poniżej została przedstawiona zasada działania oraz funkcjonalność dla każdego z komponentów. 
+
+\subsection{Volume - głośność}
+Komponent \texttt{Volume} odpowiada za modyfikację amplitudy sygnału audio. Pozwala zarówno na zwiększenie, jak i zmniejszenie głośności sygnału przy pomocy parametru \texttt{vol}. Jest to podstawowy algorytm modyfikacji sygnału audio.
+
+\subsection{Pan - pozycja dźwięku w przestrzeni}
+Komponent \texttt{Pan} odpowiada za modyfikację pozycji dźwięku w przestrzeni stereofonicznej. Pozwala na względne zwiększenie amplitudy sygnału jednego z kanałów względem drugiego przy pomocy parametru \texttt{pan}. Jest to podstawowy algorytm modyfikacji strumieni stereofonicznych.
+
+\subsection{Distortion - przesterowanie}
+Komponent \texttt{Distortion} implementuje prosty algorytm przesterowania sygnału audio. Posługuje się on następującymi parametrami:
+\begin{itemize}
+    \item \texttt{gain} - wzmocnienie sygnału przed przesterowaniem,
+    \item \texttt{threshold} - próg przesterowania, sygnał powyżej tej wartości zostaje nią zastąpiony,
+    \item \texttt{symmetry} - przesunięcie wzmocnienia aplikowanego poprzez parametr \texttt{gain} względem wartości 0,
+    \item \texttt{vol} - modyfikacja amplitudy sygnału wyjściowego.
+\end{itemize}
+Wynikiem działania komponentu jest obcięcie sygnału powyżej wartości \texttt{threshold}, co skutkuje powstaniem wielu harmonicznych.
+Zastosowana w tej pracy implementacja tego algorytmu opiera się na zastosowaniu instrukcji warunkowej, co pozwoli na przetestowanie potencjalnej różnicy w wydajności pomiędzy CPU a GPU dla podobnych operacji. 
+
+\subsection{Echo - efekt powtórzenia}
+Komponent \texttt{Echo} implementuje algorytm powielający sygnał wejściowy i sumujący go z oryginalnym sygnałem wskazaną ilość razy ze wskazanym opóźnieniem. Parametry komponentu to:
+\begin{itemize}
+    \item \texttt{repeats} - liczba powtórzeń sygnału,
+    \item \texttt{delay} - okres czasu po którym zapisany sygnał zostaje ponownie odtworzony,
+    \item \texttt{fade} - mnożnik amplitudy sygnału powtarzanego,
+    \item \texttt{rvol / lvol} - mnożnik amplitudy sygnału powtarzanego dla odpowiednio prawego i lewego kanału.
+\end{itemize}
+Algorytm ten wprowadza wykorzystanie pętli dla wygenerowanie pojedynczej próbki dźwiękowej oraz wymaga zapisu sygnału wejściowego w buforze, co pozwoli na przetestowanie różnicy w wydajności pomiędzy CPU a GPU dla wielokrotnej operacji zapisu i odczytu z pamięci.
+
+\subsection{Compressor - kompresja}
+Komponent \texttt{Compressor} implementuje algorytm kompresji sygnału audio. W tej dziedzinie kompresja oznacza zmniejszenie różnicy pomiędzy największą a najmniejszą wartością sygnału. W przypadku tej implementacji, algorytm ogranicza amplitudę sygnału powyżej wskazanej wartości, przy jednoczesnej próbie zniwelowania efektu przesteru, który może powstać w wyniku takiej operacji. Parametry komponentu to:
+\begin{itemize}
+    \item \texttt{threshold} - próg powyżej którego algorytm zostaje wykonany,
+    \item \texttt{ratio} - stosunek amplitudy przekraczającej \texttt{threshold} sygnału wejściowego do amplitudy przekraczającej \texttt{threshold} sygnału wyjściowego. Wartość ta jest ściśle powiązana z parametrem \texttt{step},
+    \item \texttt{step} - określa wartość przekroczenia \texttt{threshold} sygnału wejściowego, po której wartość \texttt{ratio} jest w pełni zastosowana,
+    \item \texttt{attack} - czas, potrzebny do zarejestrowania w pełni wzrostu amplitudy sygnału wejściowego,
+    \item \texttt{release} - czas, potrzebny do zarejestrowania w pełni spadku amplitudy sygnału wejściowego,
+    \item \texttt{vol} - modyfikacja amplitudy sygnału wyjściowego.
+\end{itemize}
+Algorytm wykorzystuje zależność czasową pomiędzy kolejnymi próbkami sygnału (parametry \texttt{attack} i \texttt{release}) do zastosowania kompresji. Pozwoli to na przetestowanie różnicy w wydajności pomiędzy CPU a GPU dla operacji zależnych od siebie w czasie.
+
+\section{Komponenty zaawansowane}
+Komponenty zaawansowane reprezentowane poprzez klasy dziedziczące po klasie abstrakcyjnej \texttt{AAdvancedComponent} mogą operować na wielu strumieniach audio jednocześnie, tworząc tym samym swój własny strumień wyjściowy. Pozwala to na tworzenie bardziej złożonych operacji na dźwięku, umożliwiając np. miksowanie kilku strumieni audio, czy też tworzenie alternatywnych ścieżek przetwarzania pojedynczego strumienia. Poniżej została przedstawiona zasada działania oraz funkcjonalność dla każdego z komponentów.
+
+\subsection{copy - kopiowanie strumienia}
+Komponent \texttt{copy} pozwala na kopiowanie strumienia audio. Dzięki temu możliwe jest utworzenie alternatywnych ścieżek przetwarzanie danego sygnału.
+
+\subsection{sum - łączenie strumieni}
+Komponent \texttt{sum} pozwala na sumowanie \texttt{n} strumieni audio. Umożliwia to jednoczesne odtwarzanie sygnałów generowanych przez kilka syntezatorów, lub też miksowanie kilku strumieni wytworzonych przy pomocy komponentu \texttt{copy}. W pracy zaimplementowano algorytm sumowania dwóch oraz siedmiu sygnałów.
