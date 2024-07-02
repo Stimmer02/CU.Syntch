@@ -1,1 +1,250 @@
 \chapter{Implementacja GPU}
+Implementacja GPU jest kluczowym elementem pracy. Powstały system będzie bazował na implementacji CPU, a wprowadzone modyfikacje nie mogą łamać wymagań przedstawionych w trakcie przedstawiania projektu systemu (\textbf{Rozdział \ref{chap:Projekt systemu} \nameref{chap:Projekt systemu}}). Może natomiast modyfikować sposób oraz metody działania, wprowadzone w trakcie implementacji CPU, w celu spełnienia wymogów wynikających ze specyfiki programowania GPU. Dzięki tym wytycznym możliwym będzie ocena poziomu trudności dla przeprojektowania systemu dla wykorzystania platformy CUDA. W rozdziale tym zostaną przedstawione najważniejsze zmiany w implementacji dla każdego z podsystemów, które umożliwiły wykorzystanie technologii CUDA. W celu bliższego przyjrzenia się dokonanym zmianom, należy skorzystać z załączonej implementacji systemu, gdzie każda klasa bądź struktura, ktora została zmodyfikowana na tym etapie implementacji, jest oznaczona na końcu swej nazwy ciągiem znaków \texttt{\_CUDA}.
+
+\section{Podsystem wejścia}
+W związku z zauważalnym kosztem przesyłu danych pomiędzy CPU a GPU, jednym z kluczowych elementów implementacji jest sprowadzenie ilości danych przesyłanych pomiędzy urządzeniami do minimum. Jako, iż by móc przetwarzać dane, muszą one być wcześniej dostępne na karcie graficznej. Podsystem wejścia obsługuje urządzenia oraz pliki wejściowe w celu dostarczenia informacji dotyczących konieczności syntezy dźwięków o konkretnych częstotliwościach. Proces ten jest wykonywany za pomocą CPU, a następnie nieprzetworzone dane zostają przeniesione na GPU. Punktem przeniesienia została wybrana struktura \texttt{keyboardTransferBuffer}. Jako, iż klasa ta jest relatywnie niewielka, posłuży jako przykład zmian powszechnie wprowadzanych w implementacji GPU. Zmiany te nie zostaną ponownie opisane dla każdej klasy oraz struktury, jako iż są one analogiczne dla każdego z przypadków.
+
+\lstset{
+    language=C++,
+    caption={Implementacja keyboardTransferBuffer\_CUDA},
+    label=lst:keyboardTransferBuffer_CUDA
+    literate={ę}{{\k{e}}}1 {ą}{{\k{a}}}1 {ł}{{\l{}}}1 {ó}{{\'o}}1 {ś}{{\'s}}1 {ć}{{\'c}}1 {ż}{{\.z}}1 {ź}{{\'z}}1 {ń}{{\'n}}1,
+    frame=single,
+    float,
+}
+\begin{lstlisting}
+
+// konstruktor alokuje potrzebne bufory na karcie graficznej
+// wykorzystuje w tym celu funkcje cudaMalloc
+keyboardTransferBuffer_CUDA::keyboardTransferBuffer_CUDA(
+    const uint& sampleSize, const unsigned short int& keyCount)
+    : sampleSize(sampleSize), keyCount(keyCount){
+
+    // oznaczenie 'd_' (device_) wskazuje, że dane pole
+    // klasy jest wskaźnikiem na pamięć karty graficznej
+    cudaMalloc((void**)(&d_buffer),
+        keyCount * sampleSize * sizeof(unsigned char));
+
+    cudaMalloc((void**)(&d_input),
+        keyCount * sampleSize * sizeof(unsigned char));
+
+    cudaMalloc((void**)(&d_lastState),
+        keyCount * sizeof(unsigned char));
+}
+
+// destruktor zwalnia zaalokowane wcześniej bufory
+keyboardTransferBuffer_CUDA::~keyboardTransferBuffer_CUDA(){
+    cudaFree(d_buffer);
+    cudaFree(d_input);
+    cudaFree(d_lastState);
+}
+
+// niezmodyfikowana metoda pozwalająca na konwersję bufora
+// dowolnego obiektu implementującego interfejs IKeyboardDoubleBuffer
+void keyboardTransferBuffer_CUDA::convertBuffer(
+    IKeyboardDoubleBuffer* keyboardBuffer){
+    convertBuffer(keyboardBuffer->getInactiveBuffer());
+}
+
+// kernel CUDA odpowiedzialny za konwersję bufora
+// zadeklarowany jako funkcja globalna
+__global__ void kernel_convertBuffer(
+    const uint sampleSize, const unsigned short int keyCount, 
+    unsigned char* input, unsigned char* buffer,
+    unsigned char* lastState){
+    
+    // obliczenie indeksu wątku
+    const uint i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // sprawdzenie czy indeks wątku mieści się w zakresie
+    if (i < keyCount){
+        // operacje wykonywane dla pojedynczego wątku są
+        // analogiczne do tych wykonywanych dla pojedynczego 
+        // obrotu pętli wersji CPU
+        unsigned char lastStateTemp = lastState[i];
+        for (uint j = 0; j < sampleSize; j++){
+            uint index = i * sampleSize + j;
+            if (input[index] == 255){
+                lastStateTemp = 0;
+            } else if (input[index] > 0){
+                lastStateTemp = input[index];
+            }
+            buffer[index] = lastStateTemp;
+        }
+        lastState[i] = lastStateTemp;
+    }    
+}
+
+void keyboardTransferBuffer_CUDA::convertBuffer(
+    unsigned char* buff[127]){
+
+    // ustalenie rozmiaru bloku
+    static const uint blockSize = 128;
+
+    // przeniesienie danych z pamięci RAM,
+    // przechowywanych w tablicy tablic
+    // na pojedynczy bufor w pamięci karty graficznej
+    for (uint i = 0; i < keyCount; i++){
+        cudaMemcpy(
+            d_input + i * sampleSize,
+            buff[i],
+            sampleSize * sizeof(unsigned char),
+            cudaMemcpyHostToDevice);
+    }
+
+    // obliczenie potrzebnej ilości bloków
+    uint blockCount = (keyCount + blockSize - 1) / blockSize;
+
+    // wywołanie kernelu CUDA
+    kernel_convertBuffer<<<blockCount, blockSize>>>
+        (sampleSize, keyCount, d_input, d_buffer, d_lastState);
+}
+\end{lstlisting}
+
+Struktura \texttt{keyboardTransferBuffer\_CUDA} nadal spełnia te same zadania co jej odpowiednik \texttt{keyboardTransferBuffer}. Wprowadzone zmiany umożliwiają na wykorzystanie GPU do wykonania czasochłonnych obliczeń. Przeniesione i przetworzone dane pozostają w pamięci karty graficznej, co pozwala na ich wykorzystanie w dalszych etapach przetwarzania, bez konieczności ich ponownego przesyłania. Tabela \ref{tab:Przesył danych pomiędzy CPU a GPU dla jednego urządzenia wejściowego} przedstawia ilość danych przesyłanych pomiędzy CPU a GPU dla pojedynczego urządzenia wejściowego z uwzględnieniem częstotliwości próbkowania oraz standardowej ilości klawiszy dla urządzenia MIDI, wynoszącej 128.
+
+\begin{table}[H]
+    \begin{center}
+        \caption{Przesył danych pomiędzy CPU a GPU dla jednego urządzenia wejściowego}
+        \label{tab:Przesył danych pomiędzy CPU a GPU dla jednego urządzenia wejściowego}
+        \begin{tabular}{r|c|}
+            częstotliwość próbkowania  &   wymagana przepustowość \\
+            \hline
+            44kHz                      &   5.632 MB/s   \\
+            48kHz                      &   6.144 MB/s   \\
+            96kHz                      &   12.288 MB/s  \\
+            192kHz                     &   24.576 MB/s  \\
+        \end{tabular}
+    \end{center}
+\end{table}
+
+Przetwarzane dane posiadają zależność czasową, co nie zezwala na przetworzenie każdej z próbek jednocześnie, jednak dane dzielą się na niezależne fragmenty, gdzie każdy z nich przypisane jest innemu z przycisków klawiatury. Łącząc te dwa fakty, możliwe jest zrównoleglenie obliczeń dla każdego z fragmentów sposobem, który został zilustrowany na grafice \ref{fig:Wykorzystanie m wątków do przetworzenia m buforów} - \nameref{fig:Wykorzystanie m wątków do przetworzenia m buforów}.
+\\\\
+Największe zmiany podczas tej fazy implementacyjnej zaszły w klasach odpowiedzialnych za generowanie dźwięku. Każda struktura, aby zostać przeniesiona na GPU, nie może posiadać żadnych metod. W związku z tym wszelkie operacje, które były wcześniej wykonywane w metodach, zostały przeniesione do klas pomocniczych: \texttt{NoteBufferHandler\_CUDA}, \texttt{DynamicsController\_CUDA}. Wszelkie operacje, wykonywane na buforach, zostały zastąpione przez odpowiednie kernele CUDA, bądź funkcje CUDA dla np. alokacji pamięci. 
+\\
+Koncepcja klasy abstrakcyjnej \texttt{AGenerator}, a tym samym i wszystkich implementujących ją klas, musiała zostać utworzona na nowo. Platforma CUDA nie zezwala na polimorfizm w taki sam sposób, jak to jest możliwe w przypadku jezyka C++. W celu zachowania wzorca projektowego strategii, każda z klas implementujących interfejs \texttt{AGenerator} została przeniesiona do klasy \texttt{Generator\_CUDA}, gdzie polimorfizm został zastąpiony przez tablicę wskaźników na kernele \texttt{device}\ (kernele \texttt{device} są wywoływane na karcie graficznej) zaalokowanej w pamięci karty graficznej. W celu wyboru algorytmu generowania sygnału dźwiękowego, przekazywany jest indeks tablicy, przy wykorzystaniu zmiennej typu \texttt{enum synthesizer::generator\_type} do kernela, wraz ze wskaźnikem na ową tablicę.
+\\
+Obrany w czasie implementacji CPU algorytm syntezy dźwięku wprowadza zależność pomiędzy kolejnymi próbkami. Znacząco ogranicza to możliwości zrównoleglenia obliczeń, w związku z czym algorytm ten został podzielony na kilka części. Po głębszej analizie udało się wyodrębnić operacje, które można dla określonej grupy przypadków, wykonać przed rozpoczęciem syntezy, a wyniki zapisać w tablicy. Następnie wszelkie operacje, które wymagały zależności czasowej, zostały zamknięte w pierwszym kernelu CUDA, natomiast operacje, które nie wymagały zależności czasowej, zostały zamknięte w drugim. Dzięki temu jedynie operacje zależne czasowo zostają wykonane w przy wykorzystaniu metody opisanej za pomocą \ref{fig:Wykorzystanie m wątków do przetworzenia m buforów} - \nameref{fig:Wykorzystanie m wątków do przetworzenia m buforów}. Operacje wykonane w drugim z opisywanych kerneli pozwalają na wykorzystanie pełni mocy obliczeniowej karty graficznej, jako że korzystają z metody opisanej za pomocą \ref{fig:Wykorzystanie m*n wątków do przetworzenia m buforów po n próbek} - \nameref{fig:Wykorzystanie m*n wątków do przetworzenia m buforów po n próbek}. Listing \ref{lst:generator_CUDA} przedstawia fragmenty implementację klasy \texttt{Generator\_CUDA}, odpowiedzialne za opisane powyżej operacje. 
+
+\lstset{
+    language=C++,
+    caption={Implementacja Generator\_CUDA},
+    label=lst:generator_CUDA,
+    literate={ę}{{\k{e}}}1 {ą}{{\k{a}}}1 {ł}{{\l{}}}1 {ó}{{\'o}}1 {ś}{{\'s}}1 {ć}{{\'c}}1 {ż}{{\.z}}1 {ź}{{\'z}}1 {ń}{{\'n}}1,
+    frame=single,
+    float,
+}
+\begin{lstlisting}
+
+// przykładowy kernel CUDA odpowiedzialny za 
+// generowanie próbki dźwięku
+__device__ float kernel_soundSquare(
+    const float phaze, const float multiplier){
+
+    return (int((phaze) / multiplier) & 0x1)*2 - 1;
+}
+
+// kernel CUDA inicjalizujący tablicę wskaźników na funkcje
+__global__ void kernel_initFunctionArray(
+    Generator_CUDA::soundFunctionPointer* functionArray){
+
+    // inicjalizacja tablicy ma zostać przeprowadzona tylko raz
+    if (threadIdx.x == 0 && blockIdx.x == 0){
+        functionArray[SINE] = &kernel_soundSine;
+        functionArray[SQUARE] = &kernel_soundSquare;
+        functionArray[SAWTOOTH] = &kernel_soundSawtooth;
+        functionArray[TRIANGLE] = &kernel_soundTriangle;
+        functionArray[NOISE1] = &kernel_soundNoise1;
+    }
+}
+
+// kernel CUDA odpowiedzialny za wykonanie operacji
+// generowania dźwięku bez zależności czasowej
+__global__  void kernel_generate(
+    noteBuffer_CUDA* noteBuffer, const uchar* keyState,
+    const settings_CUDA* settings, const float* dynamicsProfile,
+    const float* releaseProfile, uint* phazeWorkArr,
+    uint* pressSamplessPassedWorkArr,
+    uint* releaseSamplesPassedWorkArr, float* velocityWorkArr,
+    const Generator_CUDA::soundFunctionPointer* soundFunction,
+    synthesizer::generator_type currentGeneratorType){
+
+    // obliczenie indeksu wątku dla dwóch wymiarów
+    uint i = blockIdx.x * blockDim.x + threadIdx.x; // key index
+    uint j = blockIdx.y * blockDim.y + threadIdx.y; // sample index
+    if (i < settings->keyCount && j < settings->sampleSize){
+        uint workArrIndex = j + i*settings->sampleSize;
+        
+        // sprawdzenie czy dany klawisz jest wciśnięty
+        // lub czy został puszczony w ciągu określonego czasu
+        if (keyState[workArrIndex] ||
+        releaseSamplesPassedWorkArr[workArrIndex] <
+        settings->release.duration){
+
+            // dynamicsMultiplier odpowiada za zmianę głośności
+            // w zależności od czasu jaki minął od wciśnięcia
+            // bądź puszczenia klawisza
+            float dynamicsMultiplier = settings->dynamicsDuration >
+            pressSamplessPassedWorkArr[workArrIndex] ? 
+            dynamicsProfile[pressSamplessPassedWorkArr[workArrIndex]]
+            : settings->fadeTo;
+
+            if (keyState[workArrIndex] == 0){
+                dynamicsMultiplier *= releaseProfile[
+                    releaseSamplesPassedWorkArr[workArrIndex]];
+            }
+
+            // wywołanie odpowiedniej funkcji generującej dźwięk
+            noteBuffer->buffer[workArrIndex] = 
+                (*soundFunction[currentGeneratorType])
+                (phazeWorkArr[workArrIndex],
+                noteBuffer->multiplier[i]) *
+                settings->volume * velocityWorkArr[workArrIndex] *
+                dynamicsMultiplier;
+        }
+    }
+}
+\end{lstlisting}
+
+
+\section{Podsystem wyjścia}
+
+Podsystem wyjścia jest drugim z podsystemów, który wymaga przesyłu danych pomiędzy CPU a GPU. Jedyną zmianą w implementacji jest zastosowanie technologii CUDA do przetworzenia wychodzącego strumienia audio, na format gotowy do odtworzenia przez serwer dźwięku. Wzorzec strategii został zastosowany do znacznie prostszego algorytmu w przypadku syntezy dźwięku i nie musiał on zostać zmodyfikowany. 
+\\
+W przeciwieństwie do podsystemu wejścia, ilość buforów kopiowanych pomiędzy pamięciami urządzeń nie jest zależna od ilości urządzeń wejściowych i odbywa się jedynie raz. Dla głębi bitowej wynoszącej 32, wartość ta jest zgodna z tabelą \ref{tab:Przesył danych dla różnych formatów przy wykorzystaniu float32} - Przesył danych dla różnych formatów przy wykorzystaniu float32, jednak jako że jest to sygnał gotowy do odtworzenia lub zapisu, to głębia bitów będzie przyjmować przeważnie wartości 16 lub 24. Zmienia to wymaganą przepustowość odpowiednio o połowę lub o jedną czwartą. Biorąc to pod uwagę można obliczyć dokładną wartość przepustowości wymaganej do działania całego systemu w zależności od obranego formatu audio oraz ilości urządzeń wejściowych, co zostało przedstawione w tabeli \ref{tab:Przesył danych pomiędzy CPU a GPU dla całego systemu}.
+
+\begin{table}[H]
+    \begin{center}
+        \caption{Przesył danych pomiędzy CPU a GPU dla całego systemu}
+        \label{tab:Przesył danych pomiędzy CPU a GPU dla całego systemu}
+        \begin{tabular}{r|c|c|c|c}
+                               & \multicolumn{4}{c}{liczba urządzeń wejściowych}        \\
+            \hline
+            format             &     1       &     2      &      4      &     8         \\
+            \hline
+            16b 44kHz stereo   & 5.808 MB/s  & 11.44 MB/s & 22.704 MB/s & 45.232 MB/s   \\
+            16b 48kHz stereo   & 6.336 MB/s  & 12.48 MB/s & 24.768 MB/s & 49.344 MB/s   \\
+            16b 96kHz stereo   & 12.672 MB/s & 24.96 MB/s & 49.536 MB/s & 98.688 MB/s   \\
+            16b 192kHz stereo  & 25.344 MB/s & 49.92 MB/s & 99.072 MB/s & 197.376 MB/s  \\
+            \hline
+            24b 44kHz stereo   & 5.896 MB/s  & 11.528 MB/s & 22.792 MB/s & 45.32 MB/s   \\
+            24b 192kHz stereo  & 25.728 MB/s & 50.304 MB/s & 99.456 MB/s & 197.76 MB/s  \\
+            \hline
+            32b 44kHz stereo   & 5.984 MB/s  & 11.616 MB/s & 22.88 MB/s & 45.408 MB/s   \\
+            32b 192kHz stereo  & 26.112 MB/s & 50.688 MB/s & 99.84 MB/s & 198.144 MB/s  \\
+        \end{tabular}
+    \end{center}
+\end{table}
+
+
+\section{Podsystem komponentów}
+
+Każdy z komponentów, których implementacja została opisana w rozdziale \textbf{\ref{chap:Implementacja CPU} \nameref{chap:Implementacja CPU}}, został przeniesiony na GPU w podobny sposób. Struktura \texttt{componentSettings} przechowująca ustawienia komponentu, otrzymała, obok wskaźnika na tablicę wartości ustawień, wskaźnik na bufor karty graficznej przechowujący kopie tych wartości. Rozwiązanie te zostało zastosowane również dla innych struktur, pozwala ona na szybki dostęp do wartości zarówno po stronie CPU, jak i GPU, bez konieczności zbędnego przesyłania danych. Wszelkie operacje, które były wcześniej wykonywane na strumieniach dźwięku, zostały przeniesione do kerneli obliczeniowych. Każdy z komponentów został zaimplementowany przy wykorzystaniu metody opisanej za pomocą \ref{fig:Wykorzystanie n wątków do przetworzenia n próbek} - \nameref{fig:Wykorzystanie n wątków do przetworzenia n próbek}. 
+\\
+Komponent \texttt{Component\_Compressor} został wyjątkowo zastapiony komponentem \texttt{Component\_SimpleCompressor\_CUDA}, implementującym prostszy algorytm kompresji, który poprzez pozbycie się zależności czasowej pomiędzy próbkami, pozwala na efektywne wykorzystanie mocy obliczeniowej karty graficznej. Implementacja początkowo przyjętego algorytmu okazała się zbyt trudna, ze względu na operowanie na pojedynczym buforze, co uniemożliwiało zastosowanie podejścia
+\ref{fig:Wykorzystanie m wątków do przetworzenia m buforów} - \nameref{fig:Wykorzystanie m wątków do przetworzenia m buforów}. 
+Nowo wprowadzony algorytm wykonuje te samo zadanie - kompresuje sygnał dźwiękowy przekraczający określoną amplitudę, co pozawala na ograniczenie głośności sygnału, dodając minimalną ilość przesteru. 
+
+
+\section{Pozostałe elementy systemu}
+Reszta systemu nie uległa zmianie w trakcie implementacji GPU. Wszelkie zmiany, które zostały wprowadzone, dotyczyły jedynie sposobu przetwarzania danych dźwiękowych. Zarówno podsystem statystyczny, interfejs użytkownika, jak i główna pętla programowa nie uległy zmianom. Podliczając wszelkie modyfikacje, które zostały wprowadzone w trakcie implementacji GPU, w przybliżeniu jedynie 25\% kodu źródłowego uległo zmianie. 
