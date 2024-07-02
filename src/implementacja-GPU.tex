@@ -245,6 +245,13 @@ Komponent \texttt{Component\_Compressor} został wyjątkowo zastapiony komponent
 \ref{fig:Wykorzystanie m wątków do przetworzenia m buforów} - \nameref{fig:Wykorzystanie m wątków do przetworzenia m buforów}. 
 Nowo wprowadzony algorytm wykonuje te samo zadanie - kompresuje sygnał dźwiękowy przekraczający określoną amplitudę, co pozawala na ograniczenie głośności sygnału, dodając minimalną ilość przesteru. 
 
+\begin{figure}[H]
+    \centering
+    \input{./fig/Component_SimpleCompressor.pgf}
+    \caption{Reprezentacja komponentu \texttt{SimpleCompressor}}
+    \label{fig:Reprezentacja komponentu SimpleCompressor}
+\end{figure}
+
 
 \section{Pozostałe elementy systemu}
 Reszta systemu nie uległa zmianie w trakcie implementacji GPU. Wszelkie zmiany, które zostały wprowadzone, dotyczyły jedynie sposobu przetwarzania danych dźwiękowych. Zarówno podsystem statystyczny, interfejs użytkownika, jak i główna pętla programowa nie uległy zmianom. Podliczając wszelkie modyfikacje, które zostały wprowadzone w trakcie implementacji GPU, w przybliżeniu jedynie 25\% kodu źródłowego uległo zmianie. 

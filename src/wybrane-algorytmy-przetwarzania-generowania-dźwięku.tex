@@ -102,10 +102,24 @@ Sygnał trójkątny w brzmieniu przypomina sygnał sinusoidalny, jednakże w zwi
 Komponenty podstawowe reprezentowane poprzez klasy dziedziczące po klasie abstrakcyjnej \texttt{AComponent} modyfikują strumień audio do którego są przypisane. Każdy komponent posiada swoje parametry, które mogą być modyfikowane w trakcie działania programu. Poniżej została przedstawiona zasada działania oraz funkcjonalność dla każdego z komponentów. 
 
 \subsection{Volume - głośność}
-Komponent \texttt{Volume} odpowiada za modyfikację amplitudy sygnału audio. Pozwala zarówno na zwiększenie, jak i zmniejszenie głośności sygnału przy pomocy parametru \texttt{vol}. Jest to podstawowy algorytm modyfikacji sygnału audio.
+Komponent \texttt{Volume} odpowiada za modyfikację amplitudy sygnału audio. Pozwala zarówno na zwiększenie, zmniejszenie głośności sygnału, jak i odwrócenie fazy przy pomocy parametru \texttt{vol}. Jest to podstawowy algorytm modyfikacji sygnału audio.
+
+\begin{figure}[H]
+    \centering
+    \input{./fig/Component_Volume.pgf}
+    \caption{Reprezentacja komponentu \texttt{Volume}}
+    \label{fig:Reprezentacja komponentu Volume}
+\end{figure}
 
 \subsection{Pan - pozycja dźwięku w przestrzeni}
 Komponent \texttt{Pan} odpowiada za modyfikację pozycji dźwięku w przestrzeni stereofonicznej. Pozwala na względne zwiększenie amplitudy sygnału jednego z kanałów względem drugiego przy pomocy parametru \texttt{pan}. Jest to podstawowy algorytm modyfikacji strumieni stereofonicznych.
+
+\begin{figure}[H]
+    \centering
+    \input{./fig/Component_Pan.pgf}
+    \caption{Reprezentacja komponentu \texttt{Pan}}
+    \label{fig:Reprezentacja komponentu Pan}
+\end{figure}
 
 \subsection{Distortion - przesterowanie}
 Komponent \texttt{Distortion} implementuje prosty algorytm przesterowania sygnału audio. Posługuje się on następującymi parametrami:
@@ -118,6 +132,13 @@ Komponent \texttt{Distortion} implementuje prosty algorytm przesterowania sygna�
 Wynikiem działania komponentu jest obcięcie sygnału powyżej wartości \texttt{threshold}, co skutkuje powstaniem wielu harmonicznych.
 Zastosowana w tej pracy implementacja tego algorytmu opiera się na zastosowaniu instrukcji warunkowej, co pozwoli na przetestowanie potencjalnej różnicy w wydajności pomiędzy CPU a GPU dla podobnych operacji. 
 
+\begin{figure}[H]
+    \centering
+    \input{./fig/Component_Distortion.pgf}
+    \caption{Reprezentacja komponentu \texttt{Distortion}}
+    \label{fig:Reprezentacja komponentu Distortion}
+\end{figure}
+
 \subsection{Echo - efekt powtórzenia}
 Komponent \texttt{Echo} implementuje algorytm powielający sygnał wejściowy i sumujący go z oryginalnym sygnałem wskazaną ilość razy ze wskazanym opóźnieniem. Parametry komponentu to:
 \begin{itemize}
@@ -127,6 +148,13 @@ Komponent \texttt{Echo} implementuje algorytm powielający sygnał wejściowy i 
     \item \texttt{rvol / lvol} - mnożnik amplitudy sygnału powtarzanego dla odpowiednio prawego i lewego kanału.
 \end{itemize}
 Algorytm ten wprowadza wykorzystanie pętli dla wygenerowanie pojedynczej próbki dźwiękowej oraz wymaga zapisu sygnału wejściowego w buforze, co pozwoli na przetestowanie różnicy w wydajności pomiędzy CPU a GPU dla wielokrotnej operacji zapisu i odczytu z pamięci.
+
+\begin{figure}[H]
+    \centering
+    \input{./fig/Component_Echo.pgf}
+    \caption{Reprezentacja komponentu \texttt{Echo}}
+    \label{fig:Reprezentacja komponentu Echo}
+\end{figure}
 
 \subsection{Compressor - kompresja}
 Komponent \texttt{Compressor} implementuje algorytm kompresji sygnału audio. W tej dziedzinie kompresja oznacza zmniejszenie różnicy pomiędzy największą a najmniejszą wartością sygnału. W przypadku tej implementacji, algorytm ogranicza amplitudę sygnału powyżej wskazanej wartości, przy jednoczesnej próbie zniwelowania efektu przesteru, który może powstać w wyniku takiej operacji. Parametry komponentu to:
@@ -140,6 +168,13 @@ Komponent \texttt{Compressor} implementuje algorytm kompresji sygnału audio. W 
 \end{itemize}
 Algorytm wykorzystuje zależność czasową pomiędzy kolejnymi próbkami sygnału (parametry \texttt{attack} i \texttt{release}) do zastosowania kompresji. Pozwoli to na przetestowanie różnicy w wydajności pomiędzy CPU a GPU dla operacji zależnych od siebie w czasie.
 
+\begin{figure}[H]
+    \centering
+    \input{./fig/Component_Compressor.pgf}
+    \caption{Reprezentacja komponentu \texttt{Compressor}}
+    \label{fig:Reprezentacja komponentu Compressor}
+\end{figure}
+
 \section{Komponenty zaawansowane}
 Komponenty zaawansowane reprezentowane poprzez klasy dziedziczące po klasie abstrakcyjnej \texttt{AAdvancedComponent} mogą operować na wielu strumieniach audio jednocześnie, tworząc tym samym swój własny strumień wyjściowy. Pozwala to na tworzenie bardziej złożonych operacji na dźwięku, umożliwiając np. miksowanie kilku strumieni audio, czy też tworzenie alternatywnych ścieżek przetwarzania pojedynczego strumienia. Poniżej została przedstawiona zasada działania oraz funkcjonalność dla każdego z komponentów.
 
@@ -148,3 +183,10 @@ Komponent \texttt{copy} pozwala na kopiowanie strumienia audio. Dzięki temu mo�
 
 \subsection{sum - łączenie strumieni}
 Komponent \texttt{sum} pozwala na sumowanie \texttt{n} strumieni audio. Umożliwia to jednoczesne odtwarzanie sygnałów generowanych przez kilka syntezatorów, lub też miksowanie kilku strumieni wytworzonych przy pomocy komponentu \texttt{copy}. W pracy zaimplementowano algorytm sumowania dwóch oraz siedmiu sygnałów.
+
+\begin{figure}[H]
+    \centering
+    \input{./fig/Component_Sum.pgf}
+    \caption{Reprezentacja komponentu \texttt{Sum}}
+    \label{fig:Reprezentacja komponentu Sum}
+\end{figure}
