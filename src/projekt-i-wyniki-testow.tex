@@ -1,0 +1,182 @@
+\chapter{Projekt i wyniki testów}
+
+W celu wyeliminowania czynników zewnętrznych, wszystkie z przeprowadzonych testów zostały oparte o ten sam zestaw plików MIDI. Testy zostały przeprowadzone na komputerze:
+
+\begin{table}[H]
+    \begin{center}
+        \caption{Specyfikacja komputera}
+        \label{tab:Specyfikacja komputera}
+        \begin{tabular}{r l c}
+            \hline
+            \textbf{komponent} & \textbf{nazwa} & \textbf{przepustowość danych} \\
+            \hline
+            Procesor & AMD Ryzen 5 3600 & - \\
+            \hline
+            Pamięć RAM & 16 GB DDR4 3200 MHz & 25 GB/s \\
+            \hline
+            Karta graficzna & NVIDIA RTX 3070 & 448 GB/s \\
+            \hline
+            Szyna PCI-E & 3.0 x16 & 16 GB/s \\
+            \hline
+        \end{tabular}
+    \end{center}
+\end{table}
+
+Przedstawiona przepustowość jest czysto teoretyczna i tyczy się ona możliwości pamięci w przypadku GPU oraz pamięci RAM, jak również możliwościom szyny danych PCI-E.
+
+\section{Projekt testów}
+
+Pierwsze testy i porównanie obu implementacji nastąpiło już w czasie implementacji. Zebrane w tamtym czasie wyniki pozwoliły na zaprojektowanie testów, które zostaną przedstawione w dalszej części tego rozdziału. Każdy z przeprowadzonych testów jest wywoływany za pomocą skryptu, który automatycznie konfiguruje system i wywołuje odpowiednie komendy w celu rozpoczęcia i zapisu pomiaru.
+
+\lstset{
+    language=bash,
+    caption={Przykłady skryptów testujących wydajność},
+    label=lst:Przykład skryptu testującego,
+    literate={ę}{{\k{e}}}1 {ą}{{\k{a}}}1 {ł}{{\l{}}}1 {ó}{{\'o}}1 {ś}{{\'s}}1 {ć}{{\'c}}1 {ż}{{\.z}}1 {ź}{{\'z}}1 {ń}{{\'n}}1,
+    frame=single,
+    float,
+}
+\begin{lstlisting}
+# skrypt testujący wydajność implementacji GPU w trybie online:
+
+# wykonanie skryptu konfigurującego system
+execute ./config/scripts/Vth_symphony_setup.txt
+# uruchomienie pipeline systemu
+pStart
+# rozpoczęcie pomiaru statystyk 
+# (pomiar co 0.05 sekundy)
+statRecord 0.05 Online_GPU48k16b1024.csv
+# rozpoczęcie nagrywania otwartych w plików midi do pliku test.wav
+midiRecord test.wav
+# zatrzymanie pomiaru statystyk po zakończeniu nagrywania 
+statStop
+
+
+# skrypt testujący wydajność implementacji GPU w trybie offline:
+
+# wykonanie skryptu konfigurującego system
+execute ./config/scripts/Vth_symphony_setup.txt
+# wielokrotne wykonanie nagrania otwartych w plikach midi
+# przy jednoczesnym zapisie czasu trwania operacji
+midiRecord test.wav offline time Offline_GPU48k16b128.csv
+midiRecord test.wav offline time Offline_GPU48k16b128.csv
+midiRecord test.wav offline time Offline_GPU48k16b128.csv
+# [...] 
+\end{lstlisting}
+
+Jako dane testowe została wybrana pierwsza część utworu \textit{Symphony No. 5 in C minor, Op. 67} Ludwiga van Beethovena. Utwór ten został wybrany z powodu swojej złożoności, która pozwala na przetestowanie wydajności systemu w różnych warunkach. Drugą zaletą tego utworu jest jego długość (pierwsza część utworu trwa 7:37 minut), jak i wykorzystanie wielu instrumentów, dzięki czemu tworzy warunki testowania obu implementacji pod dużym i długotrwałym obciążeniem, generując przy tym reprezentatywną ilość danych.
+\\
+Przedstawiony w \autoref{lst:Vth_symphony_setup} plik konfiguracyjny przygotowuje dziewięć syntezatorów o różnych konfiguracjach, tworzących strumienie, które następnie są przetwarzane przez łącznie dziewiętnaście komponentów. W przypadku przetwarzania online test został przeprowadzony jednorazowo dla każdej wybranej konfiguracji systemu. Wynikiem testu wydajność systemu w trybie offline, jest pomiar czasu potrzebnego na wygenerowanie pliku .wav na bazie konfiguracji systemu. Test został więc przeprowadzony dziesięciokrotnie, w celu uzyskania bardziej reprezentatywnych wyników.
+\\
+Zarówno dla przetwarzania online jak i offline testy zostały przeprowadzone przy zapisie próbki w formacie 16-bitowym, częstotliwości próbkowania 48 kHz oraz stereofonicznej konfiguracji strumieni dźwiękowych. Wyróżniono cztery rozmiary bufora, reprezentujące różne przypadki użycia:
+\begin{itemize}
+    \item \textbf{128 $\sim$ 2.67ms} - mały rozmiar bufora, reprezentujący przypadek, w którym kluczowe jest niskie opóźnienie (przetwarzanie audio w przypadku występu na żywo, próba muzyczna, itp.),
+    \item \textbf{1024 $\sim$ 21.33ms} - średni rozmiar bufora, reprezentujący przypadek, w którym równowaga między opóźnieniem a wydajnością jest kluczowa (praca inżyniera dźwięku w studiu nagrań, odtwarzanie muzyki),
+    \item \textbf{8192 $\sim$ 170.67ms (online)} - duży rozmiar bufora, reprezentujący przypadek, w którym wysokie opóźnienie nie stanowi dużego problemu (renderowanie projektu online, hobbystyczna praca przy wykorzystaniu niewydajnego urządzenia).
+    \item \textbf{65536 $\sim$ 1365.33ms (offline)} - nad przeciętnie duży rozmiar bufora, reprezentujący przypadek pracy offline (renderowanie projektu offline, przetwarzanie dużej ilości plików). 
+\end{itemize}
+
+\lstset{
+    language=bash,
+    caption={Wybrane fragmenty pliku Vth\_symphony\_setup.txt, przygotowującego system do odtworzenia "Piątej Symfonii" Beethovena},
+    label=lst:Vth_symphony_setup,
+    literate={ę}{{\k{e}}}1 {ą}{{\k{a}}}1 {ł}{{\l{}}}1 {ó}{{\'o}}1 {ś}{{\'s}}1 {ć}{{\'c}}1 {ż}{{\.z}}1 {ź}{{\'z}}1 {ń}{{\'n}}1,
+    frame=single,
+    float,
+}
+\begin{lstlisting}
+# [...]
+# konfiguracja pojedynczego syntezatora dla trzeciego instrumentu
+#
+# utworzenie nowego strumienia wejściowego
+midiAdd #MIDI 2
+# ustawienie ścieżki do pliku MIDI
+midiSet 2 ./V_Bethoven/viole.mid
+# utworzenie nowego syntezatora
+synthAdd #SYNTH 4
+# wczytanie pliku konfiguracyjnego dla syntezatora
+synthSave 4 load ./config/synthSave/Vth_symphony/lead.bin
+# połączenie pliku midi z syntezatorem
+synthConnect 4 2
+# utworzenie komponentu 'pan'
+compAdd PAN #COMP 6
+# ustawienie położenia w przestrzeni
+compSet 6 pan 0.8
+# połączenie komponentu 'pan' z syntezatorem
+compConnect 6 SYNTH 4
+#
+# [...]
+#
+# utworzenie komponentu 'sum7' łączącego wszystkie strumienie
+compAdd SUM7 #COMP 11
+# ustawienie poprzednio utworzonego komponentu
+# jako strumienia wyjściowego systemu
+setOut COMP 11
+# połączenie wszystkich strumieni z komponentem sumującym
+aCompConnect 11 0 COMP 2
+aCompConnect 11 1 COMP 5
+aCompConnect 11 2 SYNTH 4
+# [...]
+# ustawienie głośności strumieni wchodzących
+compSet 11 vol2 0.17 vol3 0.18 vol4 0.18 vol5 0.064 vol6 0.064
+# dodatnie komponentów przetwarzających sygnał wyjściowy
+compAdd VOLUME #COMP 12
+compConnect 12 COMP 11
+compSet 12 vol 2
+compAdd COMPRESSOR #COMP 13
+compConnect 13 COMP 11
+compSet 13 ratio 10
+# wyświetlenie konfiguracji plików MIDI
+midiList
+\end{lstlisting}
+
+\section{Wyniki testów wydajności przetwarzania offline}
+Wyniki testów wydajności przetwarzania offline zostały podzielone na dwie części. Pierwsza część przedstawia uśrednione czasy trwania samej syntezy oraz przetwarzania strumieni audio (\ref{fig:Średni czas trwania przetwarzania dźwięku w trybie offline}). Druga część przedstawia uśrednione czasy trwania wszelkich obliczeń, włączając w to odczyt i zapis do plików, przetworzenie danych MIDI i przygotowanie ich do formatu przyjmowanego przez syntezator, a w przypadku GPU transfer danych pomiędzy urządzeniami (\ref{fig:Średni czas trwania wszelkich operacji w trybie offline}).
+
+\begin{figure}[H]
+    \centering
+    \scalebox{1.0}{\input{./fig/wyniki-offline.pgf}}
+    \caption{Średni czas trwania przetwarzania dźwięku w trybie offline}
+    \label{fig:Średni czas trwania przetwarzania dźwięku w trybie offline}
+\end{figure}
+
+Można zauważyć, iż w przypadku przetwarzania offline, wielkość bufora nie miała znaczenia dla implementacji CPU. W przypadku implementacji GPU, zwiększenie rozmiaru bufora znacząco wpłynęło na czas przetwarzania, zmniejszając wykorzystany czas wraz ze wzrostem bufora. W przypadku implementacji CPU, czas przetwarzania był zbliżony dla wszystkich rozmiarów bufora, co może wskazywać na to, że w przypadku CPU, czas przetwarzania jest zdominowany przez inne czynniki niż rozmiar bufora. W przypadku implementacji GPU, zwiększenie rozmiaru bufora pozwala na wykonanie kerneli o wiekszych rozmiarach, co skutkuje zmniejszeniem czasu przetwarzania.
+
+\begin{figure}[H]
+    \centering
+    \scalebox{1.0}{\input{./fig/wyniki-offline-calosc.pgf}}
+    \caption{Średni czas trwania wszelkich operacji w trybie offline}
+    \label{fig:Średni czas trwania wszelkich operacji w trybie offline}
+\end{figure}
+
+Rozmiar bufora miał bardzo duży wpływ na czas trwania wszelkich operacji w przypadku implementacji GPU. Jest to potwierdzeniem zaleceń przedstawionych w dokumentacji CUDA, głoszących, iż należy unikać wielokrotnych transferów danych pomiędzy GPU a pamięcią RAM, a zamiast tego przesyłać większe porcje danych w jednym transferze. Dla bufora o rozmiarze 128 próbek czas ponad dwukrotnie przekroczył czas trwania utworu, co wskazuje na to, że dla małych buforów, przetwarzanie w czasie rzeczywistym jest niemożliwe z wykorzystaniem przedstawionej w tej pracy implementacji. W związku z tym testy wydajności przetwarzania w czasie rzeczywistym nie zostanie przeprowadzony dla wielkości bufora 128 próbek.
+
+\section{Wyniki testów wydajności przetwarzania online}
+Wyniki testów wydajności przetwarzania online zostały podzielone na sekcje: uśrednione statystyki, obciążenie systemu, przebieg trwania obliczeń dla bufora o rozmiarze 1024.
+
+\begin{figure}[H]
+    \centering
+    \scalebox{1.0}{\input{./fig/wyniki-online-srednia.pgf}}
+    \caption{Uśrednione statystyki przetwarzania dźwięku w trybie online}
+    \label{fig:Uśrednione statystyki przetwarzania dźwięku w trybie online}
+\end{figure}
+
+"Średni czas trwania pętli" przedstawia czas trwania całej pętli przetwarzania. Jako, że częstotliwość próbkowania jest ustawiona na 48kHz, to idealna wartość tej statystyki wynosi 21333ns dla bufora o rozmiarze 1024 próbek oraz 170667ns dla bufora o rozmiarze 8192 próbek. "Średni czas obliczeń" uwzględnia czas poświęcony na wszelkie operacje obliczeniowe, a wyłącza czas spędzony na oczekiwanie na odpowiedni moment na odtworzenie dźwięku (co wynika ze specyfikacji generowania online). Można tu zauważyć jedynie niewielkie różnice między implementacjami. "Średnie opóźnienie" przedstawia czas związany z niedotrzymaniem idealnego czasu trwania pętli. Wartość ta powinna być jak najbliższa 0.
+
+\begin{figure}[H]
+    \centering
+    \scalebox{1.0}{\input{./fig/wyniki-online-obciazenie.pgf}}
+    \caption{Obciążenie systemu w trakcie przetwarzania dźwięku w trybie online}
+    \label{fig:Obciążenie systemu w trakcie przetwarzania dźwięku w trybie online}
+\end{figure}
+
+Obciążenie systemu w trakcie przetwarzania dźwięku w trybie online jest porównywalne w przypadku obu implementacji. Zarówno dla bufora 1024 jak i 8192 próbek, różnice są znikome. Warto zauważyć, że potwierdza się tendencja GPU do zwiększania przewagi nad CPU, gdy zwiększa się ilość przetwarzanych danych.
+
+\begin{figure}[H]
+    \centering
+    \scalebox{1.0}{\input{./fig/wyniki-online-1024.pgf}}
+    \caption{Przebieg trwania obliczeń dla bufora o rozmiarze 1024}
+    \label{fig:Przebieg trwania obliczeń dla bufora o rozmiarze 1024}
+\end{figure}
+
+Przebieg trwania obliczeń dla bufora o rozmiarze 1024 przedstawia kolejno: czas trwania obliczeń, obciążenie systemu oraz opóźnienie. Można zauważyć odmienną charakterystykę reakcji na ilość przetwarzanych danych. W przypadku CPU, czas obliczeń oraz obciążenie utrzymują się na podobnym poziomie, gdzie w przypadku GPU następuje duża niestabilność omawianych wartości. Prawdopodobnie jest to związane z charakterystyką pracy GPU. Zwiększenie się ilości aktywnych syntezatorów, zwiększa prawdopodobieństwo konieczności zaprzestania pracy części procesorów w związku z wykonywaniem się gałęzi instrukcji warunkowej. Patrząc na statystykę opóźnienia można również dostrzec różnicę między implementacjami. W obu przypadkach wartości te sięgają maksymalnie dziesiątych części milisekundy, co wskazuje na dużą stabilność działania systemu.

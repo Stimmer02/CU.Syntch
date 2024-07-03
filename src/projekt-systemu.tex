@@ -9,7 +9,7 @@ Aby zrealizować projekt w sposób składny i efektywny, należy zdefiniować ce
     \item Możliwość przetwarzania dźwięku w czasie rzeczywistym (online).
     \item Możliwość przetwarzania dźwięku w trybie offline (możliwe najszybciej bez jednoczesnego odtwarzania).
     \item Pierwsza wersja systemu ma przetwarzać dźwięk jedynie przy użyciu CPU.
-    \item Łatwy w rozbudowie o przetwarzanie dźwięku przy użyciu GPU, przy zachowaniu minimalnych zmian w kodzie.
+    \item Łatwy w re-implementacji w celu wykorzystania GPU, przy zachowaniu minimalnych zmian w kodzie.
     \item Uniwersalny podsystem komponentów odpowiedzialnych za przetwarzanie dźwięku - komponent implementuje pojedynczy algorytm przetwarzania dźwięku.
     \item Uniwersalny podsystem strumieni dźwięku - strumień może zostać przetworzony przez dowolną liczbę komponentów oraz dowolnie łączony z innymi strumieniami.
     \item Możliwość odtwarzania strumienia wyjściowego.
@@ -25,7 +25,7 @@ Aby zrealizować projekt w sposób składny i efektywny, należy zdefiniować ce
 \end{enumerate}
 
 \section{Założenia implementacyjne}
-Przed rozpoczęciem procesu implementacji należy wpierw określić wykorzystane technologie oraz standardy.
+Przed rozpoczęciem procesu implementacji należy najpierw określić wykorzystane technologie oraz standardy.
 \\\\
 \textbf{Zbiór założeń implementacyjnych:}
 \begin{enumerate}

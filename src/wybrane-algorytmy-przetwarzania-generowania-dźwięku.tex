@@ -178,10 +178,10 @@ Algorytm wykorzystuje zależność czasową pomiędzy kolejnymi próbkami sygna�
 \section{Komponenty zaawansowane}
 Komponenty zaawansowane reprezentowane poprzez klasy dziedziczące po klasie abstrakcyjnej \texttt{AAdvancedComponent} mogą operować na wielu strumieniach audio jednocześnie, tworząc tym samym swój własny strumień wyjściowy. Pozwala to na tworzenie bardziej złożonych operacji na dźwięku, umożliwiając np. miksowanie kilku strumieni audio, czy też tworzenie alternatywnych ścieżek przetwarzania pojedynczego strumienia. Poniżej została przedstawiona zasada działania oraz funkcjonalność dla każdego z komponentów.
 
-\subsection{copy - kopiowanie strumienia}
+\subsection{Copy - kopiowanie strumienia}
 Komponent \texttt{copy} pozwala na kopiowanie strumienia audio. Dzięki temu możliwe jest utworzenie alternatywnych ścieżek przetwarzanie danego sygnału.
 
-\subsection{sum - łączenie strumieni}
+\subsection{Sum - łączenie strumieni}
 Komponent \texttt{sum} pozwala na sumowanie \texttt{n} strumieni audio. Umożliwia to jednoczesne odtwarzanie sygnałów generowanych przez kilka syntezatorów, lub też miksowanie kilku strumieni wytworzonych przy pomocy komponentu \texttt{copy}. W pracy zaimplementowano algorytm sumowania dwóch oraz siedmiu sygnałów.
 
 \begin{figure}[H]
