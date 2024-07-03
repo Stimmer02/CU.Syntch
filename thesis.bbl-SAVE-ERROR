@@ -1,0 +1,136 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{ynt/global//global/global}
+    \entry{bib:WAV}{online}{}
+      \name{author}{1}{}{%
+        {{hash=72952e92c1443e3ffbe289c8be28bf19}{%
+           family={Sapp},
+           familyi={S\bibinitperiod},
+           given={Craig\bibnamedelima Stuart},
+           giveni={C\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+      }
+      \strng{namehash}{72952e92c1443e3ffbe289c8be28bf19}
+      \strng{fullhash}{72952e92c1443e3ffbe289c8be28bf19}
+      \strng{bibnamehash}{72952e92c1443e3ffbe289c8be28bf19}
+      \strng{authorbibnamehash}{72952e92c1443e3ffbe289c8be28bf19}
+      \strng{authornamehash}{72952e92c1443e3ffbe289c8be28bf19}
+      \strng{authorfullhash}{72952e92c1443e3ffbe289c8be28bf19}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{WAVE PCM soundfile format}
+      \field{urlday}{3}
+      \field{urlmonth}{7}
+      \field{urlyear}{2024}
+      \field{year}{2005}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb soundfile.sapp.org/doc/WaveFormat/
+      \endverb
+      \verb{url}
+      \verb soundfile.sapp.org/doc/WaveFormat/
+      \endverb
+    \endentry
+    \entry{bib:PCM}{book}{}
+      \name{author}{1}{}{%
+        {{hash=b4feccfd8ad4a9bf93a7a6b9bcc3e74f}{%
+           family={Garg},
+           familyi={G\bibinitperiod},
+           given={Vijay\bibnamedelima K.},
+           giveni={V\bibinitperiod\bibinitdelim K\bibinitperiod}}}%
+      }
+      \strng{namehash}{b4feccfd8ad4a9bf93a7a6b9bcc3e74f}
+      \strng{fullhash}{b4feccfd8ad4a9bf93a7a6b9bcc3e74f}
+      \strng{bibnamehash}{b4feccfd8ad4a9bf93a7a6b9bcc3e74f}
+      \strng{authorbibnamehash}{b4feccfd8ad4a9bf93a7a6b9bcc3e74f}
+      \strng{authornamehash}{b4feccfd8ad4a9bf93a7a6b9bcc3e74f}
+      \strng{authorfullhash}{b4feccfd8ad4a9bf93a7a6b9bcc3e74f}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Wireless Communications & Networking}
+      \field{year}{2007}
+    \endentry
+    \entry{bib:Nyquist-Shannon}{online}{}
+      \name{author}{1}{}{%
+        {{hash=e07a8a16139f25a4c05b0e1e9aedfa3a}{%
+           family={Instruments},
+           familyi={I\bibinitperiod},
+           given={National},
+           giveni={N\bibinitperiod}}}%
+      }
+      \strng{namehash}{e07a8a16139f25a4c05b0e1e9aedfa3a}
+      \strng{fullhash}{e07a8a16139f25a4c05b0e1e9aedfa3a}
+      \strng{bibnamehash}{e07a8a16139f25a4c05b0e1e9aedfa3a}
+      \strng{authorbibnamehash}{e07a8a16139f25a4c05b0e1e9aedfa3a}
+      \strng{authornamehash}{e07a8a16139f25a4c05b0e1e9aedfa3a}
+      \strng{authorfullhash}{e07a8a16139f25a4c05b0e1e9aedfa3a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Nyquist and Shannon's Sampling Theorems}
+      \field{urlday}{3}
+      \field{urlmonth}{7}
+      \field{urlyear}{2024}
+      \field{year}{2023}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb ni.com/docs/en-US/bundle/ni-fgen/page/nyquist-and-shannons-sampling-theorems.html
+      \endverb
+      \verb{url}
+      \verb ni.com/docs/en-US/bundle/ni-fgen/page/nyquist-and-shannons-sampling-theorems.html
+      \endverb
+    \endentry
+    \entry{bib:MIDI}{online}{}
+      \name{author}{1}{}{%
+        {{hash=de47ccbcaaacf53f96d6723ef1962f34}{%
+           family={MIXAGE},
+           familyi={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{de47ccbcaaacf53f96d6723ef1962f34}
+      \strng{fullhash}{de47ccbcaaacf53f96d6723ef1962f34}
+      \strng{bibnamehash}{de47ccbcaaacf53f96d6723ef1962f34}
+      \strng{authorbibnamehash}{de47ccbcaaacf53f96d6723ef1962f34}
+      \strng{authornamehash}{de47ccbcaaacf53f96d6723ef1962f34}
+      \strng{authorfullhash}{de47ccbcaaacf53f96d6723ef1962f34}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{MIDI - Getting Started}
+      \field{urlday}{3}
+      \field{urlmonth}{7}
+      \field{urlyear}{2024}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb mixagesoftware.com/en/midikit/help/
+      \endverb
+      \verb{url}
+      \verb mixagesoftware.com/en/midikit/help/
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

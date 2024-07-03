@@ -30,7 +30,7 @@ Przed rozpoczęciem procesu implementacji należy najpierw określić wykorzysta
 \textbf{Zbiór założeń implementacyjnych:}
 \begin{enumerate}
     \item System zostanie zaimplementowany w języku C++.
-    \item Elementy systemu odpowiedzialne za przetwarzanie dźwięku zostaną ponownie zaimplementowane na GPU przy użyciu technologii CUDA.
+    \item Elementy systemu odpowiedzialne za przetwarzanie dźwięku zostaną ponownie zaimplementowane na GPU przy użyciu technologii CUDA\cite{bib:CUDA}.
     \item Jako formatu przetwarzanego sygnału zostanie użyty format LPCM.
     \item Próbki LPCM będą reprezentowane jako liczby zmiennoprzecinkowe 32-bitowe (typ float w języku C++).
     \item Bufory audio będą zawsze grupowane po dwa - sygnał stereo.
@@ -38,12 +38,12 @@ Przed rozpoczęciem procesu implementacji należy najpierw określić wykorzysta
     \item Jako urządzenia wejścia posłużą urządzenia MIDI oraz klawiatura komputerowa.
     \item Jako format wejściowy zostaną użyte pliki .mid - pliki zapisane w formacie MIDI.
     \item Jako format wyjściowy danych dźwiękowych zostaną użyte pliki .wav.
-    \item W celu odtwarzania dźwięku zostanie użyty system PulseAudio.
+    \item W celu odtwarzania dźwięku zostanie użyty system PulseAudio\cite{bib:PulseAudio}.
     \item System nie będzie korzystał z wielowątkowości (w przypadku przetwarzania na CPU) lub asynchronicznych wywołań kerneli (w przypadku przetwarzania na GPU) w celu przetwarzania dźwięku.
 \end{enumerate}
 
 \section{Architektura systemu}
-System będzie się składał z wielu podsystemów, posiadających odmienne zbiory obowiązków, połączonych ze sobą klasą implementującą wzorzec mediatora oraz fasady.
+System będzie się składał z wielu podsystemów, posiadających odmienne zbiory obowiązków, połączonych ze sobą klasą implementującą wzorzec mediatora oraz fasady\cite{bib:DesignPatterns}.
 \\\\
 \textbf{Dziedziny jakimi będą zajmować się podsystemy:}
 \begin{enumerate}
@@ -57,7 +57,7 @@ System będzie się składał z wielu podsystemów, posiadających odmienne zbio
         \end{itemize}
     \item Wyjście:
         \begin{itemize}
-            \item zarządza komunikacją programu z serwerem PulseAudio,
+            \item zarządza komunikacją programu z serwerem PulseAudio\cite{bib:PulseAudio},
             \item konwertuje otrzymany strumień dźwiękowy na wybrany przez użytkownika format,
             \item odtwarza otrzymany strumień dźwiękowy,
             \item pozwala na zapis otrzymanego strumienia dźwiękowego do pliku.
@@ -84,17 +84,17 @@ System będzie się składał z wielu podsystemów, posiadających odmienne zbio
 \end{enumerate}
 
 \section{Komunikacja podsystemów}
-W związku z koniecznością komunikacji pomiędzy podsystemami oraz wewnątrz klas wchodzących w ich skład, należy zdefiniować ustandaryzowany format dla każdego typu przekazywanych i przechowywanych informacji, z uwzględnieniem koniecznej w przyszłości reimplementacji znaczącej części systemu przy użyciu technologii CUDA.
+W związku z koniecznością komunikacji pomiędzy podsystemami oraz wewnątrz klas wchodzących w ich skład, należy zdefiniować ustandaryzowany format dla każdego typu przekazywanych i przechowywanych informacji, z uwzględnieniem koniecznej w przyszłości reimplementacji znaczącej części systemu przy użyciu technologii CUDA\cite{bib:CUDA}.
 
 \begin{enumerate}
-    \item \textbf{audioFormatInfo} - struktura przechowująca informacje dotyczące formatu przetwarzanego i odtwarzanego/zapisanego dźwięku takie jak:
+    \item \texttt{audioFormatInfo} - struktura przechowująca informacje dotyczące formatu przetwarzanego i odtwarzanego/zapisanego dźwięku takie jak:
     \begin{itemize}
         \item częstotliwość próbkowania,
         \item rozmiar bufora,
         \item liczba kanałów wyjściowych,
         \item głębia bitowa próbki.
     \end{itemize}
-    \item \textbf{IDManager} - klasa-kontener przechowująca obiekty wskazanego typu i nadająca im unikalne identyfikatory, pomaga w zarządzaniu obiektami w systemie, nadając im możliwie najkrótsze identyfikatory, co ułatwia posługiwanie się nimi użytkownikowi.
+    \item \texttt{IDManager} - klasa-kontener przechowująca obiekty wskazanego typu i nadająca im unikalne identyfikatory, pomaga w zarządzaniu obiektami w systemie, nadając im możliwie najkrótsze identyfikatory, co ułatwia posługiwanie się nimi użytkownikowi.
     \item Pozwala na operacje takie jak:
     \begin{itemize}
         \item dodawanie nowego obiektu i jednoczesne przydzielanie mu ID,
@@ -103,25 +103,25 @@ W związku z koniecznością komunikacji pomiędzy podsystemami oraz wewnątrz k
         \item pobieranie tablicy wszystkich obiektów,
         \item sprawdzanie czy obiekt o wskazanym ID istnieje.
     \end{itemize}
-    \item \textbf{audioBuffer} - struktura przechowująca próbki dźwiękowe w postaci tablicy bajtów, wykorzystywana w komunikacji pomiędzy systemem a serwerem PulseAudio. Przechowuje:
+    \item \texttt{audioBuffer} - struktura przechowująca próbki dźwiękowe w postaci tablicy bajtów, wykorzystywana w komunikacji pomiędzy systemem a serwerem PulseAudio\cite{bib:PulseAudio}. Przechowuje:
     \begin{itemize}
         \item tablicę bajtów zawierającą próbki dźwiękowe,
         \item ilość próbek w tablicy,
         \item wielkość pojedynczej próbki w bajtach.
     \end{itemize}
-    \item \textbf{pipelineAudioBuffer} - struktura przechowująca dwie tablice typu float próbek dźwiękowych, wykorzystywana w wewnętrznej komunikacji pomiędzy komponentami przetwarzania dźwięku, systemem wyjścia oraz systemem wejścia. Przechowuje:
+    \item \texttt{pipelineAudioBuffer} - struktura przechowująca dwie tablice typu float próbek dźwiękowych, wykorzystywana w wewnętrznej komunikacji pomiędzy komponentami przetwarzania dźwięku, systemem wyjścia oraz systemem wejścia. Przechowuje:
     \begin{itemize}
         \item dwie tablice typu float zawierające próbki dźwiękowe,
         \item ilość próbek w tablicach.
     \end{itemize}
-    \item \textbf{audioBufferQueue} - struktura przechowująca pipelineAudioBuffer wraz z informacją o kolejności wykonywania na nim operacji oraz informacja o jego pochodzeniu. Przechowuje:
+    \item \texttt{audioBufferQueue} - struktura przechowująca pipelineAudioBuffer wraz z informacją o kolejności wykonywania na nim operacji oraz informacja o jego pochodzeniu. Przechowuje:
     \begin{itemize}
         \item obiekt pipelineAudioBuffer,
         \item typ podsystemu, który utworzył buffer,
         \item ID elementu podsystemu który utworzył buffer,
         \item listę ID komponentów przetwarzania dźwięku, które mają zostać na nim wykonane.
     \end{itemize}
-    \item \textbf{keyboardTransferBuffer} - struktura przechowująca informacje o stanie poszczególnych klawiszy, na osi czasu, urządzenia wejściowego. Przechowuje:
+    \item \texttt{keyboardTransferBuffer} - struktura przechowująca informacje o stanie poszczególnych klawiszy, na osi czasu, urządzenia wejściowego. Przechowuje:
     \begin{itemize}
         \item dwuwymiarową tablicę bajtów (gdzie pierwszy wymiar stanowi indeks klawisza, a drugi oś czasu) zawierających informację o stanie klawiszy, wyróżniając 128 stanów zgodnie ze standardem MIDI,
         \item jednowymiarową tablicę (wielkości równej ilości klawiszy) zawierającą informację o ostatnim stanie z poprzedniej zawartości bufora,
@@ -129,8 +129,3 @@ W związku z koniecznością komunikacji pomiędzy podsystemami oraz wewnątrz k
         \item wielkość bufora w dziedzinie czasu.
     \end{itemize}
 \end{enumerate}
-
-
-% PulseAudio
-% PulseAudio simple
-% mediator, fasada

@@ -7,22 +7,22 @@ Klasa \texttt{pipeline::Input} zarządza urządzeniami wejścia, odtwarzaniem pl
     \item \texttt{AKeyboardRecorder} - klasa abstrakcyjna reprezentująca urządzenie wejścia, jej implementacje zapisują stan urządzenia na przestrzeni czasu wykorzystując obiekty klas implementujących interfejs \texttt{IKeyboardDoubleBuffer}. Klasami dziedziczącymi po \texttt{AKeyboardRecorder} są:
     \begin{itemize}
         \item \texttt{KeyboardRecorder\_MidiFile} - klasa implementująca odczyt plików MIDI przy wykorzystaniu klasy \texttt{MidiFileReader}.
-        \item \texttt{KeyboardRecorder\_DevInput} - klasa implementująca odczyt z klawiatury komputerowej przy wykorzystaniu strumieni systemowych znajdujących się w /dev/input/ w systemie Linux.
-        \item \texttt{KeyboardRecorder\_DevSnd} - klasa implementująca odczyt z urządzenia MIDI przy wykorzystaniu strumieni systemowych znajdujących się w /dev/snd/ w systemie Linux oraz klasy \texttt{MidiMessageInterpreter}.
+        \item \texttt{KeyboardRecorder\_DevInput} - klasa implementująca odczyt z klawiatury komputerowej przy wykorzystaniu strumieni systemowych znajdujących się w /dev/input/\cite{bib:system-streem} w systemie Linux.
+        \item \texttt{KeyboardRecorder\_DevSnd} - klasa implementująca odczyt z urządzenia MIDI przy wykorzystaniu strumieni systemowych znajdujących się w /dev/snd/\cite{bib:system-streem} w systemie Linux oraz klasy \texttt{MidiMessageInterpreter}.
     \end{itemize}
     \item \texttt{KeyboradManager} - klasa-kontener dziedzicząca po \texttt{IDManager}, przechowująca i zarządzająca obiektami klas implementujących \texttt{AKeyboardRecorder}.
     \item \texttt{MidiReaderManager} - klasa zarządzająca odczytem plików MIDI, operuje na  obiektach klasy \texttt{KeyboardRecorder\_MidiFile}.
-    \item \texttt{Synthesizer} - klasa reprezentująca syntezator, przy wykorzystaniu wzorca strategii pozwala na wybór różnych algorytmów generowania dźwięku. Wypełnia bufor audio na podstawie ustawień użytkownika oraz struktur \texttt{keyboardTransferBuffer}. Każdy syntezator posiada unikalny identyfikator, nadawany przez obiekt klasy \texttt{IDManager}, dzięki któremu przyporządkowuje się mu strumień dźwiękowy w postaci struktury \texttt{pipelineAudioBuffer}.
+    \item \texttt{Synthesizer} - klasa reprezentująca syntezator, przy wykorzystaniu wzorca strategii\cite{bib:DesignPatterns} pozwala na wybór różnych algorytmów generowania dźwięku. Wypełnia bufor audio na podstawie ustawień użytkownika oraz struktur \texttt{keyboardTransferBuffer}. Każdy syntezator posiada unikalny identyfikator, nadawany przez obiekt klasy \texttt{IDManager}, dzięki któremu przyporządkowuje się mu strumień dźwiękowy w postaci struktury \texttt{pipelineAudioBuffer}.
     \item \texttt{MidiFileReader} - klasa zarządzająca odczytem plików MIDI. Jej głównym zadaniem jest obliczenie konkretnego punktu w czasie w którym należy odczytać kolejną wiadomość MIDI na podstawie konfiguracji zawartej w pliku oraz ustawień systemowych. Klasa ta wykorzystuje obiekty klasy \texttt{MidiMessageInterpreter} do interpretacji odczytanych wiadomości.
 \end{enumerate}
 
 \section{Podsystem wyjścia}
-Klasa \texttt{pipeline::Output} zarządza komunikacją programu z serwerem PulseAudio, konwertuje otrzymany strumień dźwiękowy na wybrany przez użytkownika format oraz pozwala na zapis otrzymanego strumienia dźwiękowego do pliku. Podsystem ten operuje na obiektach następujących klas:
+Klasa \texttt{pipeline::Output} zarządza komunikacją programu z serwerem PulseAudio\cite{bib:PulseAudio}, konwertuje otrzymany strumień dźwiękowy na wybrany przez użytkownika format oraz pozwala na zapis otrzymanego strumienia dźwiękowego do pliku. Podsystem ten operuje na obiektach następujących klas:
 \begin{enumerate}
-    \item \texttt{OutStreamPulseAudio} - klasa implementująca interfejs \texttt{IOutStream}. Klasa ta wykorzystuje bibliotekę \texttt{libpulse} do nawiązania połączenia z serwerem PulseAudio oraz przesyłania do niego buforów dźwiękowych.
+    \item \texttt{OutStreamPulseAudio\cite{bib:PulseAudio}} - klasa implementująca interfejs \texttt{IOutStream}. Klasa ta wykorzystuje bibliotekę \texttt{libpulse} do nawiązania połączenia z serwerem PulseAudio\cite{bib:PulseAudio} oraz przesyłania do niego buforów dźwiękowych.
     \item \texttt{AudioRecorder} - klasa pozwalająca na zapis otrzymanego bufora dźwiękowego do pliku o wskazanej nazwie z rozszerzeniem .wav.
     \item \texttt{AudioBuffer} - struktura reprezentująca bufor dźwiękowy. Przede wszystkim przechowuje próbki dźwiękowe w postaci tablicy bajtów.
-    \item \texttt{ABufferConverter} - klasa abstrakcyjna, której implementacje, dzięki zastosowaniu wzorca projetkowego stragegii, pozwalają na konwersję bufora dźwiękowego przedstawianego za pomocą struktury \texttt{pipelineAudioBuffer} do struktury \texttt{AudioBuffer} w wybrany formacie. 
+    \item \texttt{ABufferConverter} - klasa abstrakcyjna, której implementacje, dzięki zastosowaniu wzorca projetkowego stragegii\cite{bib:DesignPatterns}, pozwalają na konwersję bufora dźwiękowego przedstawianego za pomocą struktury \texttt{pipelineAudioBuffer} do struktury \texttt{AudioBuffer} w wybrany formacie. 
 \end{enumerate}
 
 \section{Podsystem komponentów}
@@ -35,7 +35,7 @@ Podsystem komponentów jest zarządzany równocześnie za pomocą klasy \texttt{
 \end{enumerate}
 
 \section{Podsystem danych statystycznych}
-Podsystem danych statystycznych jest zarządzany przez klasę \texttt{pipeline::StatisticsService}. Podsystem opiera się o dwa punkty pomiaru czasu w głównej pętli systemowej: na samym początku iteracji (przed wykonaniem jakichkolwiek operacji) oraz po utworzeniu bufora wyjściowego (jeszcze przed przekazaniem jego do serwera PulseAudio). Dzięki temu można dokładnie zmierzyć czas trwania operacji oraz całej pętli programowej. Na podstawie wielkości buforu oraz częstotliwości próbkowania możliwe jest obliczenie przewidywanego czasu obrotu pętli programowej. Porównując to z pomiarami, można między innymi wyznaczyć obciążenie systemu: $O = \frac{t_{\text{pomiar}}}{t_{\text{przewidywany}}}$, gdzie $O > 1$ oznacza, iż czas potrzebny na wykonanie obliczeń nie pozwala na przetworzenie dźwięku w czasie rzeczywistym. Podsystem operuje na obiektach struktury \texttt{pipeline::StatisticsBuffer}. Obiekty te przechowują czasy trwania operacji oraz czasy trwania pętlu w mikrosekundach, jak i procentowe obciążenie systemu. Na podstawie uśrednionych wartości uaktualniana jest struktura \texttt{pipeline::Statistics} udostępniona reszcie systemu.
+Podsystem danych statystycznych jest zarządzany przez klasę \texttt{pipeline::StatisticsService}. Podsystem opiera się o dwa punkty pomiaru czasu w głównej pętli systemowej: na samym początku iteracji (przed wykonaniem jakichkolwiek operacji) oraz po utworzeniu bufora wyjściowego (jeszcze przed przekazaniem jego do serwera PulseAudio\cite{bib:PulseAudio}). Dzięki temu można dokładnie zmierzyć czas trwania operacji oraz całej pętli programowej. Na podstawie wielkości buforu oraz częstotliwości próbkowania możliwe jest obliczenie przewidywanego czasu obrotu pętli programowej. Porównując to z pomiarami, można między innymi wyznaczyć obciążenie systemu: $O = \frac{t_{\text{pomiar}}}{t_{\text{przewidywany}}}$, gdzie $O > 1$ oznacza, iż czas potrzebny na wykonanie obliczeń nie pozwala na przetworzenie dźwięku w czasie rzeczywistym. Podsystem operuje na obiektach struktury \texttt{pipeline::StatisticsBuffer}. Obiekty te przechowują czasy trwania operacji oraz czasy trwania pętlu w mikrosekundach, jak i procentowe obciążenie systemu. Na podstawie uśrednionych wartości uaktualniana jest struktura \texttt{pipeline::Statistics} udostępniona reszcie systemu.
 
 \section{Jądro systemu}
 Klasą z której można zarządzać całym systemem jest klasa \texttt{AudioPipelineManager}. Pełni ona rolę fasady dla całego systemu, udostępniając wszelkie jego funkcjonalności rozproszone w różnych podsystemach. Jako, że implementuje ona główną pętlę programową oraz zarządza wątkiem, w którym się ta pętla wykonuje, klasa ta również pełni rolę jądra całego systemu. 
@@ -112,7 +112,7 @@ void AudioPipelineManager::pipelineThreadFunction(){
         }
 
         // Odtworzenie dźwięku i dokonanie pomiaru czasu przed
-        // przekazaniem bufora wyjściowego do serwera PulseAudio
+        // przekazaniem bufora wyjściowego do serwera PulseAudio\cite{bib:PulseAudio}
         output.play(&outputBuffer->buffer, loopWorkEnd);
     }
 }
@@ -227,5 +227,3 @@ char AudioPipelineManager::recordMidiFilesOffline(
 
 \section{Interfejs użytkownika}
 Interfejs użytkownika został zaimplementowany jako aplikacja konsolowa w klasie \texttt{SynthUserInterface}. Klasa ta wykorzystuje metody upublicznione w \texttt{AudioPipelineManager} w swoich metodach obsługujących poszczególne komendy. \texttt{SynthUserInterface} wykorzystuje kontener \texttt{std::map} z biblioteki standardowej w celu przechowywania par wartości: nazwy komendy (std::string) i wskaźnika na metodę (void (SynthUserInterface::*)()). Pozwala to w wydajny sposób na wywołanie odpowiedniej metody w zależności od wprowadzonej przez użytkownika komendy. Interfejs posiada swoją własną pętlę programową, której zadaniem jest oczekiwanie na wprowadzenie komendy przez użytkownika, parsowanie wprowadzonej komendy oraz wywołanie odpowiedniej metody. Klasa \texttt{SynthUserInterface} implementuje interfejs \texttt{IScriptReaderClient} dzięki czemu obiekt klasy \texttt{ScriptReader} może wywołać operacje na obiekcie klasy \texttt{SynthUserInterface} i jednocześnie jest on polem klasy na, której operuje. Pozwala to na wywołanie skryptów zarówno z poziomu implementacji systemu, jak i z poziomu interfejsu użytkownika, co automatyzuje proces testowania wydajności systemu, tym samym eliminując czynnik ludzki z procesu pomiaru.
-
-% dev/input, dev/snd
