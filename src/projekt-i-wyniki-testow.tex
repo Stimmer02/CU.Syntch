@@ -12,7 +12,7 @@ W celu wyeliminowania czynników zewnętrznych, wszystkie z przeprowadzonych tes
             \hline
             Procesor & AMD Ryzen 5 3600 & - \\
             \hline
-            Pamięć RAM & 16 GB DDR4 3200 MHz & 25 GB/s \\
+            Pamięć RAM & 32 GB DDR4 3200 MHz & 25 GB/s \\
             \hline
             Karta graficzna & NVIDIA RTX 3070 & 448 GB/s \\
             \hline
@@ -28,6 +28,7 @@ Przedstawiona przepustowość jest czysto teoretyczna i tyczy się ona możliwo�
 
 Pierwsze testy i porównanie obu implementacji nastąpiło już w czasie implementacji. Zebrane w tamtym czasie wyniki pozwoliły na zaprojektowanie testów, które zostaną przedstawione w dalszej części tego rozdziału. Każdy z przeprowadzonych testów jest wywoływany za pomocą skryptu, który automatycznie konfiguruje system i wywołuje odpowiednie komendy w celu rozpoczęcia i zapisu pomiaru.
 
+\clearpage
 \lstset{
     language=bash,
     caption={Przykłady skryptów testujących wydajność},
@@ -65,10 +66,10 @@ midiRecord test.wav offline time Offline_GPU48k16b128.csv
 \end{lstlisting}
 
 Jako dane testowe została wybrana pierwsza część utworu \textit{Symphony No. 5 in C minor, Op. 67} Ludwiga van Beethovena. Utwór ten został wybrany z powodu swojej złożoności, która pozwala na przetestowanie wydajności systemu w różnych warunkach. Drugą zaletą tego utworu jest jego długość (pierwsza część utworu trwa 7:37 minut), jak i wykorzystanie wielu instrumentów, dzięki czemu tworzy warunki testowania obu implementacji pod dużym i długotrwałym obciążeniem, generując przy tym reprezentatywną ilość danych.
-\\
-Przedstawiony w \autoref{lst:Vth_symphony_setup} plik konfiguracyjny przygotowuje dziewięć syntezatorów o różnych konfiguracjach, tworzących strumienie, które następnie są przetwarzane przez łącznie dziewiętnaście komponentów. W przypadku przetwarzania online test został przeprowadzony jednorazowo dla każdej wybranej konfiguracji systemu. Wynikiem testu wydajność systemu w trybie offline, jest pomiar czasu potrzebnego na wygenerowanie pliku .wav na bazie konfiguracji systemu. Test został więc przeprowadzony dziesięciokrotnie, w celu uzyskania bardziej reprezentatywnych wyników.
-\\
-Zarówno dla przetwarzania online jak i offline testy zostały przeprowadzone przy zapisie próbki w formacie 16-bitowym, częstotliwości próbkowania 48 kHz oraz stereofonicznej konfiguracji strumieni dźwiękowych. Wyróżniono cztery rozmiary bufora, reprezentujące różne przypadki użycia:
+
+\vspace{10pt}Przedstawiony w \ref{lst:Vth_symphony_setup} plik konfiguracyjny przygotowuje dziewięć syntezatorów o różnych konfiguracjach, tworzących strumienie, które następnie są przetwarzane przez łącznie dziewiętnaście komponentów. W przypadku przetwarzania online test został przeprowadzony jednorazowo dla każdej wybranej konfiguracji systemu. Wynikiem testu wydajność systemu w trybie offline, jest pomiar czasu potrzebnego na wygenerowanie pliku .wav na bazie konfiguracji systemu. Test został więc przeprowadzony dziesięciokrotnie, w celu uzyskania bardziej reprezentatywnych wyników.
+
+\vspace{10pt}Zarówno dla przetwarzania online jak i offline testy zostały przeprowadzone przy zapisie próbki w formacie 16-bitowym, częstotliwości próbkowania 48kHz oraz stereofonicznej konfiguracji strumieni dźwiękowych. Wyróżniono cztery rozmiary bufora, reprezentujące różne przypadki użycia:
 \begin{itemize}
     \item \textbf{128 $\sim$ 2.67ms} - mały rozmiar bufora, reprezentujący przypadek, w którym kluczowe jest niskie opóźnienie (przetwarzanie audio w przypadku występu na żywo, próba muzyczna, itp.),
     \item \textbf{1024 $\sim$ 21.33ms} - średni rozmiar bufora, reprezentujący przypadek, w którym równowaga między opóźnieniem a wydajnością jest kluczowa (praca inżyniera dźwięku w studiu nagrań, odtwarzanie muzyki),
@@ -140,7 +141,7 @@ Wyniki testów wydajności przetwarzania offline zostały podzielone na dwie cz�
     \label{fig:Średni czas trwania przetwarzania dźwięku w trybie offline}
 \end{figure}
 
-Można zauważyć, iż w przypadku przetwarzania offline, wielkość bufora nie miała znaczenia dla implementacji CPU. W przypadku implementacji GPU, zwiększenie rozmiaru bufora znacząco wpłynęło na czas przetwarzania, zmniejszając wykorzystany czas wraz ze wzrostem bufora. W przypadku implementacji CPU, czas przetwarzania był zbliżony dla wszystkich rozmiarów bufora, co może wskazywać na to, że w przypadku CPU, czas przetwarzania jest zdominowany przez inne czynniki niż rozmiar bufora. W przypadku implementacji GPU, zwiększenie rozmiaru bufora pozwala na wykonanie kerneli o wiekszych rozmiarach, co skutkuje zmniejszeniem czasu przetwarzania.
+Można zauważyć, iż w przypadku przetwarzania offline, wielkość bufora nie miała znaczenia dla implementacji CPU. W przypadku implementacji GPU, zwiększenie rozmiaru bufora znacząco wpłynęło na czas przetwarzania, zmniejszając wykorzystany czas wraz ze wzrostem wielkości bufora. W przypadku implementacji CPU, czas przetwarzania był zbliżony dla wszystkich rozmiarów bufora, co może wskazywać na to, że w przypadku CPU, czas przetwarzania jest zdominowany przez inne czynniki niż rozmiar bufora. W przypadku implementacji GPU, zwiększenie rozmiaru bufora pozwala na wykonanie kerneli o wiekszych rozmiarach, co skutkuje zmniejszeniem czasu przetwarzania.
 
 \begin{figure}[H]
     \centering
@@ -161,7 +162,7 @@ Wyniki testów wydajności przetwarzania online zostały podzielone na sekcje: u
     \label{fig:Uśrednione statystyki przetwarzania dźwięku w trybie online}
 \end{figure}
 
-"Średni czas trwania pętli" przedstawia czas trwania całej pętli przetwarzania. Jako, że częstotliwość próbkowania jest ustawiona na 48kHz, to idealna wartość tej statystyki wynosi 21333ns dla bufora o rozmiarze 1024 próbek oraz 170667ns dla bufora o rozmiarze 8192 próbek. "Średni czas obliczeń" uwzględnia czas poświęcony na wszelkie operacje obliczeniowe, a wyłącza czas spędzony na oczekiwanie na odpowiedni moment na odtworzenie dźwięku (co wynika ze specyfikacji generowania online). Można tu zauważyć jedynie niewielkie różnice między implementacjami. "Średnie opóźnienie" przedstawia czas związany z niedotrzymaniem idealnego czasu trwania pętli. Wartość ta powinna być jak najbliższa 0.
+"Średni czas trwania pętli" przedstawia czas trwania całej pętli przetwarzania. Jako, że częstotliwość próbkowania jest ustawiona na 48kHz, to idealna wartość tej statystyki wynosi 21333ns dla bufora o rozmiarze 1024 próbek oraz 170667ns dla bufora o rozmiarze 8192 próbek. "Średni czas obliczeń" uwzględnia czas poświęcony na wszelkie operacje obliczeniowe, a wyłącza czas spędzony na oczekiwanie na odtworzenie dźwięku (co wynika ze charakterystyki generowania online). Można tu zauważyć jedynie niewielkie różnice między implementacjami. "Średnie opóźnienie" przedstawia czas związany z niedotrzymaniem idealnego czasu trwania pętli. Wartość ta powinna być jak najbliższa 0.
 
 \begin{figure}[H]
     \centering
@@ -171,7 +172,7 @@ Wyniki testów wydajności przetwarzania online zostały podzielone na sekcje: u
 \end{figure}
 
 Obciążenie systemu w trakcie przetwarzania dźwięku w trybie online jest porównywalne w przypadku obu implementacji. Zarówno dla bufora 1024 jak i 8192 próbek, różnice są znikome. Warto zauważyć, że potwierdza się tendencja GPU do zwiększania przewagi nad CPU, gdy zwiększa się ilość przetwarzanych danych.
-
+\clearpage
 \begin{figure}[H]
     \centering
     \scalebox{1.0}{\input{./fig/wyniki-online-1024.pgf}}

@@ -29,21 +29,21 @@ Przed rozpoczęciem procesu implementacji należy najpierw określić wykorzysta
 \\\\
 \textbf{Zbiór założeń implementacyjnych:}
 \begin{enumerate}
-    \item System zostanie zaimplementowany w języku C++.
+    \item System zostanie zaimplementowany w języku C++\cite{bib:Cpp}.
     \item Elementy systemu odpowiedzialne za przetwarzanie dźwięku zostaną ponownie zaimplementowane na GPU przy użyciu technologii CUDA\cite{bib:CUDA}.
-    \item Jako formatu przetwarzanego sygnału zostanie użyty format LPCM.
+    \item Jako formatu przetwarzanego sygnału zostanie użyty format LPCM\cite{bib:PCM}.
     \item Próbki LPCM będą reprezentowane jako liczby zmiennoprzecinkowe 32-bitowe (typ float w języku C++).
     \item Bufory audio będą zawsze grupowane po dwa - sygnał stereo.
     \item Interfejs użytkownika zostanie zaimplementowany jako aplikacja konsolowa.
-    \item Jako urządzenia wejścia posłużą urządzenia MIDI oraz klawiatura komputerowa.
-    \item Jako format wejściowy zostaną użyte pliki .mid - pliki zapisane w formacie MIDI.
+    \item Jako urządzenia wejścia posłużą urządzenia MIDI\cite{bib:MIDI} oraz klawiatura komputerowa.
+    \item Jako format wejściowy zostaną użyte pliki .mid - pliki zapisane w formacie MIDI\cite{bib:MIDI}.
     \item Jako format wyjściowy danych dźwiękowych zostaną użyte pliki .wav.
     \item W celu odtwarzania dźwięku zostanie użyty system PulseAudio\cite{bib:PulseAudio}.
     \item System nie będzie korzystał z wielowątkowości (w przypadku przetwarzania na CPU) lub asynchronicznych wywołań kerneli (w przypadku przetwarzania na GPU) w celu przetwarzania dźwięku.
 \end{enumerate}
 
 \section{Architektura systemu}
-System będzie się składał z wielu podsystemów, posiadających odmienne zbiory obowiązków, połączonych ze sobą klasą implementującą wzorzec mediatora oraz fasady\cite{bib:DesignPatterns}.
+System będzie się składał z wielu podsystemów, posiadających odmienne zbiory obowiązków, połączonych ze sobą klasą implementującą wzorzec fasady\cite{bib:DesignPatterns}.
 \\\\
 \textbf{Dziedziny jakimi będą zajmować się podsystemy:}
 \begin{enumerate}
@@ -84,7 +84,7 @@ System będzie się składał z wielu podsystemów, posiadających odmienne zbio
 \end{enumerate}
 
 \section{Komunikacja podsystemów}
-W związku z koniecznością komunikacji pomiędzy podsystemami oraz wewnątrz klas wchodzących w ich skład, należy zdefiniować ustandaryzowany format dla każdego typu przekazywanych i przechowywanych informacji, z uwzględnieniem koniecznej w przyszłości reimplementacji znaczącej części systemu przy użyciu technologii CUDA\cite{bib:CUDA}.
+W związku z koniecznością komunikacji pomiędzy podsystemami oraz wewnątrz klas wchodzących w ich skład, należy zdefiniować ustandaryzowany format dla każdego typu przekazywanych i przechowywanych informacji, z uwzględnieniem koniecznej w przyszłości re-implementacji znaczącej części systemu przy użyciu technologii CUDA\cite{bib:CUDA}.
 
 \begin{enumerate}
     \item \texttt{audioFormatInfo} - struktura przechowująca informacje dotyczące formatu przetwarzanego i odtwarzanego/zapisanego dźwięku takie jak:
@@ -95,7 +95,8 @@ W związku z koniecznością komunikacji pomiędzy podsystemami oraz wewnątrz k
         \item głębia bitowa próbki.
     \end{itemize}
     \item \texttt{IDManager} - klasa-kontener przechowująca obiekty wskazanego typu i nadająca im unikalne identyfikatory, pomaga w zarządzaniu obiektami w systemie, nadając im możliwie najkrótsze identyfikatory, co ułatwia posługiwanie się nimi użytkownikowi.
-    \item Pozwala na operacje takie jak:
+    \\
+    Pozwala na operacje takie jak:
     \begin{itemize}
         \item dodawanie nowego obiektu i jednoczesne przydzielanie mu ID,
         \item usuwanie obiektu o wskazanym ID,

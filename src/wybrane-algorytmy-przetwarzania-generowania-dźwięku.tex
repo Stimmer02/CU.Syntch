@@ -2,7 +2,7 @@
 Przedstawione w pracy algorytmy należą do najprostszych i najbardziej popularnych. W każdym przypadku zostały one zaimplementowane w możliwie najprostszej formie, wystarczającej do ilustracji ich działania, jak i możliwości zastosowania. 
 
 \section{Generowanie sygnału}
-Sygnał dźwiękowy jest generowany przy pomocy syntezatora, który wykorzystuje jeden z poniżej przedstawionych algorytmów, by na podstawie informacji o wciśniętych klawiszach wygenerować odpowiednią sekwencję próbek. Każdemu z klawiszy koresponduje określona częstotliwość, która definiuje długość okresu funkcji sygnału. Algorytmy te są równoznaczne konkretnym funkcjom matematycznym, których dziedziną jest czas, a przeciwdziedziną amplitudy sygnału. Funkcja czasu jest dyskretna, co oznacza, że wartości sygnału są znane tylko w określonych momentach czasu - próbkach. Poniżej zostały przestawione wzory wykorzystane w implementacji poszczególnych funckcji. Dla $F(f, n, f_s)$ będącego funkcją sygnału: $f$ oznacza częstotliwość sygnału, $n$ numer próbki, a $f_s$ częstotliwość próbkowania.
+Sygnał dźwiękowy jest generowany przy pomocy syntezatora, który wykorzystuje jeden z poniżej przedstawionych algorytmów, by na podstawie informacji o wciśniętych klawiszach wygenerować odpowiednią sekwencję próbek. Każdemu z klawiszy koresponduje określona częstotliwość, która definiuje długość okresu funkcji sygnału. Algorytmy te są równoznaczne konkretnym funkcjom matematycznym, których dziedziną jest czas, a przeciwdziedziną amplitudy sygnału. Funkcja czasu jest dyskretna, co oznacza, że wartości sygnału są znane tylko w określonych momentach czasu - próbkach. Poniżej zostały przestawione wzory wykorzystane w implementacji poszczególnych funkcji. Dla $F(f, n, f_s)$ będącego funkcją sygnału: $f$ oznacza częstotliwość sygnału, $n$ numer próbki, a $f_s$ częstotliwość próbkowania.
 \\\\
 Przedstawione wzory są jedynie przykładami. Istnieją inne możliwości zapisu opisywanych sygnałów.
 
@@ -12,7 +12,7 @@ Przedstawione wzory są jedynie przykładami. Istnieją inne możliwości zapisu
     \Fsin(f, n, f_s) = \sin\left(\frac{f \cdot 2\pi \cdot n}{f_s}\right)
     \label{eq:sygnał sinusoidalny}
 \end{equation}
-Sygnał sinusoidalny jest najprostszym sygnałem dźwiękowym pod względem matematycznym. Jest to funkcja sinus, której argumentem jest iloczyn częstotliwości sygnału, czasu i $2\pi$. Sygnał sinusoidalny jest sygnałem o najczystszych właściwościach dźwiękowych, co oznacza, że jest to sygnał o najmniejszej zawartości harmonicznych. Te właściwości wyróżniają funkcję sinusoidalną na tle innych. Generując sinus o częstotliwości $f$ Hz, w widmie sygnału nie znajdziemy żadnych innych składowych niż $f$ Hz.
+\vspace{10pt}Sygnał sinusoidalny jest najprostszym sygnałem dźwiękowym pod względem matematycznym. Jest to funkcja sinus, której argumentem jest iloczyn częstotliwości sygnału, czasu i $2\pi$. Sygnał sinusoidalny jest sygnałem o najczystszych właściwościach dźwiękowych, co oznacza, że jest to sygnał o najmniejszej zawartości harmonicznych. Te właściwości wyróżniają funkcję sinusoidalną na tle innych. Generując sinus o częstotliwości $f$ Hz, w widmie sygnału nie znajdziemy żadnych innych składowych niż $f$ Hz.
 
 \begin{figure}[H]
     \centering
@@ -28,7 +28,7 @@ Sygnał sinusoidalny jest najprostszym sygnałem dźwiękowym pod względem mate
     \Fsquare(f, n, f_s) = \left(\left\lfloor \frac{f \cdot n}{f_s} \right\rfloor \mod 2\right) \cdot 2 - 1
     \label{eq:sygnał prostokątny}
 \end{equation}
-Dziedzina sygnału prostokątnego składa się jedynie z dwóch wartości: -1 i 1. Łatwo zauważyć, że brak wartości pośrednich będzie generować duży przester, który jest przyczyną charakterystycznego brzmienia dla syntezatorów bazujących na sygnałach prostokątnych. W związku z obecnością przesteru, sygnał prostokątny jest sygnałem o najbogatszych harmonicznych, co oznacza, że w widmie sygnału znajdziemy wiele składowych o różnych częstotliwościach.
+\vspace{10pt}Dziedzina sygnału prostokątnego składa się jedynie z dwóch wartości: -1 i 1. Łatwo zauważyć, że brak wartości pośrednich będzie generować duży przester, który jest przyczyną charakterystycznego brzmienia dla syntezatorów bazujących na sygnałach prostokątnych. W związku z obecnością przesteru, sygnał prostokątny jest sygnałem o najbogatszych harmonicznych, co oznacza, że w widmie sygnału znajdziemy wiele składowych o różnych częstotliwościach.
 
 \begin{figure}[H]
     \centering
@@ -55,7 +55,7 @@ Dziedzina sygnału prostokątnego składa się jedynie z dwóch wartości: -1 i 
     \Fsaw(f, n, f_s) = \Bsaw(f, n, f_s) \cdot 2 - 1
     \label{eq:sygnał piłokształtny}
 \end{equation}
-Sygnał piłokształtny w związku z obecnością przesteru jest sygnałem o bogatych harmonicznych, podobnie jak sygnał prostokątny. W przeciwieństwie do sygnału prostokątnego, sygnał piłokształtny jest sygnałem o bardziej naturalnym brzmieniu, co sprawia, że jest on często wykorzystywany w syntezatorach. Można wyróżnić dwa rodzaje sygnału piłokształtnego: rosnący i opadający. Sygnał rosnący jest generowany zgodnie z równaniem \ref{eq:sygnał piłokształtny}.
+\vspace{10pt}Sygnał piłokształtny w związku z obecnością przesteru jest sygnałem o bogatych harmonicznych, podobnie jak sygnał prostokątny. W przeciwieństwie do sygnału prostokątnego, sygnał piłokształtny jest sygnałem o bardziej naturalnym brzmieniu, co sprawia, że jest on często wykorzystywany w syntezatorach. Można wyróżnić dwa rodzaje sygnału piłokształtnego: rosnący i opadający. Sygnał rosnący jest generowany zgodnie z równaniem \ref{eq:sygnał piłokształtny}.
 
 \begin{figure}[H]
     \centering
@@ -88,7 +88,7 @@ Sygnał piłokształtny w związku z obecnością przesteru jest sygnałem o bog
     \label{eq:sygnał trójkątny}
 \end{equation}
 
-Sygnał trójkątny w brzmieniu przypomina sygnał sinusoidalny, jednakże w związku z jego gwałtownymi zmianami wartości, wprowadza on niewielką ilość przesteru. Efektem tego jest powstanie sygnału zauważalnie wzbogaconego harmonicznie, ale jednocześnie o bardziej naturalnym brzmieniu niż sygnał prostokątny czy piłokształtny. Przedstawiony wzór (\ref{eq:sygnał trójkątny}) generuje sygnał trójkątny przy wykorzystaniu na zmianę sygnału piłokształtnego rosnącego i malejącego.
+\vspace{10pt}Sygnał trójkątny w brzmieniu przypomina sygnał sinusoidalny, jednakże w związku z jego gwałtownymi zmianami wartości, wprowadza on niewielką ilość przesteru. Efektem tego jest powstanie sygnału zauważalnie wzbogaconego harmonicznie, ale jednocześnie o bardziej naturalnym brzmieniu niż sygnał prostokątny czy piłokształtny. Przedstawiony wzór (\ref{eq:sygnał trójkątny}) generuje sygnał trójkątny przy wykorzystaniu na zmianę sygnału piłokształtnego rosnącego i malejącego.
 
 \begin{figure}[H]
     \centering
@@ -160,8 +160,7 @@ Algorytm ten wprowadza wykorzystanie pętli dla wygenerowanie pojedynczej próbk
 Komponent \texttt{Compressor} implementuje algorytm kompresji sygnału audio. W tej dziedzinie kompresja oznacza zmniejszenie różnicy pomiędzy największą a najmniejszą wartością sygnału. W przypadku tej implementacji, algorytm ogranicza amplitudę sygnału powyżej wskazanej wartości, przy jednoczesnej próbie zniwelowania efektu przesteru, który może powstać w wyniku takiej operacji. Parametry komponentu to:
 \begin{itemize}
     \item \texttt{threshold} - próg powyżej którego algorytm zostaje wykonany,
-    \item \texttt{ratio} - stosunek amplitudy przekraczającej \texttt{threshold} sygnału wejściowego do amplitudy przekraczającej \texttt{threshold} sygnału wyjściowego. Wartość ta jest ściśle powiązana z parametrem \texttt{step},
-    \item \texttt{step} - określa wartość przekroczenia \texttt{threshold} sygnału wejściowego, po której wartość \texttt{ratio} jest w pełni zastosowana,
+    \item \texttt{ratio} - stosunek amplitudy przekraczającej \texttt{threshold} sygnału wejściowego do amplitudy przekraczającej \texttt{threshold} sygnału wyjściowego,
     \item \texttt{attack} - czas, potrzebny do zarejestrowania w pełni wzrostu amplitudy sygnału wejściowego,
     \item \texttt{release} - czas, potrzebny do zarejestrowania w pełni spadku amplitudy sygnału wejściowego,
     \item \texttt{vol} - modyfikacja amplitudy sygnału wyjściowego.

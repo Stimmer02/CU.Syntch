@@ -1,4 +1,9 @@
 {
     "editor.snippetSuggestions": "top",
-    "latex-workshop.intellisense.citation.backend": "biblatex"
+    "latex-workshop.intellisense.citation.backend": "biblatex",
+    "cSpell.words": [
+        "chrono",
+        "libpulse",
+        "Memcpy"
+    ]
 }
